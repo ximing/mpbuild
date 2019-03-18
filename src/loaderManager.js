@@ -5,23 +5,17 @@ const mm = require('micromatch');
 
 const babelLoader = require('./loader/babel-loader');
 const fileLoader = require('./loader/file-loader');
-const jsonLoader = require('./loader/json-loader');
 const replaceLoader = require('./loader/replace-loader');
 const taroJSLoader = require('./loader/taro-js-loader');
 const tsLoader = require('./loader/ts-loader');
-const wxmlLoader = require('./loader/wxml-loader');
 const postcssLoader = require('./loader/postcss-loader');
-const htmlMinifierLoader = require('./loader/html-minifier-loader');
 
 const map = {
     'babel-loader': babelLoader,
     'file-loader': fileLoader,
-    'json-loader': jsonLoader,
     'replace-loader': replaceLoader,
     'taro-js-loader': taroJSLoader,
     'ts-loader': tsLoader,
-    'wxml-loader': wxmlLoader,
-    'html-minifier-loader': htmlMinifierLoader,
     'postcss-loader': postcssLoader
 };
 

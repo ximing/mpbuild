@@ -22,6 +22,7 @@ const HandleJSONComponentDep = require('./plugin/handleJSONComponentDep');
 const HandleWXSSDep = require('./plugin/handleWXSSDep');
 const HandleWXMLDep = require('./plugin/handleWXMLDep');
 const NpmRewrite = require('./plugin/npmRewrite');
+const MinifyPlugin = require('./plugin/minifyPlugin');
 const AppJSONPick = require('./plugin/appJSONPick');
 const CopyImagePlugin = require('./plugin/copyImagePlugin');
 const CopyPlugin = require('./plugin/copyPlugin');
@@ -44,6 +45,12 @@ class Mpbuilder {
             beforeEmitFile: new AsyncSeriesWaterfallHook(['asset']),
             watchRun: new AsyncSeriesHook(['compiler'])
         };
+        this.optimization = Object.assign(
+            {
+                minimize: true
+            },
+            config.optimization
+        );
         this.watching = new Watching(this, async () => {
             await this.hooks.afterCompile.promise(this);
         });
@@ -66,7 +73,8 @@ class Mpbuilder {
                 new HandleJSONComponentDep(),
                 new HandleWXMLDep(),
                 new HandleWXSSDep(),
-                new NpmRewrite()
+                new NpmRewrite(),
+                new MinifyPlugin()
             ],
             this.config.plugins
         );
