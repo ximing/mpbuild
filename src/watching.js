@@ -1,124 +1,7 @@
-// class Watching {
-//     constructor(mpb, watchOptions, handler) {
-//         this.mpb = mpb;
-//         this.startTime = null;
-//         this.invalid = false;
-//         this.handler = handler;
-//         this.callbacks = [];
-//         this.closed = false;
-//         if (typeof watchOptions === 'number') {
-//             this.watchOptions = {
-//                 aggregateTimeout: watchOptions
-//             };
-//         } else if (watchOptions && typeof watchOptions === 'object') {
-//             this.watchOptions = Object.assign({}, watchOptions);
-//         } else {
-//             this.watchOptions = {};
-//         }
-//         this.watchOptions.aggregateTimeout = this.watchOptions.aggregateTimeout || 200;
-//         this.running = true;
-//     }
-
-//     _done(err, compilation) {
-//         this.running = false;
-//         if (this.invalid) return this._go();
-
-//         const stats = compilation ? this._getStats(compilation) : null;
-//         if (err) {
-//             this.compiler.applyPlugins('failed', err);
-//             this.handler(err, stats);
-//             return;
-//         }
-
-//         this.compiler.applyPlugins('done', stats);
-//         this.handler(null, stats);
-//         if (!this.closed) {
-//             this.watch(
-//                 compilation.fileDependencies,
-//                 compilation.contextDependencies,
-//                 compilation.missingDependencies
-//             );
-//         }
-//         this.callbacks.forEach((cb) => cb());
-//         this.callbacks.length = 0;
-//     }
-
-//     watch(files, dirs, missing) {
-//         this.pausedWatcher = null;
-//         this.watcher = this.compiler.watchFileSystem.watch(
-//             files,
-//             dirs,
-//             missing,
-//             this.startTime,
-//             this.watchOptions,
-//             (
-//                 err,
-//                 filesModified,
-//                 contextModified,
-//                 missingModified,
-//                 fileTimestamps,
-//                 contextTimestamps
-//             ) => {
-//                 this.pausedWatcher = this.watcher;
-//                 this.watcher = null;
-//                 if (err) return this.handler(err);
-
-//                 this.mpb.fileTimestamps = fileTimestamps;
-//                 this.mpb.contextTimestamps = contextTimestamps;
-//                 this.invalidate();
-//             },
-//             (fileName, changeTime) => {
-//                 this.mpb.applyPlugins('invalid', fileName, changeTime);
-//             }
-//         );
-//     }
-
-//     invalidate(callback) {
-//         if (callback) {
-//             this.callbacks.push(callback);
-//         }
-//         if (this.watcher) {
-//             this.pausedWatcher = this.watcher;
-//             this.watcher.pause();
-//             this.watcher = null;
-//         }
-//         if (this.running) {
-//             this.invalid = true;
-//             return false;
-//         }
-//     }
-
-//     close(callback) {
-//         if (callback === undefined) callback = function() {};
-
-//         this.closed = true;
-//         if (this.watcher) {
-//             this.watcher.close();
-//             this.watcher = null;
-//         }
-//         if (this.pausedWatcher) {
-//             this.pausedWatcher.close();
-//             this.pausedWatcher = null;
-//         }
-//         if (this.running) {
-//             this.invalid = true;
-//             this._done = () => {
-//                 this.compiler.applyPlugins('watch-close');
-//                 callback();
-//             };
-//         } else {
-//             this.compiler.applyPlugins('watch-close');
-//             callback();
-//         }
-//     }
-// }
-
-// module.exports = Watching;
-
 const chokidar = require('chokidar');
 const _ = require('lodash');
 const chalk = require('chalk');
-const log = require('./log');
+const Watchpack = require('watchpack');
 
 module.exports = class Watching {
     constructor(mpb, handle = () => {}) {
@@ -127,9 +10,41 @@ module.exports = class Watching {
         this.pending = false;
         this.pendingPaths = [];
         this.handle = handle;
+        this.watchTimer = Date.now();
+        this.watcher = null;
     }
 
-    watch(missing) {
+    watch() {
+        const files = this.mpb.assetManager.getWatchFiles();
+        if (this.watcher) {
+            this.listenWatcherEvent();
+            this.watcher.watch(files, [], this.watchTimer);
+        } else {
+            this.watcher = new Watchpack({
+                aggregateTimeout: 1000,
+                poll: true
+            });
+            this.listenWatcherEvent();
+            this.watcher.watch(files, [], this.watchTimer);
+        }
+        this.files = files;
+    }
+
+    listenWatcherEvent() {
+        this.watcher.on('aggregated', (changes, removals) => {
+            this.watchTimer = Date.now();
+            this.watcher.close();
+            this.watcher = null;
+            changes.forEach((filePath) => {
+                this.handleWatch(filePath, 'change');
+            });
+            removals.forEach((filePath) => {
+                this.handleWatch(filePath, 'unlink');
+            });
+        });
+    }
+
+    watch1(missing) {
         const files = this.mpb.assetManager.getWatchFiles();
         if (this.watcher) {
             const addPaths = _.difference(files, this.files);
@@ -144,13 +59,13 @@ module.exports = class Watching {
             this.watcher = chokidar.watch(files, {
                 ignored: missing,
                 persistent: true,
+                usePolling: true,
                 ignoreInitial: true
                 // awaitWriteFinish: {
                 //     stabilityThreshold: 2000,
                 //     pollInterval: 100
                 // }
             });
-            log.info('开启watching');
             this.watcher.on('add', (/* path */) => {
                 // 不监听文件夹, 所有没有add事件
                 // this.handleWatch(path, 'add');

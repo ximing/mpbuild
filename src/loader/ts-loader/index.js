@@ -89,7 +89,6 @@ module.exports = function typescript(asset, options = {}) {
     const formattedDiagnostics = Object.keys(groupedByFile)
         .map((file) => groupedByFile[file])
         .map((diagnostics) => codeframe(diagnostics, asset.dir));
-    console.log('formattedDiagnostics', formattedDiagnostics);
     formattedDiagnostics.forEach((diagnostic) => {
         if (diagnostic.category === ts.DiagnosticCategory.Error) {
             console.log(chalk.red('[ts-loader-error]'), asset.path);

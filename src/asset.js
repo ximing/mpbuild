@@ -44,7 +44,7 @@ module.exports = class Asset {
             if (this.__mtime) {
                 return this.__mtime;
             }
-            return this.stats.mtimeMs;
+            return this.stats.mtime.getTime();
         } catch (err) {
             return 0;
         }
@@ -58,6 +58,7 @@ module.exports = class Asset {
                 } else {
                     this.__content = fs.readFileSync(this.filePath);
                 }
+                this.__stats = fs.statSync(this.filePath);
             } catch (e) {
                 this.__content = null;
             }
