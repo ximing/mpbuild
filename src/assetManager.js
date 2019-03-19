@@ -1,6 +1,8 @@
 /**
  * Created by ximing on 2019-03-15.
  */
+const chalk = require('chalk');
+
 const Asset = require('./asset');
 const log = require('./log');
 
@@ -37,7 +39,7 @@ module.exports = class AssetManager {
         if (asset.exists()) {
             if (this.getAsset(asset.path) && !this.getAsset(asset.path).beChanged(asset)) {
                 // 终止接下来处理asset的流程
-                // console.log('文件没有更改');
+                // console.log(chalk.yellow('[addAsset] 文件没有更改'), asset.path);
                 return asset;
             }
             // 更新asset

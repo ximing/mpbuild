@@ -1,11 +1,13 @@
 const ts = require('typescript');
-const path = require('path');
+const chalk = require('chalk');
 const {
     getDefaultOptions,
     getCompilerOptionsFromTsConfig,
     adjustCompilerOptions
 } = require('./options.js');
 const { createFilter } = require('../../util');
+const { groupByFile } = require('./util');
+const codeframe = require('./codeFrame');
 
 module.exports = function typescript(asset, options = {}) {
     options = Object.assign({}, options);
@@ -47,7 +49,7 @@ module.exports = function typescript(asset, options = {}) {
         moduleType !== 'COMMONJS'
     ) {
         throw new Error(
-            `rollup-plugin-typescript: The module kind should be 'ES2015' or 'ESNext, found: '${
+            `typescript-loader: The module kind should be 'ES2015' or 'ESNext, found: '${
                 options.module
             }'`
         );
@@ -83,27 +85,38 @@ module.exports = function typescript(asset, options = {}) {
 
     let fatalError = false;
 
-    diagnostics.forEach((diagnostic) => {
-        const message = typescript.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
-
-        if (diagnostic.file) {
-            const { line, character } = diagnostic.file.getLineAndCharacterOfPosition(
-                diagnostic.start
-            );
-
-            console.error(
-                `${diagnostic.file.fileName}(${line + 1},${character + 1}): error TS${
-                    diagnostic.code
-                }: ${message}`
-            );
-        } else {
-            console.error(`Error: ${message}`);
-        }
-
+    const groupedByFile = groupByFile(diagnostics);
+    const formattedDiagnostics = Object.keys(groupedByFile)
+        .map((file) => groupedByFile[file])
+        .map((diagnostics) => codeframe(diagnostics, asset.dir));
+    console.log('formattedDiagnostics', formattedDiagnostics);
+    formattedDiagnostics.forEach((diagnostic) => {
         if (diagnostic.category === ts.DiagnosticCategory.Error) {
+            console.log(chalk.red('[ts-loader-error]'), asset.path);
             fatalError = true;
         }
+        console.log(diagnostic.FormattedDiagnostic);
     });
+    // diagnostics.forEach((diagnostic) => {
+    //     const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
+    //
+    //     if (diagnostic.file) {
+    //         const { line, character } = diagnostic.file.getLineAndCharacterOfPosition(
+    //             diagnostic.start
+    //         );
+    //         console.error(
+    //             `${diagnostic.file.fileName}(${line + 1},${character + 1}): error TS${
+    //                 diagnostic.code
+    //             }: ${message}`
+    //         );
+    //     } else {
+    //         console.error(`[ts-loader] Error: ${message}`);
+    //     }
+    //
+    //     if (diagnostic.category === ts.DiagnosticCategory.Error) {
+    //         fatalError = true;
+    //     }
+    // });
 
     if (fatalError) {
         throw new Error(`There were TypeScript errors transpiling`);

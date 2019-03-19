@@ -117,6 +117,7 @@
 
 const chokidar = require('chokidar');
 const _ = require('lodash');
+const chalk = require('chalk');
 const log = require('./log');
 
 module.exports = class Watching {
@@ -144,6 +145,10 @@ module.exports = class Watching {
                 ignored: missing,
                 persistent: true,
                 ignoreInitial: true
+                // awaitWriteFinish: {
+                //     stabilityThreshold: 2000,
+                //     pollInterval: 100
+                // }
             });
             log.info('开启watching');
             this.watcher.on('add', (/* path */) => {
@@ -164,7 +169,7 @@ module.exports = class Watching {
     }
 
     async handleAsset(path, type) {
-        console.log('[handleAsset]', path, type);
+        console.log(chalk.cyan('[handleAsset]'), path, type);
         const asset = this.mpb.assetManager.getAsset(path);
         if (asset) {
             if (type === 'change') {

@@ -22,8 +22,15 @@
         "bin",
         "src"
     ],
-    "Keywords":["微信小程序","小程序","构建","工具","打包"],
+    "Keywords": [
+        "微信小程序",
+        "小程序",
+        "构建",
+        "工具",
+        "打包"
+    ],
     "dependencies": {
+        "@babel/code-frame": "^7.0.0",
         "@babel/polyfill": "^7.0.0",
         "@babel/runtime": "^7.3.4",
         "@tarojs/cli": "^1.2.20",

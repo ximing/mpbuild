@@ -60,6 +60,7 @@ class Mpbuilder {
         this.scan = new Scan(this);
         this.initPlugin();
         this.assetManager = new AssetManager(this);
+        this.hasInit = false;
     }
 
     initPlugin() {
@@ -95,6 +96,7 @@ class Mpbuilder {
 
     async run() {
         await this.scan.run();
+        this.hasInit = true;
     }
 }
 
