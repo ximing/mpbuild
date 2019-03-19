@@ -36,10 +36,27 @@ module.exports = class MinifyPlugin {
         if (mpb.optimization.minimize) {
             mpb.hooks.beforeEmitFile.tapPromise('MinifyPlugin', async (asset) => {
                 if (asset.contents) {
-                    asset.contents = await pool.exec(minify, [
-                        asset.contents,
-                        asset.outputFilePath
-                    ]);
+                    // if (/\.js$/.test(asset.outputFilePath)) {
+                    //     const result = UglifyJS.minify(asset.contents);
+                    //     if (result.error) console.error('[MinifyPlugin]', result.error);
+                    //     if (result.warnings) console.warn('[MinifyPlugin]', result.warnings);
+                    //     asset.contents = result.code;
+                    // } else if (/\.json$/.test(asset.outputFilePath)) {
+                    //     asset.contents = jsonminify(asset.contents).toString();
+                    // } else if (/\.wxml$/.test(asset.outputFilePath)) {
+                    //     asset.contents = asset.contents = htmlmin.minify(asset.contents, {
+                    //         removeComments: true,
+                    //         keepClosingSlash: true,
+                    //         collapseWhitespace: true,
+                    //         caseSensitive: true
+                    //     });
+                    // }
+                    if (/\.(js|json|wxml)$/.test(asset.outputFilePath)) {
+                        asset.contents = await pool.exec(minify, [
+                            asset.contents,
+                            asset.outputFilePath
+                        ]);
+                    }
                 }
                 return Promise.resolve();
             });

@@ -15,11 +15,8 @@ const template = require('babel-template');
 
 const taroJsFramework = '@tarojs/taro';
 const taroJsComponents = '@tarojs/components';
-const config = {
-    src: 'src',
-    dest: 'dist',
-    cwd: process.cwd()
-};
+const Asset = require('../asset');
+
 const PARSE_AST_TYPE = {
     ENTRY: 'ENTRY',
     PAGE: 'PAGE',
@@ -458,14 +455,9 @@ function parseAst(type, ast, depComponents, sourceFilePath) {
 
 module.exports = async function(asset, opts) {
     const { path: sourcePath, outputFilePath, contents } = asset;
-    // console.log('start');
     try {
-        // const pageWXMLPath = assetPath.replace(p.extname(assetPath), wxml);
-        // const outputPath = p.join(
-        //     config.cwd,
-        //     config.dest,
-        //     assetPath.replace(p.join(config.cwd, config.src), '')
-        // );
+        const pageWXMLPath = sourcePath.replace(path.extname(sourcePath), '.wxml');
+        const outputPath = path.join(this.dest, pageWXMLPath.replace(this.src, ''));
         if (contents.indexOf(taroJsFramework) >= 0) {
             console.log('handle taro file');
             const baseOptions = {
@@ -483,15 +475,13 @@ module.exports = async function(asset, opts) {
                 })
             );
             const parseRes = parseAst(PARSE_AST_TYPE.PAGE, ast, pageDepComponents);
-            // fse.outputFileSync(outputPath.replace(p.extname(sourcePath), wxml), compressedTemplate, {
-            //     encoding
-            // });
-            // console.log('code', parseRes.code);
             asset.contents = parseRes.code;
+            const wxmlAsset = new Asset(pageWXMLPath, outputPath, { virtual_file: true });
+            wxmlAsset.contents = compressedTemplate;
+            await this.assetManager.addAsset(wxmlAsset);
         }
     } catch (e) {
         console.error(e);
     }
-    // console.log('end');
     return asset;
 };

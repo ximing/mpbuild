@@ -2,10 +2,6 @@ const path = require('path');
 const validateOptions = require('schema-utils');
 const postcss = require('postcss');
 const postcssrc = require('postcss-load-config');
-const workerpool = require('workerpool');
-
-const pool = workerpool.pool(`${__dirname}/worker.js`);
-
 const Warning = require('./Warning.js');
 const SyntaxError = require('./Error.js');
 const parseOptions = require('./options.js');
@@ -110,7 +106,8 @@ async function loader(asset, options = {}) {
 
         messages.forEach((msg) => {
             if (msg.type === 'dependency') {
-                this.addDependency(msg.file);
+                console.error('[postcss addDependency]', msg.file);
+                // this.addDependency(msg.file);
             }
         });
 
