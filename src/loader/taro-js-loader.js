@@ -154,16 +154,6 @@ function parseAst(type, ast, depComponents, sourceFilePath) {
                                 node.decorators || []
                             )
                         );
-                    } else if (node.id.name === 'App') {
-                        componentClassName = '_App';
-                        astPath.replaceWith(
-                            t.classDeclaration(
-                                t.identifier(componentClassName),
-                                node.superClass,
-                                node.body,
-                                node.decorators || []
-                            )
-                        );
                     } else {
                         componentClassName = node.id.name;
                     }
@@ -199,16 +189,6 @@ function parseAst(type, ast, depComponents, sourceFilePath) {
                                 node.decorators || []
                             )
                         );
-                    } else if (node.id.name === 'App') {
-                        componentClassName = '_App';
-                        astPath.replaceWith(
-                            t.ClassExpression(
-                                t.identifier(componentClassName),
-                                node.superClass,
-                                node.body,
-                                node.decorators || []
-                            )
-                        );
                     } else {
                         componentClassName = node.id.name;
                     }
@@ -227,7 +207,6 @@ function parseAst(type, ast, depComponents, sourceFilePath) {
             const { node } = astPath;
             const { source } = node;
             let { value } = source;
-            const { specifiers } = node;
             if (Util.isNpmPkg(value)) {
                 if (value === taroJsComponents) {
                     astPath.remove();
@@ -381,7 +360,6 @@ function parseAst(type, ast, depComponents, sourceFilePath) {
                         if (callee.name === 'require') {
                             const args = node.arguments;
                             const { value } = args[0];
-                            const valueExtname = path.extname(value);
                             if (value.indexOf('.') === 0) {
                                 let importPath = path.resolve(path.dirname(sourceFilePath), value);
                                 importPath = Util.resolveScriptPath(importPath);
@@ -412,14 +390,6 @@ function parseAst(type, ast, depComponents, sourceFilePath) {
                 }
                 const taroMiniAppFrameworkPath = taroMiniAppFramework;
                 switch (type) {
-                    case PARSE_AST_TYPE.ENTRY:
-                        node.body.push(
-                            template(
-                                `App(require('${taroMiniAppFrameworkPath}').default.createApp(${exportVariableName}))`,
-                                babylonConfig
-                            )()
-                        );
-                        break;
                     case PARSE_AST_TYPE.PAGE:
                         node.body.push(
                             template(
@@ -474,6 +444,7 @@ module.exports = async function(asset, opts) {
                     code: contents
                 })
             );
+            // asset.contents = resCode;
             const parseRes = parseAst(PARSE_AST_TYPE.PAGE, ast, pageDepComponents);
             asset.contents = parseRes.code;
             const wxmlAsset = new Asset(pageWXMLPath, outputPath, { virtual_file: true });

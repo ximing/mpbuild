@@ -93,6 +93,7 @@ class Mpbuilder {
         await this.run();
         log.info('开启watching');
         this.watching.watch();
+        this.watching.watchEntry();
     }
 
     async run() {
