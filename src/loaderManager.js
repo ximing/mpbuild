@@ -6,7 +6,6 @@ const mm = require('micromatch');
 const babelLoader = require('./loader/babel-loader');
 const fileLoader = require('./loader/file-loader');
 const replaceLoader = require('./loader/replace-loader');
-const taroJSLoader = require('./loader/taro-js-loader');
 const tsLoader = require('./loader/ts-loader');
 const postcssLoader = require('./loader/postcss-loader');
 
@@ -14,7 +13,6 @@ const map = {
     'babel-loader': babelLoader,
     'file-loader': fileLoader,
     'replace-loader': replaceLoader,
-    'taro-js-loader': taroJSLoader,
     'ts-loader': tsLoader,
     'postcss-loader': postcssLoader
 };
