@@ -9,7 +9,7 @@ const { createFilter } = require('../../util');
 const { groupByFile } = require('./util');
 const codeframe = require('./codeFrame');
 
-module.exports = function typescript(asset, options = {}) {
+module.exports = function(options = {}) {
     options = Object.assign({}, options);
 
     const filter = createFilter(
@@ -64,66 +64,72 @@ module.exports = function typescript(asset, options = {}) {
 
         throw new Error(`mpb-lodder-typescript: Couldn't process compiler options`);
     }
-
     const compilerOptions = parsed.options;
-    const [outputPrefix] = this.helper.splitExtension(asset.outputFilePath);
-    asset.outputFilePath = `${outputPrefix}.js`;
-    if (!filter(asset.name)) {
-        asset.contents = '// ts file';
-        return asset;
-    }
-    const transformed = typescript.transpileModule(asset.contents, {
-        fileName: asset.name,
-        reportDiagnostics: true,
-        compilerOptions
-    });
 
-    // All errors except `Cannot compile modules into 'es6' when targeting 'ES5' or lower.`
-    const diagnostics = transformed.diagnostics
-        ? transformed.diagnostics.filter((diagnostic) => diagnostic.code !== 1204)
-        : [];
-
-    let fatalError = false;
-
-    const groupedByFile = groupByFile(diagnostics);
-    const formattedDiagnostics = Object.keys(groupedByFile)
-        .map((file) => groupedByFile[file])
-        .map((diagnostics) => codeframe(diagnostics, asset.dir));
-    formattedDiagnostics.forEach((diagnostic) => {
-        if (diagnostic.category === ts.DiagnosticCategory.Error) {
-            console.log(chalk.red('[ts-loader-error]'), asset.path);
-            fatalError = true;
+    return function(asset) {
+        const [outputPrefix] = this.helper.splitExtension(asset.outputFilePath);
+        asset.outputFilePath = `${outputPrefix}.js`;
+        if (!filter(asset.name)) {
+            asset.contents = '// ts file';
+            return asset;
         }
-        console.log(diagnostic.FormattedDiagnostic);
-    });
-    // diagnostics.forEach((diagnostic) => {
-    //     const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
-    //
-    //     if (diagnostic.file) {
-    //         const { line, character } = diagnostic.file.getLineAndCharacterOfPosition(
-    //             diagnostic.start
-    //         );
-    //         console.error(
-    //             `${diagnostic.file.fileName}(${line + 1},${character + 1}): error TS${
-    //                 diagnostic.code
-    //             }: ${message}`
-    //         );
-    //     } else {
-    //         console.error(`[ts-loader] Error: ${message}`);
-    //     }
-    //
-    //     if (diagnostic.category === ts.DiagnosticCategory.Error) {
-    //         fatalError = true;
-    //     }
-    // });
+        const transformed = typescript.transpileModule(asset.contents, {
+            fileName: asset.name,
+            reportDiagnostics: true,
+            compilerOptions
+        });
 
-    if (fatalError) {
-        throw new Error(`There were TypeScript errors transpiling`);
-    }
-    asset.contents = transformed.outputText;
-    asset.setMeta(
-        'sourceMap',
-        transformed.sourceMapText ? JSON.parse(transformed.sourceMapText) : null
-    );
-    return asset;
+        // All errors except `Cannot compile modules into 'es6' when targeting 'ES5' or lower.`
+        const diagnostics = transformed.diagnostics
+            ? transformed.diagnostics.filter((diagnostic) => diagnostic.code !== 1204)
+            : [];
+
+        let fatalError = false;
+        // console.log('diagnostics', diagnostics);
+        // diagnostics.forEach((diagnostic) => {
+        //     const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
+        //
+        //     if (diagnostic.file) {
+        //         const { line, character } = diagnostic.file.getLineAndCharacterOfPosition(
+        //             diagnostic.start
+        //         );
+        //         console.error(
+        //             `${diagnostic.file.fileName}(${line + 1},${character + 1}): error TS${
+        //                 diagnostic.code
+        //             }: ${message}`
+        //         );
+        //     } else {
+        //         console.error(`[ts-loader] Error: ${message}`);
+        //     }
+        //
+        //     if (diagnostic.category === ts.DiagnosticCategory.Error) {
+        //         console.error(`[ts-loader] Error: ${message}`);
+        //         fatalError = true;
+        //     }
+        // });
+
+        const groupedByFile = groupByFile(diagnostics);
+        const formattedDiagnostics = Object.keys(groupedByFile)
+            .map((file) => groupedByFile[file])
+            .map((diagnostics) => codeframe(diagnostics, asset.dir));
+
+        formattedDiagnostics.forEach((diagnostic) => {
+            if (diagnostic.message) {
+                console.log(chalk.red('[ts-loader-error]'), asset.path);
+                console.log(diagnostic.message);
+                fatalError = true;
+            }
+        });
+
+        if (!fatalError) {
+            asset.contents = transformed.outputText;
+            asset.setMeta(
+                'sourceMap',
+                transformed.sourceMapText ? JSON.parse(transformed.sourceMapText) : null
+            );
+        } else {
+            asset.contents = null;
+        }
+        return asset;
+    };
 };

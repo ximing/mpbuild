@@ -2,6 +2,7 @@
  * Created by ximing on 2019-03-15.
  */
 const path = require('path');
+const { assetType } = require('../consts');
 
 module.exports = class HandleJSONComponentDep {
     apply(mpb) {
@@ -27,7 +28,8 @@ module.exports = class HandleJSONComponentDep {
                                 }
                                 mpb.scan.addAssetByEXT(
                                     filePath.replace(mpb.src, ''),
-                                    path.resolve(mpb.dest, path.relative(mpb.src, filePath))
+                                    path.resolve(mpb.dest, path.relative(mpb.src, filePath)),
+                                    assetType.component
                                 );
                             })
                         );

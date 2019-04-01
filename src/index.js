@@ -61,6 +61,7 @@ class Mpbuilder {
         this.initPlugin();
         this.assetManager = new AssetManager(this);
         this.hasInit = false;
+        this.isWatch = false;
     }
 
     initPlugin() {
@@ -90,6 +91,7 @@ class Mpbuilder {
     }
 
     async watch() {
+        this.isWatch = true;
         await this.run();
         log.info('开启watching');
         this.watching.watch();
@@ -97,6 +99,7 @@ class Mpbuilder {
     }
 
     async run() {
+        await this.loaderManager.initRules();
         await this.scan.run();
         this.hasInit = true;
     }

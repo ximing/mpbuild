@@ -6,6 +6,7 @@ const perf = require('execution-time')();
 const log = require('./log');
 const { formatBuildTime } = require('./util');
 const AppJSON = require('./plugin/appJSON');
+const { assetType } = require('./consts');
 
 module.exports = class ScanDep {
     constructor(mpb) {
@@ -17,10 +18,10 @@ module.exports = class ScanDep {
         this.modules = {};
     }
 
-    addAssetByEXT(prefixPath, prefixOutputPath, base = this.mpb.config.src) {
+    addAssetByEXT(prefixPath, prefixOutputPath, type = assetType.page, base = this.mpb.config.src) {
         return Promise.all(
             this.exts.map((ext) => {
-                const meta = {};
+                const meta = { type };
                 if (ext === '.json') {
                     meta['mbp-scan-json-dep'] = 'usingComponents';
                 }
@@ -74,7 +75,7 @@ module.exports = class ScanDep {
         perf.start('init');
         this.findEntry();
         // find App
-        await this.addAssetByEXT('app', path.join(this.mpb.dest, 'app'));
+        await this.addAssetByEXT('app', path.join(this.mpb.dest, 'app'), assetType.app);
         // find Pages
         const { router } = this.mpb.appEntry;
         for (let i = 0, l = router.length; i < l; i++) {

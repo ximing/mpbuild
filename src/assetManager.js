@@ -2,6 +2,7 @@
  * Created by ximing on 2019-03-15.
  */
 const chalk = require('chalk');
+const fse = require('fs-extra');
 
 const Asset = require('./asset');
 const log = require('./log');
@@ -45,17 +46,25 @@ module.exports = class AssetManager {
             // 更新asset
             this.setAsset(asset);
             return this.mpb.hooks.addAsset.promise(asset).then(
-                (asset) =>
-                    this.mpb.hooks.beforeEmitFile.promise(asset).then(
-                        () => {
-                            this.emitFile(asset);
-                            return asset;
-                        },
-                        (err) => {
-                            console.error(err);
-                            // throw err;
-                        }
-                    ),
+                (asset) => {
+                    if (asset.shouldOutput) {
+                        return this.mpb.hooks.beforeEmitFile.promise(asset).then(
+                            () => {
+                                this.emitFile(asset);
+                                return asset;
+                            },
+                            (err) => {
+                                console.error(err);
+                                // throw err;
+                            }
+                        );
+                    }
+                    // 如果不输出，就删除之前的构建文件，这样小程序工具上直观能体现出来有代码有问题了
+                    return fse
+                        .remove(asset.outputFilePat)
+                        .then((_) => asset)
+                        .catch((_) => asset);
+                },
                 (err) => {
                     console.error(err);
                     // throw err;

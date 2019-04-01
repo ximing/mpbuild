@@ -4,6 +4,7 @@
 const path = require('path');
 const fs = require('fs');
 const fse = require('fs-extra');
+const { assetType } = require('./consts');
 
 module.exports = class Asset {
     constructor(filePath, outputFilePath, meta) {
@@ -15,7 +16,10 @@ module.exports = class Asset {
         this.path = filePath;
         this.filePath = filePath;
         this.__content = null;
-        this.__meta = meta || {};
+        this.__meta = meta || {
+            type: assetType.normal
+        };
+        this.shouldOutput = true;
         this.outputFilePath = outputFilePath;
     }
 
@@ -84,7 +88,7 @@ module.exports = class Asset {
 
     render(targetPath) {
         if (targetPath || this.outputFilePath) {
-            if (this.contents != null) {
+            if (this.__content != null) {
                 // TODO 做一个
                 // if (this.outputFilePath.includes('/mnt/d/project/mall-wxapp/dist')) {
                 //     return fse.outputFile(targetPath || this.outputFilePath, this.contents);
