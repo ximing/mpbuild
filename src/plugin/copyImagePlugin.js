@@ -23,25 +23,28 @@ module.exports = class CopyImagePlugin {
 
     apply(mpb) {
         mpb.hooks.afterCompile.tapPromise('AppJSON', async () => {
-            await Promise.all(
-                Object.keys(this.options.srcFiles).map((srcFile) => {
-                    return imagemin(
-                        [srcFile],
-                        path.join(
-                            this.options.output,
-                            path.dirname(this.options.srcFiles[srcFile])
-                        ),
-                        {
-                            plugins: [
-                                imageminJpegtran(),
-                                imageminPngquant({
-                                    quality: [0.6, 0.8]
-                                })
-                            ]
-                        }
-                    );
-                })
-            );
+            // TODO 这里需要 看下 watch下怎么监听 images目录的更改
+            if (!mpb.hasInit) {
+                await Promise.all(
+                    Object.keys(this.options.srcFiles).map((srcFile) => {
+                        return imagemin(
+                            [srcFile],
+                            path.join(
+                                this.options.output,
+                                path.dirname(this.options.srcFiles[srcFile])
+                            ),
+                            {
+                                plugins: [
+                                    imageminJpegtran(),
+                                    imageminPngquant({
+                                        quality: [0.6, 0.8]
+                                    })
+                                ]
+                            }
+                        );
+                    })
+                );
+            }
         });
     }
 };

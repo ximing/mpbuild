@@ -14,7 +14,8 @@ const map = {
     'babel-loader': babelLoader,
     'file-loader': fileLoader,
     'replace-loader': replaceLoader,
-    'ts-loader': tsLoaderNext,
+    'ts-loader': tsLoader,
+    'ts-loader-next': tsLoaderNext,
     'postcss-loader': postcssLoader
 };
 
