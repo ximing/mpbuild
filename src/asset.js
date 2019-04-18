@@ -4,6 +4,7 @@
 const path = require('path');
 const fs = require('fs');
 const fse = require('fs-extra');
+const chalk = require('chalk');
 const { assetType } = require('./consts');
 
 module.exports = class Asset {
@@ -90,7 +91,7 @@ module.exports = class Asset {
         if (targetPath || this.outputFilePath) {
             if (this.__content != null) {
                 if (mpb.hasInit && mpb.isWatch) {
-                    console.log('[watch]:输出文件', this.outputFilePath);
+                    console.log(chalk.cyan('[watching-output]'), this.outputFilePath);
                 }
                 // TODO 做一个
                 // if (this.outputFilePath.includes('/mnt/d/project/mall-wxapp/dist')) {

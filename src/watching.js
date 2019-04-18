@@ -2,6 +2,9 @@ const chokidar = require('chokidar');
 const _ = require('lodash');
 const chalk = require('chalk');
 const Watchpack = require('watchpack');
+const perf = require('execution-time')();
+const { formatBuildTime } = require('./util');
+const log = require('./log');
 
 module.exports = class Watching {
     constructor(mpb, handle = () => {}) {
@@ -12,6 +15,7 @@ module.exports = class Watching {
         this.handle = handle;
         this.watchTimer = Date.now();
         this.watcher = null;
+        this.perfId = 0;
     }
 
     watch() {
@@ -83,8 +87,14 @@ module.exports = class Watching {
         this.files = files;
     }
 
+    generatePerfId() {
+        return `perf__${this.perfId}`;
+    }
+
     async handleAsset(path, type) {
         console.log(chalk.cyan('[watching-asset]'), path, type);
+        const perfId = this.generatePerfId();
+        perf.start(perfId);
         const asset = this.mpb.assetManager.getAsset(path);
         if (asset) {
             if (type === 'change') {
@@ -97,6 +107,7 @@ module.exports = class Watching {
         } else {
             console.warn('[watching] 这里不应该 在assetManager里面找不到对应的文件');
         }
+        log.info(`${chalk.green('[success]')},耗时:${formatBuildTime(perf.stop(perfId).time)}`);
         const ps = this.pendingPaths;
         if (ps.length) {
             this.pendingPaths = [];

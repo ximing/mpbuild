@@ -25,12 +25,14 @@ const NpmRewrite = require('./plugin/npmRewrite');
 const MinifyPlugin = require('./plugin/minifyPlugin');
 const AppJSONPick = require('./plugin/appJSONPick');
 const CopyImagePlugin = require('./plugin/copyImagePlugin');
+const ProjectConfigPlugin = require('./plugin/projectConfigPlugin.js');
 const CopyPlugin = require('./plugin/copyPlugin');
+const CleanMbpPlugin = require('./plugin/cleanMbpPlugin.js');
 const NodeEnvironmentPlugin = require('./node/NodeEnvironmentPlugin');
 
 class Mpbuilder {
     constructor(config) {
-        this.dest = config.output.path;
+        this.dest = path.resolve(process.cwd(), config.output.path);
         this.src = path.resolve(process.cwd(), config.src);
         this.config = config;
         this.appEntry = {};
@@ -38,7 +40,7 @@ class Mpbuilder {
         this.hooks = {
             addAsset: new AsyncSeriesBailHook(['asset']),
             delAsset: new AsyncSeriesBailHook(['asset']),
-            start: new AsyncParallelHook(['compiler']),
+            start: new AsyncParallelHook(['mpb']),
             beforeCompile: new AsyncParallelHook(['mpb']),
             afterCompile: new AsyncParallelHook(['mpb']),
             afterGenerateEntry: new AsyncSeriesBailHook(['afterGenerateEntry']),
@@ -100,6 +102,7 @@ class Mpbuilder {
 
     async run() {
         await this.loaderManager.initRules();
+        await this.hooks.start.promise(this.mpb);
         await this.scan.run();
         this.hasInit = true;
     }
@@ -109,3 +112,5 @@ module.exports = Mpbuilder;
 module.exports.AppJSONPick = AppJSONPick;
 module.exports.CopyPlugin = CopyPlugin;
 module.exports.CopyImagePlugin = CopyImagePlugin;
+module.exports.ProjectConfigPlugin = ProjectConfigPlugin;
+module.exports.CleanMbpPlugin = CleanMbpPlugin;
