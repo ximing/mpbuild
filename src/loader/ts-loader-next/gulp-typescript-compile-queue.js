@@ -31,7 +31,7 @@ function tsCompileQStream(project, reporter) {
             this.signal = CompileScheduler.scheduleCompilation(project, () => {
                 this.transformStream = project(reporter).on('finish', () => this.signal());
 
-                const compileStream = src.pipe(this.transformStream);
+                let compileStream = src.pipe(this.transformStream);
                 compileStream.js.pipe(this.js);
                 compileStream.dts.pipe(this.dts);
             });
@@ -50,7 +50,7 @@ CompileScheduler.scheduleCompilation = function(project, beginCompilation) {
         projectQueue = [];
         CompileScheduler.compileGateKeeper.set(project, projectQueue);
     }
-    const ret = CompileScheduler.startNext(project);
+    let ret = CompileScheduler.startNext(project);
     if (projectQueue.length) {
         projectQueue.push(beginCompilation);
     } else {
@@ -62,9 +62,9 @@ CompileScheduler.scheduleCompilation = function(project, beginCompilation) {
 
 CompileScheduler.startNext = function(project) {
     return () => {
-        const projectQueue = CompileScheduler.compileGateKeeper.get(project);
+        let projectQueue = CompileScheduler.compileGateKeeper.get(project);
         if (projectQueue.length) {
-            const nextCompilation = projectQueue.shift();
+            let nextCompilation = projectQueue.shift();
             nextCompilation();
         }
     };

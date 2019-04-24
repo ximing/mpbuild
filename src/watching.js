@@ -98,6 +98,7 @@ module.exports = class Watching {
         const asset = this.mpb.assetManager.getAsset(path);
         if (asset) {
             if (type === 'change') {
+                console.log('[watching-add-asset]',path)
                 await this.mpb.assetManager.addAsset(path, asset.outputFilePath, asset.meta);
             } else if (type === 'unlink') {
                 await this.mpb.assetManager.delAsset(asset);

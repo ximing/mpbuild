@@ -5,16 +5,19 @@
 // const jsonminify = require('jsonminify');
 // const htmlmin = require('html-minifier');
 const workerpool = require('workerpool');
-
 const pool = workerpool.pool();
 
 function minifyJS(contents) {
     const UglifyJS = require('uglify-js');
     const result = UglifyJS.minify(contents);
-    if (result.error) console.error('[MinifyPlugin]', result.error);
+    if (result.error) {
+        console.error('[MinifyPlugin]', result.error);
+        throw result.error;
+    }
     if (result.warnings) console.warn('[MinifyPlugin]', result.warnings);
     return result.code;
 }
+
 function minifyWXML(contents) {
     const htmlmin = require('html-minifier');
     return htmlmin.minify(contents, {
@@ -24,6 +27,7 @@ function minifyWXML(contents) {
         caseSensitive: true
     });
 }
+
 function minifyJSON(contents) {
     const jsonminify = require('jsonminify');
     return jsonminify(contents).toString();

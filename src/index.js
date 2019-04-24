@@ -28,6 +28,7 @@ const CopyImagePlugin = require('./plugin/copyImagePlugin');
 const ProjectConfigPlugin = require('./plugin/projectConfigPlugin.js');
 const CopyPlugin = require('./plugin/copyPlugin');
 const CleanMbpPlugin = require('./plugin/cleanMbpPlugin.js');
+const TsTypeCheckPlugin = require('./plugin/tsTypeCheckPlugin');
 const NodeEnvironmentPlugin = require('./node/NodeEnvironmentPlugin');
 
 class Mpbuilder {
@@ -114,3 +115,4 @@ module.exports.CopyPlugin = CopyPlugin;
 module.exports.CopyImagePlugin = CopyImagePlugin;
 module.exports.ProjectConfigPlugin = ProjectConfigPlugin;
 module.exports.CleanMbpPlugin = CleanMbpPlugin;
+module.exports.TsTypeCheckPlugin = TsTypeCheckPlugin;

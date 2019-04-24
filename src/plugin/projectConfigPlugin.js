@@ -27,10 +27,7 @@ module.exports = class ProjectConfigPlugin {
             const projectConfigFile = path.join(distDir, 'project.config.json');
             const isExist = fs.existsSync(projectConfigFile);
             if (!isExist) {
-                console.log(
-                    chalk.gray('[ProjectConfigPlugin]: '),
-                    chalk.blue('project.config.json 不存在，重新生成')
-                );
+                console.log(chalk.gray('[ProjectConfigPlugin]: '), chalk.blue('project.config.json 不存在，重新生成'));
                 await fse.outputJson(projectConfigFile, {
                     description: '项目配置文件',
                     packOptions: {
@@ -74,11 +71,8 @@ module.exports = class ProjectConfigPlugin {
                         }
                     }
                 });
-            } else {
-                console.log(
-                    chalk.gray('[ProjectConfigPlugin]: '),
-                    chalk.blue('project.config.json 存在，不需要重新生成')
-                );
+            }else{
+                console.log(chalk.gray('[ProjectConfigPlugin]: '), chalk.blue('project.config.json 存在，不需要重新生成'));
             }
             return Promise.resolve();
         });

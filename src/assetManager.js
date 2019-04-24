@@ -3,6 +3,7 @@
  */
 const chalk = require('chalk');
 const fse = require('fs-extra');
+const notifier = require('node-notifier');
 
 const Asset = require('./asset');
 const log = require('./log');
@@ -54,7 +55,20 @@ module.exports = class AssetManager {
                                 return asset;
                             },
                             (err) => {
-                                console.error(err);
+                                if (this.mpb.isWatch) {
+                                    notifier.notify({
+                                        title: 'beforeEmitFile hooks error',
+                                        message: '输出文件失败，具体错误请查看命令行'
+                                    });
+                                    console.log(
+                                        chalk.red('[beforeEmitFile hooks error]'),
+                                        asset.path
+                                    );
+                                    console.error(err);
+                                } else {
+                                    console.error(err);
+                                    process.exit(1);
+                                }
                                 // throw err;
                             }
                         );
@@ -66,6 +80,7 @@ module.exports = class AssetManager {
                         .catch((_) => asset);
                 },
                 (err) => {
+                    console.log('asset', asset.path);
                     console.error(err);
                     // throw err;
                 }
