@@ -87,27 +87,25 @@ module.exports = class Asset {
         return this.mtime !== asset.mtime;
     }
 
-    render(targetPath, mpb) {
-        if (targetPath || this.outputFilePath) {
+    render(mpb) {
+        if (this.outputFilePath) {
             if (this.__content != null) {
                 if (mpb.hasInit && mpb.isWatch) {
                     console.log(chalk.cyan('[watching-output]'), this.outputFilePath);
                 }
                 // TODO 做一个
                 // if (this.outputFilePath.includes('/mnt/d/project/mall-wxapp/dist')) {
-                //     return fse.outputFile(targetPath || this.outputFilePath, this.contents);
+                //     return fse.outputFile(this.outputFilePath, this.contents);
                 // }
                 // return Promise.reject(new Error('dist not in project: ' + this.outputFilePath));
-                return fse.outputFile(targetPath || this.outputFilePath, this.contents);
+                return fse.outputFile(this.outputFilePath, this.contents);
             }
             if (mpb.hasInit && mpb.isWatch) {
                 console.log('[watch]:文件内容为空，不输出', this.outputFilePath);
             }
             return Promise.resolve(this);
         }
-        return Promise.reject(
-            new Error(`[asset.js] emit ${this.path} must have targetPath or outputFilePath`)
-        );
+        return Promise.reject(new Error(`[asset.js] emit ${this.path} must have outputFilePath`));
     }
 
     del() {

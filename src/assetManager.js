@@ -92,7 +92,7 @@ module.exports = class AssetManager {
     }
 
     emitFile(asset) {
-        asset.render(null, this.mpb).catch((err) => {
+        asset.render(this.mpb).catch((err) => {
             console.error(err);
         });
     }

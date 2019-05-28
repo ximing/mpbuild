@@ -73,7 +73,7 @@ module.exports = class ScanDep {
 
     async init() {
         perf.start('init');
-        this.findEntry();
+        await this.findEntry();
         // find App
         await this.addAssetByEXT('app', path.join(this.mpb.dest, 'app'), assetType.app);
         // find Pages

@@ -9,12 +9,14 @@ const replaceLoader = require('./loader/replace-loader');
 const tsLoader = require('./loader/ts-loader');
 const tsLoaderNext = require('./loader/ts-loader-next');
 const postcssLoader = require('./loader/postcss-loader');
+const jsonLoader = require('./loader/json-loader');
 
 const map = {
     'babel-loader': babelLoader,
     'file-loader': fileLoader,
     'replace-loader': replaceLoader,
     'ts-loader': tsLoader,
+    'json-loader': jsonLoader,
     'ts-loader-next': tsLoaderNext,
     'postcss-loader': postcssLoader
 };
@@ -64,7 +66,7 @@ module.exports = class LoaderManager {
         this.rules = [];
         for (let i = this.mpb.config.module.rules.length - 1; i >= 0; i--) {
             const rule = this.mpb.config.module.rules[i];
-            let { use, test, exclude, include } = rule;
+            const { use, test, exclude, include } = rule;
             for (let j = use.length - 1; j >= 0; j--) {
                 const { loader, options } = use[j];
                 if (!use[j].loaderInstance) {
