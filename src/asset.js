@@ -58,13 +58,17 @@ module.exports = class Asset {
     get contents() {
         if (!this.__content) {
             try {
-                if (/\.(ts|tsx|js|jsx|wxml|wxss|css|less|scss|text|txt|json)$/.test(this.name)) {
+                if (
+                    /\.(ts|tsx|js|jsx|wxml|wxss|css|less|scss|text|txt|json|wxs)$/.test(this.name)
+                ) {
                     this.__content = fs.readFileSync(this.filePath, 'utf-8');
                 } else {
                     this.__content = fs.readFileSync(this.filePath);
                 }
                 this.__stats = fs.statSync(this.filePath);
             } catch (e) {
+                console.log('读取文件失败', this.filePath);
+                console.error(e);
                 this.__content = null;
             }
         }

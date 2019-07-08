@@ -18,6 +18,8 @@ module.exports = class HandleWXMLDep {
                                         deps.push(attribs.src);
                                     } else if (name === 'include' && attribs.src) {
                                         deps.push(attribs.src);
+                                    } else if (name === 'wxs' && attribs.src) {
+                                        deps.push(attribs.src);
                                     }
                                 },
                                 onerror(error) {
