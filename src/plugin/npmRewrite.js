@@ -6,7 +6,10 @@ function fixNPM(code) {
     });
     code = code.replace(/'use strict';\n?/g, '');
 
-    if (/[^\w_]process\.\w/.test(code) && !/typeof process/.test(code)) {
+    // if (/[^\w_]process\.\w/.test(code) && !/typeof process/.test(code)) {
+    //     code = `var process={};${code}`;
+    // }
+    if (/[^\w_]process\.\w/.test(code)) {
         code = `var process={};${code}`;
     }
     return code;
