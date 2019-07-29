@@ -6,17 +6,17 @@ module.exports = function(opts) {
         try {
             let contents = JSON.parse(asset.contents);
             if (contents.extends) {
-                if (typeof contents.extends === 'string') {
-                    let filePath = '';
-                    if (contents.extends[0] === '.') {
-                        filePath = path.resolve(asset.dir, contents.extends);
-                    } else {
+                if(typeof contents.extends === 'string'){
+                    let filePath= '';
+                    if(contents.extends[0]==='.'){
+                         filePath = path.resolve(asset.dir, contents.extends);
+                    }else{
                         filePath = path.join(this.src, contents.extends);
                     }
                     contents = _.merge({}, contents, require(filePath));
-                    delete contents.extends;
+                    delete contents['extends'];
                     asset.contents = JSON.stringify(contents);
-                } else {
+                }else{
                     console.error('[json-loader] extends 必须为字符串');
                 }
             }

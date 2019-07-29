@@ -80,7 +80,9 @@ module.exports = class HandleJSDep {
                                             libOutputPath
                                         );
                                         if (node.arguments[0].value[0] !== '.') {
-                                            node.arguments[0].value = `./${node.arguments[0].value}`;
+                                            node.arguments[0].value = `./${
+                                                node.arguments[0].value
+                                            }`;
                                         }
                                         deps.push({
                                             libPath,

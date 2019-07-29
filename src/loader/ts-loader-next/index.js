@@ -5,8 +5,7 @@ const gulp = require('gulp');
 const ts = require('gulp-typescript');
 const through = require('through2');
 const plumber = require('gulp-plumber');
-const { default: PQueue } = require('p-queue');
-
+const {default: PQueue} = require('p-queue');
 const queue = new PQueue({ concurrency: 1 });
 
 // const tsCompileQStream = require('./gulp-typescript-compile-queue');
@@ -14,13 +13,14 @@ const queue = new PQueue({ concurrency: 1 });
 module.exports = function(opts = {}) {
     const tsProject = ts.createProject('tsconfig.json');
     return async function(asset) {
-        // Solution to "Error: gulp-typescript: A project cannot be used in two compilations * at the same time. Create multiple projects with createProject instead."  https://gist.github.com/smac89/49f3b076cd987e0875ba9bfb3fe81ef9 not work
+        //Solution to "Error: gulp-typescript: A project cannot be used in two compilations * at the same time. Create multiple projects with createProject instead."  https://gist.github.com/smac89/49f3b076cd987e0875ba9bfb3fe81ef9 not work
         let errorCount = 0,
             file;
         asset.contents = await queue.add(
             () =>
                 new Promise((res) => {
-                    gulp.src(asset.path)
+                    gulp
+                        .src(asset.path)
                         .pipe(
                             plumber({
                                 errorHandler() {

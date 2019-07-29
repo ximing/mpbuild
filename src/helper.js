@@ -3,6 +3,7 @@
  */
 const pathAlias = require('path-alias');
 const path = require('path');
+const os = require('os');
 
 module.exports = class Helper {
     constructor(mpb) {
@@ -22,6 +23,9 @@ module.exports = class Helper {
         if (filePath.includes('@')) {
             const newPath = pathAlias(filePath);
             if (newPath !== filePath) return newPath;
+        }
+        if(filePath.includes(os.homedir())){
+            return filePath;
         }
         if (filePath[0] === '/') {
             return path.resolve(this.mpb.config.src, filePath.substr(1));

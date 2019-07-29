@@ -66,7 +66,7 @@ module.exports = class LoaderManager {
         this.rules = [];
         for (let i = this.mpb.config.module.rules.length - 1; i >= 0; i--) {
             const rule = this.mpb.config.module.rules[i];
-            const { use, test, exclude, include } = rule;
+            let { use, test, exclude, include } = rule;
             for (let j = use.length - 1; j >= 0; j--) {
                 const { loader, options } = use[j];
                 if (!use[j].loaderInstance) {
