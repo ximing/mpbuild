@@ -26,9 +26,14 @@ module.exports = class HandleWXSSDep {
                                 } else {
                                     filePath = path.resolve(asset.dir, `./${src}`);
                                 }
+                                const root = asset.getMeta('root');
                                 return mpb.assetManager.addAsset(
                                     filePath,
-                                    path.resolve(mpb.dest, path.relative(mpb.src, filePath))
+                                    path.resolve(mpb.dest, path.relative(mpb.src, filePath)),
+                                    {
+                                        root,
+                                        source: asset.filePath
+                                    }
                                 );
                             })
                         );

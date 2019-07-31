@@ -17,17 +17,45 @@ module.exports = class AssetManager {
         });
     }
 
-    getAsset(path) {
+    getAssets(path) {
         return this.map[path];
     }
 
+    findExistAsset(asset) {
+        if(this.map[asset.path]) {
+            let index = -1;
+            const existAssets = this.map[asset.path];
+            for(let i = 0; i < existAssets.length; i++) {
+                if(existAssets[i].outputFilePath === asset.outputFilePath) {
+                    index = i;
+                }
+            }
+            return index;
+        } else {
+            throw new Error(`This.map[${asset.path}] is undefined`);
+        }
+    }
+
     setAsset(asset) {
-        this.map[asset.path] = asset;
+        if(this.map[asset.path]) {
+            let index = this.findExistAsset(asset);
+            if(index === -1) {
+                this.map[asset.path].push(asset);
+            } else {
+                this.map[asset.path][index] = asset;
+            }
+
+            this.map[asset.path].push(asset);
+        } else {
+            this.map[asset.path] = [asset];
+        }
         return asset;
     }
 
     removeAsset(asset) {
-        if (asset) delete this.mpb[asset.path];
+        if(!this.map[asset.path]) return;
+        let index = this.findExistAsset(asset);
+        this.map[asset.path].splice(index, 1);
     }
 
     // 尝试添加新的资源文件
@@ -39,10 +67,15 @@ module.exports = class AssetManager {
             asset = new Asset(path, outputPath, meta);
         }
         if (asset.exists()) {
-            if (this.getAsset(asset.path) && !this.getAsset(asset.path).beChanged(asset)) {
-                // 终止接下来处理asset的流程
-                // console.log(chalk.yellow('[addAsset] 文件没有更改'), asset.path);
-                return asset;
+            const existAssets = this.getAssets(asset.path);
+            if(existAssets) {
+                for(let existAsset of existAssets) {
+                    if (!existAsset.beChanged(asset) && existAsset.outputFilePath === asset.outputFilePath) {
+                        // 终止接下来处理asset的流程
+                        // console.log(chalk.yellow('[addAsset] 文件没有更改'), asset.path);
+                        return existAsset;
+                    }
+                }
             }
             // 更新asset
             this.setAsset(asset);
@@ -92,6 +125,9 @@ module.exports = class AssetManager {
     }
 
     emitFile(asset) {
+        // if(asset.filePath.includes('node_modules') && asset.getMeta('mbp-scan-json-dep')) {
+        //     console.log(asset.getMeta('source'), asset.getMeta('root'));
+        // }
         asset.render(this.mpb).catch((err) => {
             console.error(err);
         });
@@ -99,8 +135,8 @@ module.exports = class AssetManager {
 
     delAsset(asset) {
         // TODO 这里就是单纯去除文件本身，文件所依赖的，和被依赖的有可能悬空，也需要被清除
-        this.removeAsset();
-        asset.exists();
+        this.removeAsset(asset);
+        return asset.exists();
     }
 
     getWatchFiles() {

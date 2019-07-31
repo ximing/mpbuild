@@ -18,10 +18,10 @@ module.exports = class ScanDep {
         this.modules = {};
     }
 
-    addAssetByEXT(prefixPath, prefixOutputPath, type = assetType.page, base = this.mpb.config.src) {
+    addAssetByEXT(prefixPath, prefixOutputPath, type = assetType.page, base = this.mpb.config.src, root = '', source = '') {
         return Promise.all(
             this.exts.map((ext) => {
-                const meta = { type };
+                const meta = { type, root, source };
                 if (ext === '.json') {
                     meta['mbp-scan-json-dep'] = 'usingComponents';
                 }
@@ -88,7 +88,10 @@ module.exports = class ScanDep {
                 Object.keys(pages).map((pageRouter) =>
                     this.addAssetByEXT(
                         pages[pageRouter],
-                        path.join(this.mpb.dest, root, pageRouter)
+                        path.join(this.mpb.dest, root, pageRouter),
+                        undefined,
+                        undefined,
+                        root
                     )
                 )
             );
