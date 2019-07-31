@@ -4,7 +4,6 @@
 const path = require('path');
 const { assetType } = require('../consts');
 const resolve = require('resolve');
-const COMPS_DIR = './npm_components';
 const NPM_PATH_NAME = 'node_modules';
 
 module.exports = class HandleJSONComponentDep {
@@ -31,7 +30,7 @@ module.exports = class HandleJSONComponentDep {
                                 } else if (src[0] === '.') {
                                     filePath = path.resolve(asset.dir, src);
                                 } else if (src[0] === '@'){
-                                    filePath = resolve.sync(src);
+                                    filePath = resolve.sync(src, {basedir: mpb.cwd});
                                     filePath = filePath.replace(path.parse(filePath).ext, '');
                                 } else {
                                     filePath = path.resolve(asset.dir, `./${src}`);
@@ -46,7 +45,7 @@ module.exports = class HandleJSONComponentDep {
                                         asset.contents = JSON.stringify(code);
                                         return;
                                     }
-                                    usePath = path.resolve('/' + root, COMPS_DIR, `${filePath.substr(nmPathIndex + NPM_PATH_NAME.length + 1)}`);
+                                    usePath = path.resolve('/' + root, `./${mpb.config.output.npm}`, `${filePath.substr(nmPathIndex + NPM_PATH_NAME.length + 1)}`);
                                     if(!root) {
                                         this.mainPkgPathMap[filePath] = usePath;
                                     }

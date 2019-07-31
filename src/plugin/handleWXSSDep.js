@@ -5,6 +5,10 @@ const postcss = require('postcss');
 const path = require('path');
 
 module.exports = class HandleWXSSDep {
+    constructor() {
+        this.mainPkgPathMap = {};
+    }
+
     apply(mpb) {
         mpb.hooks.beforeEmitFile.tapPromise('HandleWXSSDep', async (asset) => {
             if (/\.wxss$/.test(asset.name)) {
@@ -26,10 +30,28 @@ module.exports = class HandleWXSSDep {
                                 } else {
                                     filePath = path.resolve(asset.dir, `./${src}`);
                                 }
+                                
                                 const root = asset.getMeta('root');
+                                let outputPath = path.resolve(mpb.dest, path.relative(mpb.src, filePath));
+
+                                if(filePath.includes('node_modules')) {
+                                    outputPath = this.mainPkgPathMap[filePath];
+                                    if(!outputPath) {
+                                        outputPath = path.join(
+                                            mpb.dest,
+                                            `./${root}`,
+                                            path
+                                                .relative(mpb.cwd, filePath)
+                                                .replace('node_modules', mpb.config.output.npm)
+                                        );
+                                        if(!root) {
+                                            this.mainPkgPathMap[filePath] = outputPath;
+                                        }
+                                    }
+                                };
                                 return mpb.assetManager.addAsset(
                                     filePath,
-                                    path.resolve(mpb.dest, path.relative(mpb.src, filePath)),
+                                    outputPath,
                                     {
                                         root,
                                         source: asset.filePath
