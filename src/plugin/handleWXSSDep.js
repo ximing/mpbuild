@@ -61,8 +61,6 @@ module.exports = class HandleWXSSDep {
                         );
                         let index = 0;
                         root.walkAtRules('import', (rule) => {
-                            const libPath = rule.params.replace(/'|"/g, '');
-                            const root = asset.getMeta('root');
                             rule.params = JSON.stringify(
                                 path.relative(path.dirname(asset.outputFilePath), distDeps[index])
                             );
