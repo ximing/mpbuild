@@ -25,10 +25,10 @@ module.exports = class Helper {
         //     if (newPath !== filePath) return newPath;
         // }
         // 如果包含node_modules说明是引用的外部组件直接直接处理文件路径
-        if(filePath.includes('node_modules')) {
+        if (filePath.includes('node_modules')) {
             return filePath;
-        } else if(filePath.includes('@')) {
-            const newPath = pathAlias(filePath);
+        } if (filePath.includes('@')) {
+            const newPath = pathAlias.resolve(filePath);
             if (newPath !== filePath) return newPath;
         } else if (filePath[0] === '/') {
             return path.resolve(this.mpb.config.src, filePath.substr(1));
