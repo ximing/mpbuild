@@ -3,6 +3,37 @@
  */
 const htmlparser = require('htmlparser2');
 const path = require('path');
+const fs = require('fs');
+const resolve = require('resolve');
+
+const generateCode = function(ast, code = '', distDeps, asset) {
+    let index = 0;
+    const { length } = ast;
+    for (let i = 0; i < length; i++) {
+        const node = ast[i];
+        const { type, name, data, attribs, children } = node;
+        if (type === 'text') {
+            code += data;
+        } else if (type === 'comment') {
+            code += `<!-- ${data} -->`;
+        } else {
+            if (['include', 'wxs', 'import'].indexOf(name) >= 0) {
+                attribs.src = path.relative(path.dirname(asset.outputFilePath), distDeps[index++]);
+            }
+            code += `<${name} ${Object.keys(attribs).reduce(
+                (total, next) =>
+                    `${total} ${attribs[next] !== '' ? `${next}="${attribs[next]}"` : next}`,
+                ''
+            )}`;
+            if (Array.isArray(children) && children.length) {
+                code += `>${generateCode(children, '', distDeps, asset)}</${name}>`;
+            } else {
+                code += '/>';
+            }
+        }
+    }
+    return code;
+};
 
 module.exports = class HandleWXMLDep {
     constructor() {
@@ -14,6 +45,7 @@ module.exports = class HandleWXMLDep {
             if (/\.wxml$/.test(asset.name)) {
                 try {
                     const deps = [];
+                    const distDeps = [];
                     await new Promise((resolve, reject) => {
                         const parser = new htmlparser.Parser(
                             {
@@ -47,36 +79,50 @@ module.exports = class HandleWXMLDep {
                                 filePath = path.resolve(asset.dir, src);
                             } else {
                                 filePath = path.resolve(asset.dir, `./${src}`);
+                                const { ext } = path.parse(filePath);
+                                if (!fs.existsSync(filePath)) {
+                                    filePath = resolve.sync(src, {
+                                        basedir: mpb.cwd,
+                                        extensions: [ext]
+                                    });
+                                }
                             }
                             const root = asset.getMeta('root');
-                            let outputPath = path.resolve(mpb.dest, path.relative(mpb.src, filePath));
 
-                            if(filePath.includes('node_modules')) {
-                                outputPath = this.mainPkgPathMap[filePath];
-                                if(!outputPath) {
+                            let outputPath = this.mainPkgPathMap[filePath];
+                            if (!outputPath) {
+                                if (filePath.includes('node_modules')) {
                                     outputPath = path.join(
                                         mpb.dest,
-                                        `./${root}`,
+                                        `./${root || ''}`,
                                         path
                                             .relative(mpb.cwd, filePath)
                                             .replace('node_modules', mpb.config.output.npm)
                                     );
-                                    if(!root) {
-                                        this.mainPkgPathMap[filePath] = outputPath;
-                                    }
+                                } else {
+                                    outputPath = path.resolve(
+                                        mpb.dest,
+                                        path.relative(mpb.src, filePath)
+                                    );
                                 }
-                            };
 
-                            return mpb.assetManager.addAsset(
-                                filePath,
-                                outputPath,
-                                {
-                                    root,
-                                    source: asset.filePath
+                                if (!root) {
+                                    this.mainPkgPathMap[filePath] = outputPath;
                                 }
-                            );
+                            }
+
+                            distDeps.push(outputPath);
+                            return mpb.assetManager.addAsset(filePath, outputPath, {
+                                root,
+                                source: asset.filePath
+                            });
                         })
                     );
+
+                    if (distDeps.length) {
+                        const ast = htmlparser.parseDOM(asset.contents, { xmlMode: true });
+                        asset.contents = generateCode(ast, '', distDeps, asset);
+                    }
                 } catch (e) {
                     console.error(e);
                 }

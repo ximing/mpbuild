@@ -3,6 +3,8 @@
  */
 const postcss = require('postcss');
 const path = require('path');
+const fs = require('fs');
+const resolve = require('resolve');
 
 module.exports = class HandleWXSSDep {
     constructor() {
@@ -30,28 +32,38 @@ module.exports = class HandleWXSSDep {
                                     filePath = path.resolve(asset.dir, src);
                                 } else {
                                     filePath = path.resolve(asset.dir, `./${src}`);
+
+                                    if (!fs.existsSync(filePath)) {
+                                        filePath = resolve.sync(src, {
+                                            basedir: mpb.cwd,
+                                            extensions: ['.wxss']
+                                        });
+                                    }
                                 }
 
                                 const root = asset.getMeta('root');
-                                let outputPath = path.resolve(
-                                    mpb.dest,
-                                    path.relative(mpb.src, filePath)
-                                );
-                                if (filePath.includes('node_modules')) {
-                                    outputPath = this.mainPkgPathMap[filePath];
-                                    if (!outputPath) {
+                                let outputPath = this.mainPkgPathMap[filePath];
+                                if (!outputPath) {
+                                    if (filePath.includes('node_modules')) {
                                         outputPath = path.join(
                                             mpb.dest,
-                                            `./${root}`,
+                                            `./${root || ''}`,
                                             path
                                                 .relative(mpb.cwd, filePath)
                                                 .replace('node_modules', mpb.config.output.npm)
                                         );
-                                        if (!root) {
-                                            this.mainPkgPathMap[filePath] = outputPath;
-                                        }
+                                    } else {
+                                        outputPath = path.resolve(
+                                            mpb.dest,
+                                            path.relative(mpb.src, filePath)
+                                        );
+                                    }
+
+                                    if (!root) {
+                                        this.mainPkgPathMap[filePath] = outputPath;
                                     }
                                 }
+
                                 distDeps.push(outputPath);
                                 return mpb.assetManager.addAsset(filePath, outputPath, {
                                     root,

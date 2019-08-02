@@ -2,8 +2,10 @@
  * Created by ximing on 2019-03-15.
  */
 const path = require('path');
-const { assetType } = require('../consts');
+const fs = require('fs');
 const resolve = require('resolve');
+const { assetType } = require('../consts');
+
 const NPM_PATH_NAME = 'node_modules';
 
 module.exports = class HandleJSONComponentDep {
@@ -29,24 +31,30 @@ module.exports = class HandleJSONComponentDep {
                                     filePath = path.resolve(mpb.src, `.${src}`);
                                 } else if (src[0] === '.') {
                                     filePath = path.resolve(asset.dir, src);
-                                } else if (src[0] === '@'){
-                                    filePath = resolve.sync(src, {basedir: mpb.cwd});
-                                    filePath = filePath.replace(path.parse(filePath).ext, '');
                                 } else {
                                     filePath = path.resolve(asset.dir, `./${src}`);
+
+                                    if (!fs.existsSync(`${filePath}.json`)) {
+                                        filePath = resolve.sync(src, { basedir: mpb.cwd });
+                                        filePath = filePath.replace(path.parse(filePath).ext, '');
+                                    }
                                 }
 
                                 const nmPathIndex = filePath.indexOf(NPM_PATH_NAME);
                                 const root = asset.getMeta('root');
-                                if(!!~nmPathIndex) {
+                                if (~nmPathIndex) {
                                     let usePath = this.mainPkgPathMap[filePath];
-                                    if(usePath) {
+                                    if (usePath) {
                                         componets[componentName] = usePath;
                                         asset.contents = JSON.stringify(code);
                                         return;
                                     }
-                                    usePath = path.resolve('/' + root, `./${mpb.config.output.npm}`, `${filePath.substr(nmPathIndex + NPM_PATH_NAME.length + 1)}`);
-                                    if(!root) {
+                                    usePath = path.resolve(
+                                        `/${root}`,
+                                        `./${mpb.config.output.npm}`,
+                                        `${filePath.substr(nmPathIndex + NPM_PATH_NAME.length + 1)}`
+                                    );
+                                    if (!root) {
                                         this.mainPkgPathMap[filePath] = usePath;
                                     }
                                     componets[componentName] = usePath;
