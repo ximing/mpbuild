@@ -13,6 +13,7 @@ module.exports = class HandleWXSSDep {
         mpb.hooks.beforeEmitFile.tapPromise('HandleWXSSDep', async (asset) => {
             if (/\.wxss$/.test(asset.name)) {
                 const deps = [];
+                const distDeps = [];
                 try {
                     const root = postcss.parse(asset.contents);
                     root.walkAtRules('import', (rule) => {
@@ -30,13 +31,15 @@ module.exports = class HandleWXSSDep {
                                 } else {
                                     filePath = path.resolve(asset.dir, `./${src}`);
                                 }
-                                
-                                const root = asset.getMeta('root');
-                                let outputPath = path.resolve(mpb.dest, path.relative(mpb.src, filePath));
 
-                                if(filePath.includes('node_modules')) {
+                                const root = asset.getMeta('root');
+                                let outputPath = path.resolve(
+                                    mpb.dest,
+                                    path.relative(mpb.src, filePath)
+                                );
+                                if (filePath.includes('node_modules')) {
                                     outputPath = this.mainPkgPathMap[filePath];
-                                    if(!outputPath) {
+                                    if (!outputPath) {
                                         outputPath = path.join(
                                             mpb.dest,
                                             `./${root}`,
@@ -44,21 +47,26 @@ module.exports = class HandleWXSSDep {
                                                 .relative(mpb.cwd, filePath)
                                                 .replace('node_modules', mpb.config.output.npm)
                                         );
-                                        if(!root) {
+                                        if (!root) {
                                             this.mainPkgPathMap[filePath] = outputPath;
                                         }
                                     }
-                                };
-                                return mpb.assetManager.addAsset(
-                                    filePath,
-                                    outputPath,
-                                    {
-                                        root,
-                                        source: asset.filePath
-                                    }
-                                );
+                                }
+                                distDeps.push(outputPath);
+                                return mpb.assetManager.addAsset(filePath, outputPath, {
+                                    root,
+                                    source: asset.filePath
+                                });
                             })
                         );
+                        let index = 0;
+                        root.walkAtRules('import', (rule) => {
+                            rule.params = JSON.stringify(
+                                path.relative(path.dirname(asset.outputFilePath), distDeps[index])
+                            );
+                            index++;
+                        });
+                        asset.contents = root.toString();
                     } catch (e) {
                         console.error(e);
                     }
