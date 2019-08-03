@@ -5,6 +5,7 @@
 // const jsonminify = require('jsonminify');
 // const htmlmin = require('html-minifier');
 const workerpool = require('workerpool');
+
 const pool = workerpool.pool();
 
 function minifyJS(contents) {
@@ -73,6 +74,12 @@ module.exports = class MinifyPlugin {
                     }
                 }
                 return Promise.resolve();
+            });
+            mpb.hooks.afterCompile.tapPromise('MinifyPlugin', async () => {
+                if (!mpb.isWatch) {
+                    console.log(pool.stats());
+                    pool.terminate(true);
+                }
             });
         }
     }
