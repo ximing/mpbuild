@@ -50,15 +50,9 @@ module.exports = class HandleJSDep {
                                             try {
                                                 libPath = resolve.sync(path.join(asset.dir, lib));
                                             } catch (e) {
-                                                try {
-                                                    libPath = bresolve.sync(lib, {
-                                                        basedir: mpb.src
-                                                    });
-                                                } catch (e) {
-                                                    libPath = resolve.sync(`${lib}.ts`, {
-                                                        basedir: mpb.cwd
-                                                    });
-                                                }
+                                                libPath = bresolve.sync(lib, {
+                                                    basedir: mpb.src
+                                                });
                                             }
                                         }
 
