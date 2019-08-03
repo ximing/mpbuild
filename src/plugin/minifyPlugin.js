@@ -5,8 +5,19 @@
 // const jsonminify = require('jsonminify');
 // const htmlmin = require('html-minifier');
 const workerpool = require('workerpool');
+const pRetry = require('p-retry');
 
 const pool = workerpool.pool();
+
+function clearPool() {
+    const poolStats = pool.stats();
+    console.log(poolStats);
+    if (poolStats.busyWorkers > 0) {
+        throw new Error(`busyWorkers count is ${poolStats.busyWorkers}`);
+    }
+    pool.terminate(true);
+    return 0;
+}
 
 function minifyJS(contents) {
     const UglifyJS = require('uglify-js');
@@ -77,8 +88,14 @@ module.exports = class MinifyPlugin {
             });
             mpb.hooks.afterCompile.tapPromise('MinifyPlugin', async () => {
                 if (!mpb.isWatch) {
-                    console.log(pool.stats());
-                    pool.terminate(true);
+                    await pRetry(clearPool, {
+                        onFailedAttempt: (error) => {
+                            console.log(
+                                `Attempt clear pool ${error.attemptNumber} failed. There are ${error.retriesLeft} retries left.`
+                            );
+                        },
+                        retries: Number.MAX_SAFE_INTEGER
+                    });
                 }
             });
         }
