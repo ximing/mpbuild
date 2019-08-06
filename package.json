@@ -1,6 +1,6 @@
 {
     "name": "mpbuild",
-    "version": "1.2.10",
+    "version": "1.2.11",
     "description": "",
     "main": "src/index.js",
     "scripts": {
@@ -29,8 +29,12 @@
         "工具",
         "打包"
     ],
+    "publishConfig": {
+        "registry": "https://registry.npmjs.org"
+    },
     "dependencies": {
         "@babel/code-frame": "^7.0.0",
+        "@babel/core": "^7.5.5",
         "@babel/polyfill": "^7.4.4",
         "@babel/runtime": "^7.4.5",
         "@tarojs/cli": "^1.3.1",
@@ -42,6 +46,7 @@
         "chokidar": "^2.1.5",
         "commander": "^2.20.0",
         "deepmerge": "^3.2.1",
+        "es6-error": "^4.1.1",
         "eventemitter3": "^3.1.2",
         "fs-extra": "^8.0.1",
         "gulp": "^4.0.0",
@@ -59,12 +64,12 @@
         "moment": "^2.18.1",
         "p-queue": "^6.0.2",
         "p-retry": "^4.1.0",
+        "postcss-load-config": "^2.1.0",
         "tapable": "^1.1.3",
         "tsc-watch": "^2.2.1",
         "watchpack": "^1.6.0"
     },
     "devDependencies": {
-        "@babel/core": "^7.4.5",
         "@babel/generator": "^7.4.4",
         "@babel/parser": "^7.4.5",
         "@babel/plugin-external-helpers": "^7.2.0",
@@ -123,10 +128,6 @@
         "ora": "^3.4.0",
         "path-alias": "0.0.12",
         "plugin-error": "^1.0.1",
-        "postcss-advanced-variables": "^3.0.0",
-        "postcss-load-config": "^2.1.0",
-        "postcss-nested": "^4.1.0",
-        "postcss-scss": "^2.0.0",
         "prettier": "^1.18.2",
         "regenerator-runtime": "^0.13.2",
         "replace": "^1.0.0",
