@@ -1,8 +1,8 @@
 /**
  * Created by ximing on 2019-03-18.
  */
-const imagemin = require('imagemin');
 const path = require('path');
+const imagemin = require('imagemin');
 const imageminJpegtran = require('imagemin-jpegtran');
 const imageminPngquant = require('imagemin-pngquant');
 
