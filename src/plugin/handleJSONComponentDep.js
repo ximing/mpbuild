@@ -2,9 +2,17 @@
  * Created by ximing on 2019-03-15.
  */
 const path = require('path');
+const fs = require('fs');
+const resolve = require('resolve');
 const { assetType } = require('../consts');
 
+const NPM_PATH_NAME = 'node_modules';
+
 module.exports = class HandleJSONComponentDep {
+    constructor() {
+        this.mainPkgPathMap = {};
+    }
+
     apply(mpb) {
         mpb.hooks.beforeEmitFile.tapPromise('HandleJSONComponentDep', async (asset) => {
             // const key = asset.getMeta('mbp-scan-json-dep');
@@ -25,12 +33,51 @@ module.exports = class HandleJSONComponentDep {
                                     filePath = path.resolve(asset.dir, src);
                                 } else {
                                     filePath = path.resolve(asset.dir, `./${src}`);
+
+                                    if (!fs.existsSync(`${filePath}.json`)) {
+                                        filePath = resolve.sync(src, { basedir: mpb.cwd });
+                                        filePath = filePath.replace(path.parse(filePath).ext, '');
+                                    }
                                 }
-                                mpb.scan.addAssetByEXT(
-                                    filePath.replace(mpb.src, ''),
-                                    path.resolve(mpb.dest, path.relative(mpb.src, filePath)),
-                                    assetType.component
-                                );
+
+                                const nmPathIndex = filePath.indexOf(NPM_PATH_NAME);
+                                const root = asset.getMeta('root');
+                                if (~nmPathIndex) {
+                                    let usePath = this.mainPkgPathMap[filePath];
+                                    if (usePath) {
+                                        componets[componentName] = usePath;
+                                        asset.contents = JSON.stringify(code);
+                                        return;
+                                    }
+                                    usePath = path.resolve(
+                                        `/${root}`,
+                                        `./${mpb.config.output.npm}`,
+                                        `${filePath.substr(nmPathIndex + NPM_PATH_NAME.length + 1)}`
+                                    );
+                                    if (!root) {
+                                        this.mainPkgPathMap[filePath] = usePath;
+                                    }
+                                    componets[componentName] = usePath;
+                                    asset.contents = JSON.stringify(code);
+
+                                    mpb.scan.addAssetByEXT(
+                                        filePath,
+                                        path.resolve(mpb.dest, `.${usePath}`),
+                                        assetType.component,
+                                        undefined,
+                                        root,
+                                        asset.filePath
+                                    );
+                                } else {
+                                    mpb.scan.addAssetByEXT(
+                                        filePath.replace(mpb.src, ''),
+                                        path.resolve(mpb.dest, path.relative(mpb.src, filePath)),
+                                        assetType.component,
+                                        undefined,
+                                        root,
+                                        asset.filePath
+                                    );
+                                }
                             })
                         );
                     }

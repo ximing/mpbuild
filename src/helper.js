@@ -20,14 +20,17 @@ module.exports = class Helper {
     getFilePath(base, filePath) {
         // 如果 src 下面 json里面使用了 /aa/xxx 这种 绝对路径，按照微信的解析方式就是相对于 src目录为绝对路径的开始
         // 相同的js等都是这个规则，所以这里解析就要按照此规则来，如果是src外的地址，那就要依据dist转换为相对应的地址
-        if (filePath.includes('@')) {
-            const newPath = pathAlias(filePath);
-            if (newPath !== filePath) return newPath;
-        }
-        if(filePath.includes(os.homedir())){
+        // if (filePath.includes('@')) {
+        //     const newPath = pathAlias(filePath);
+        //     if (newPath !== filePath) return newPath;
+        // }
+        // 如果包含node_modules说明是引用的外部组件直接直接处理文件路径
+        if (filePath.includes('node_modules')) {
             return filePath;
-        }
-        if (filePath[0] === '/') {
+        } if (filePath.includes('@')) {
+            const newPath = pathAlias.resolve(filePath);
+            if (newPath !== filePath) return newPath;
+        } else if (filePath[0] === '/') {
             return path.resolve(this.mpb.config.src, filePath.substr(1));
         }
         return path.resolve(base, filePath);
