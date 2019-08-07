@@ -95,15 +95,17 @@ module.exports = class Watching {
         console.log(chalk.cyan('[watching-asset]'), path, type);
         const perfId = this.generatePerfId();
         perf.start(perfId);
-        const asset = this.mpb.assetManager.getAsset(path);
-        if (asset) {
-            if (type === 'change') {
-                console.log('[watching-add-asset]', path);
-                await this.mpb.assetManager.addAsset(path, asset.outputFilePath, asset.meta);
-            } else if (type === 'unlink') {
-                await this.mpb.assetManager.delAsset(asset);
-            } else {
-                console.error('不支持的watch类型:', type);
+        const assets = this.mpb.assetManager.getAssets(path);
+        if (assets) {
+            for(let asset of assets) {
+                if (type === 'change') {
+                    console.log('[watching-add-asset]', path);
+                    await this.mpb.assetManager.addAsset(path, asset.outputFilePath, asset.getMeta());
+                } else if (type === 'unlink') {
+                    await this.mpb.assetManager.delAsset(asset);
+                } else {
+                    console.error('不支持的watch类型:', type);
+                }
             }
         } else {
             console.warn('[watching] 这里不应该 在assetManager里面找不到对应的文件');

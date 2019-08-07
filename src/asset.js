@@ -30,6 +30,7 @@ module.exports = class Asset {
     }
 
     getMeta(key) {
+        if(key === undefined) return this.__meta;
         return this.__meta[key];
     }
 

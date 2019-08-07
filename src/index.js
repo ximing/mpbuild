@@ -2,8 +2,7 @@
  * Created by ximing on 2018/12/10.
  */
 const path = require('path');
-const fse = require('fs-extra');
-const chalk = require('chalk');
+
 const {
     AsyncParallelHook,
     AsyncSeriesWaterfallHook,

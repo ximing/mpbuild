@@ -5,7 +5,19 @@
 // const jsonminify = require('jsonminify');
 // const htmlmin = require('html-minifier');
 const workerpool = require('workerpool');
+
 const pool = workerpool.pool();
+
+function clearPool() {
+    const timmer = setInterval(() => {
+        const poolStats = pool.stats();
+        console.log(poolStats);
+        if (poolStats.busyWorkers === 0) {
+            pool.terminate(true);
+            clearInterval(timmer);
+        }
+    }, 1000);
+}
 
 function minifyJS(contents) {
     const UglifyJS = require('uglify-js');
@@ -73,6 +85,11 @@ module.exports = class MinifyPlugin {
                     }
                 }
                 return Promise.resolve();
+            });
+            mpb.hooks.afterCompile.tapPromise('MinifyPlugin', async () => {
+                if (!mpb.isWatch) {
+                    clearPool();
+                }
             });
         }
     }

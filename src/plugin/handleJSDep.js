@@ -10,6 +10,10 @@ const bresolve = require('browser-resolve');
 const resolve = require('resolve');
 
 module.exports = class HandleJSDep {
+    constructor() {
+        this.mainPkgPathMap = {};
+    }
+
     apply(mpb) {
         mpb.hooks.beforeEmitFile.tapPromise('HandleJSDep', async (asset) => {
             const deps = [];
@@ -51,23 +55,35 @@ module.exports = class HandleJSDep {
                                                 });
                                             }
                                         }
+
+                                        const root = asset.getMeta('root');
                                         // TODO 先不考虑一层一层往上的情况，项目级别的node_modules
                                         const isNPM = libPath.includes('node_modules');
-                                        let libOutputPath;
-                                        if (isNPM) {
-                                            // npmPlugin.call(this, libFile, config, enc);
-                                            libOutputPath = path.join(
-                                                mpb.dest,
-                                                path
-                                                    .relative(mpb.cwd, libPath)
-                                                    .replace('node_modules', mpb.config.output.npm)
-                                            );
-                                        } else {
-                                            libOutputPath = path.join(
-                                                mpb.dest,
-                                                path.relative(mpb.src, libPath)
-                                            );
+                                        let libOutputPath = this.mainPkgPathMap[libPath];
+                                        if (!libOutputPath) {
+                                            if (isNPM) {
+                                                libOutputPath = path.join(
+                                                    mpb.dest,
+                                                    `./${root || ''}`,
+                                                    path
+                                                        .relative(mpb.cwd, libPath)
+                                                        .replace(
+                                                            'node_modules',
+                                                            mpb.config.output.npm
+                                                        )
+                                                );
+                                            } else {
+                                                libOutputPath = path.join(
+                                                    mpb.dest,
+                                                    path.relative(mpb.src, libPath)
+                                                );
+                                            }
+
+                                            if (!root) {
+                                                this.mainPkgPathMap[libPath] = libOutputPath;
+                                            }
                                         }
+
                                         // TODO How to handle renamed files more gracefully
                                         if (libOutputPath.endsWith('.ts')) {
                                             const [libOutputPathPrefix] = mpb.helper.splitExtension(
@@ -80,9 +96,7 @@ module.exports = class HandleJSDep {
                                             libOutputPath
                                         );
                                         if (node.arguments[0].value[0] !== '.') {
-                                            node.arguments[0].value = `./${
-                                                node.arguments[0].value
-                                            }`;
+                                            node.arguments[0].value = `./${node.arguments[0].value}`;
                                         }
                                         deps.push({
                                             libPath,
@@ -106,7 +120,11 @@ module.exports = class HandleJSDep {
                     await Promise.all(
                         deps.map((dep) => {
                             const { libPath, libOutputPath } = dep;
-                            return mpb.assetManager.addAsset(libPath, libOutputPath);
+                            const root = asset.getMeta('root');
+                            return mpb.assetManager.addAsset(libPath, libOutputPath, {
+                                root,
+                                source: asset.filePath
+                            });
                         })
                     );
                 } catch (e) {
