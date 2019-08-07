@@ -3,8 +3,8 @@
  */
 const path = require('path');
 const imagemin = require('imagemin');
-const imageminJpegtran = require('imagemin-jpegtran');
-const imageminPngquant = require('imagemin-pngquant');
+const imageminJpegtran = require('@yeanzhi/imagemin-jpegtran');
+const imageminPngquant = require('@yeanzhi/imagemin-pngquant');
 
 module.exports = class CopyImagePlugin {
     constructor(options) {
