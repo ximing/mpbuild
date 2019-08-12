@@ -7,7 +7,6 @@ const fs = require('fs');
 const resolve = require('resolve');
 
 const generateCode = function(ast, code = '', distDeps, asset) {
-    let index = 0;
     const { length } = ast;
     for (let i = 0; i < length; i++) {
         const node = ast[i];
@@ -18,7 +17,10 @@ const generateCode = function(ast, code = '', distDeps, asset) {
             code += `<!-- ${data} -->`;
         } else {
             if (['include', 'wxs', 'import'].indexOf(name) >= 0 && attribs.src) {
-                attribs.src = path.relative(path.dirname(asset.outputFilePath), distDeps[index++]);
+                attribs.src = path.relative(
+                    path.dirname(asset.outputFilePath),
+                    distDeps[attribs.src]
+                );
             }
             code += `<${name} ${Object.keys(attribs).reduce(
                 (total, next) =>
@@ -45,7 +47,7 @@ module.exports = class HandleWXMLDep {
             if (/\.wxml$/.test(asset.name)) {
                 try {
                     const deps = [];
-                    const distDeps = [];
+                    const distDeps = {};
                     await new Promise((resolve, reject) => {
                         const parser = new htmlparser.Parser(
                             {
@@ -111,7 +113,7 @@ module.exports = class HandleWXMLDep {
                                 }
                             }
 
-                            distDeps.push(outputPath);
+                            distDeps[src] = outputPath;
                             return mpb.assetManager.addAsset(filePath, outputPath, {
                                 root,
                                 source: asset.filePath
@@ -119,7 +121,7 @@ module.exports = class HandleWXMLDep {
                         })
                     );
 
-                    if (distDeps.length) {
+                    if (Object.keys(distDeps).length) {
                         const ast = htmlparser.parseDOM(asset.contents, { xmlMode: true });
                         asset.contents = generateCode(ast, '', distDeps, asset);
                     }
