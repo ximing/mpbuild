@@ -17,7 +17,7 @@ const generateCode = function(ast, code = '', distDeps, asset) {
         } else if (type === 'comment') {
             code += `<!-- ${data} -->`;
         } else {
-            if (['include', 'wxs', 'import'].indexOf(name) >= 0) {
+            if (['include', 'wxs', 'import'].indexOf(name) >= 0 && attribs.src) {
                 attribs.src = path.relative(path.dirname(asset.outputFilePath), distDeps[index++]);
             }
             code += `<${name} ${Object.keys(attribs).reduce(
