@@ -48,16 +48,33 @@ module.exports = class HandleJSDep {
                                             libPath = lib;
                                         } else {
                                             try {
+                                                // 先找相对路径
                                                 libPath = resolve.sync(path.join(asset.dir, lib));
                                             } catch (e) {
-                                                libPath = bresolve.sync(lib, {
-                                                    basedir: mpb.src
-                                                });
+                                                // 尝试寻找当前项目node_modules文件夹下是否存在
+                                                try {
+                                                    libPath = bresolve.sync(lib, {
+                                                        basedir: process.cwd()
+                                                    });
+                                                } catch (e) {
+                                                } finally {
+                                                    // 如果不存在就去从当前npm包位置开始向上查找
+                                                    if (
+                                                        !(
+                                                            libPath &&
+                                                            libPath.startsWith(process.cwd())
+                                                        )
+                                                    ) {
+                                                        libPath = bresolve.sync(lib, {
+                                                            basedir: asset.dir,
+                                                            filename: asset.path
+                                                        });
+                                                    }
+                                                }
                                             }
                                         }
 
                                         const root = asset.getMeta('root');
-                                        // TODO 先不考虑一层一层往上的情况，项目级别的node_modules
                                         const isNPM = libPath.includes('node_modules');
                                         let libOutputPath = this.mainPkgPathMap[libPath];
                                         if (!libOutputPath) {
@@ -68,7 +85,7 @@ module.exports = class HandleJSDep {
                                                     path
                                                         .relative(mpb.cwd, libPath)
                                                         .replace(
-                                                            'node_modules',
+                                                            /node_modules/g,
                                                             mpb.config.output.npm
                                                         )
                                                 );
