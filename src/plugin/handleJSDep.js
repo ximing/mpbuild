@@ -92,6 +92,7 @@ module.exports = class HandleJSDep {
                                             } else {
                                                 libOutputPath = path.join(
                                                     mpb.dest,
+                                                    `./${root || ''}`,
                                                     path.relative(mpb.src, libPath)
                                                 );
                                             }

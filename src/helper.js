@@ -26,8 +26,12 @@ module.exports = class Helper {
         // }
         // 如果包含node_modules说明是引用的外部组件直接直接处理文件路径
         if (filePath.includes('node_modules')) {
-            return filePath;
-        } if (filePath.includes('@')) {
+            if (filePath.includes(base)) {
+                return filePath;
+            }
+            return path.resolve(base, filePath);
+        }
+        if (filePath.includes('@')) {
             const newPath = pathAlias.resolve(filePath);
             if (newPath !== filePath) return newPath;
         } else if (filePath[0] === '/') {

@@ -55,6 +55,7 @@ module.exports = class HandleWXSSDep {
                                     } else {
                                         outputPath = path.resolve(
                                             mpb.dest,
+                                            `./${root || ''}`,
                                             path.relative(mpb.src, filePath)
                                         );
                                     }
