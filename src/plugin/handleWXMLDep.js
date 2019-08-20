@@ -104,6 +104,7 @@ module.exports = class HandleWXMLDep {
                                 } else {
                                     outputPath = path.resolve(
                                         mpb.dest,
+                                        `./${root || ''}`,
                                         path.relative(mpb.src, filePath)
                                     );
                                 }
