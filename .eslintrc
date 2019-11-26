@@ -60,20 +60,6 @@
             2,
             {
                 "object": "Proxy"
-            },
-            {
-                "object": "Array",
-                "property": "includes",
-                "message": "请使用indexOf代替"
-            },
-            {
-                "object": "String",
-                "property": "normalize"
-            },
-            {
-                "object": "Object",
-                "property": "values",
-                "message": "请使用Object.keys().map()代替"
             }
         ],
         "no-unused-vars": "off",

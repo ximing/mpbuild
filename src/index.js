@@ -17,6 +17,7 @@ const Scan = require('./scan');
 const Watching = require('./watching');
 const Helper = require('./helper');
 const HandleJSDep = require('./plugin/handleJSDep');
+const WatchEntry = require('./plugin/watchEntry');
 const HandleJSONComponentDep = require('./plugin/handleJSONComponentDep');
 const HandleWXSSDep = require('./plugin/handleWXSSDep');
 const HandleWXMLDep = require('./plugin/handleWXMLDep');
@@ -78,7 +79,8 @@ class Mpbuilder {
                 new HandleWXMLDep(),
                 new HandleWXSSDep(),
                 new NpmRewrite(),
-                new MinifyPlugin()
+                new MinifyPlugin(),
+                new WatchEntry()
             ],
             this.config.plugins
         );
