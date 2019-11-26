@@ -18,7 +18,14 @@ module.exports = class ScanDep {
         this.modules = {};
     }
 
-    addAssetByEXT(prefixPath, prefixOutputPath, type = assetType.page, base = this.mpb.config.src, root = '', source = '') {
+    addAssetByEXT(
+        prefixPath,
+        prefixOutputPath,
+        type = assetType.page,
+        base = this.mpb.config.src,
+        root = '',
+        source = ''
+    ) {
         return Promise.all(
             this.exts.map((ext) => {
                 const meta = { type, root, source };
@@ -32,6 +39,29 @@ module.exports = class ScanDep {
                 );
             })
         );
+    }
+
+    async pages() {
+        await this.findEntry();
+        const { router } = this.mpb.appEntry;
+        for (let i = 0, l = router.length; i < l; i++) {
+            let { root, pages } = router[i];
+            if (!root) {
+                root = '';
+            }
+            // eslint-disable-next-line no-await-in-loop
+            await Promise.all(
+                Object.keys(pages).map((pageRouter) =>
+                    this.addAssetByEXT(
+                        pages[pageRouter],
+                        path.join(this.mpb.dest, root, pageRouter),
+                        undefined,
+                        undefined,
+                        root
+                    )
+                )
+            );
+        }
     }
 
     async findEntry() {
@@ -73,29 +103,10 @@ module.exports = class ScanDep {
 
     async init() {
         perf.start('init');
-        await this.findEntry();
         // find App
         await this.addAssetByEXT('app', path.join(this.mpb.dest, 'app'), assetType.app);
         // find Pages
-        const { router } = this.mpb.appEntry;
-        for (let i = 0, l = router.length; i < l; i++) {
-            let { root, pages } = router[i];
-            if (!root) {
-                root = '';
-            }
-            // eslint-disable-next-line no-await-in-loop
-            await Promise.all(
-                Object.keys(pages).map((pageRouter) =>
-                    this.addAssetByEXT(
-                        pages[pageRouter],
-                        path.join(this.mpb.dest, root, pageRouter),
-                        undefined,
-                        undefined,
-                        root
-                    )
-                )
-            );
-        }
+        await this.pages();
         log.info(`完成编译,耗时:${formatBuildTime(perf.stop('init').time)}`);
     }
 
