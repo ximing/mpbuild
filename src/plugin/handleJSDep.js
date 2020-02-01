@@ -6,8 +6,10 @@ const babylon = require('@babel/parser');
 const t = require('@babel/types');
 const babelTraverse = require('@babel/traverse').default;
 const generate = require('@babel/generator').default;
+const template = require('@babel/template').default;
 const bresolve = require('browser-resolve');
 const resolve = require('resolve');
+const fs = require('fs');
 
 module.exports = class HandleJSDep {
     constructor() {
@@ -24,7 +26,7 @@ module.exports = class HandleJSDep {
                     babelTraverse(ast, {
                         Expression: {
                             enter: (astPath) => {
-                                const { node } = astPath;
+                                const { node, parent } = astPath;
                                 if (
                                     node.type === 'CallExpression' &&
                                     node.callee.name === 'require'
@@ -109,17 +111,28 @@ module.exports = class HandleJSDep {
                                             );
                                             libOutputPath = `${libOutputPathPrefix}.js`;
                                         }
-                                        node.arguments[0].value = path.relative(
-                                            path.parse(asset.outputFilePath).dir,
-                                            libOutputPath
-                                        );
-                                        if (node.arguments[0].value[0] !== '.') {
-                                            node.arguments[0].value = `./${node.arguments[0].value}`;
+                                        // JSON 被直接替换
+                                        if (libOutputPath.endsWith('.json')) {
+                                            // const [libOutputPathPrefix] = mpb.helper.splitExtension(
+                                            //     libOutputPath
+                                            // );
+                                            // libOutputPath = `${libOutputPathPrefix}.js`;
+                                            parent.right = template.ast(
+                                                `(${fs.readFileSync(libPath, 'utf-8')})`
+                                            );
+                                        } else {
+                                            node.arguments[0].value = path.relative(
+                                                path.parse(asset.outputFilePath).dir,
+                                                libOutputPath
+                                            );
+                                            if (node.arguments[0].value[0] !== '.') {
+                                                node.arguments[0].value = `./${node.arguments[0].value}`;
+                                            }
+                                            deps.push({
+                                                libPath,
+                                                libOutputPath
+                                            });
                                         }
-                                        deps.push({
-                                            libPath,
-                                            libOutputPath
-                                        });
                                     }
                                 }
                             }
