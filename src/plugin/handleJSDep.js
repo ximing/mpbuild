@@ -42,9 +42,15 @@ module.exports = class HandleJSDep {
                                             try {
                                                 libPath = resolve.sync(path.join(asset.dir, lib));
                                             } catch (e) {
-                                                libPath = resolve.sync(
-                                                    path.join(asset.dir, `${lib}.ts`)
-                                                );
+                                                try {
+                                                    libPath = resolve.sync(
+                                                        path.join(asset.dir, `${lib}.ts`)
+                                                    );
+                                                } catch (e) {
+                                                    libPath = resolve.sync(
+                                                        path.join(asset.dir, `${lib}.tsx`)
+                                                    );
+                                                }
                                             }
                                         } else if (lib[0] === '/') {
                                             libPath = lib;
@@ -105,7 +111,10 @@ module.exports = class HandleJSDep {
                                         }
 
                                         // TODO How to handle renamed files more gracefully
-                                        if (libOutputPath.endsWith('.ts')) {
+                                        if (
+                                            libOutputPath.endsWith('.ts') ||
+                                            libOutputPath.endsWith('.tsx')
+                                        ) {
                                             const [libOutputPathPrefix] = mpb.helper.splitExtension(
                                                 libOutputPath
                                             );
