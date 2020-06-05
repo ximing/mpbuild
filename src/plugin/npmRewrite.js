@@ -27,6 +27,13 @@ module.exports = class NPMRewrite {
                 } else {
                     asset.contents = fixNPM(asset.contents);
                 }
+                // @TODO 更好的做法？
+                if (asset.filePath.endsWith('react-reconciler/index.js')) {
+                    asset.contents = `module.exports = require('./cjs/react-reconciler.production.min.js');`;
+                }
+                if (asset.filePath.endsWith('react/index.js')) {
+                    asset.contents = `module.exports = require('./cjs/react.production.min.js');`;
+                }
             }
             return Promise.resolve();
         });

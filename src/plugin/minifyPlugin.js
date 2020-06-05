@@ -65,7 +65,11 @@ module.exports = class MinifyPlugin {
             }
             mpb.hooks.beforeEmitFile.tapPromise('MinifyPlugin', async (asset) => {
                 if (asset.contents) {
-                    if (/\.js$/.test(asset.outputFilePath) && this.js) {
+                    if (
+                        this.js &&
+                        /\.js$/.test(asset.outputFilePath) &&
+                        !/\.min\.js$/.test(asset.outputFilePath)
+                    ) {
                         // const result = UglifyJS.minify(asset.contents);
                         // if (result.error) console.error('[MinifyPlugin]', result.error);
                         // if (result.warnings) console.warn('[MinifyPlugin]', result.warnings);

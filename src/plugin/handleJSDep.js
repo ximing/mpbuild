@@ -38,7 +38,7 @@ module.exports = class HandleJSDep {
                 }
             }
             if (!libPath) {
-                throw new Error(`找不到${lib}${  dir}`);
+                throw new Error(`找不到${lib}${dir}`);
             }
         }
         return libPath;
@@ -49,7 +49,7 @@ module.exports = class HandleJSDep {
         mpb.hooks.beforeEmitFile.tapPromise('HandleJSDep', async (asset) => {
             const deps = [];
             try {
-                if (/\.(js|wxs)$/.test(asset.outputFilePath) && asset.contents) {
+                if (/\.(js|jsx|wxs)$/.test(asset.outputFilePath) && asset.contents) {
                     const code = asset.contents;
                     const ast = babylon.parse(code, { sourceType: 'module' });
                     babelTraverse(ast, {
@@ -172,6 +172,8 @@ module.exports = class HandleJSDep {
                             }
                         }
                     });
+                    const [outputPrefix] = mpb.helper.splitExtension(asset.outputFilePath);
+                    asset.outputFilePath = `${outputPrefix}.js`;
                     asset.contents = generate(ast, {
                         quotes: 'single',
                         retainLines: true
