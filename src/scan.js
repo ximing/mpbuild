@@ -16,6 +16,7 @@ module.exports = class ScanDep {
             throw new Error('exts required');
         }
         this.modules = {};
+        this.mpb.jsxPagesMap = {};
     }
 
     addAssetByEXT(
@@ -28,15 +29,16 @@ module.exports = class ScanDep {
     ) {
         return Promise.all(
             this.exts.map((ext) => {
+                // @TODO 这里的ext 应该和js寻址 .webchat.js 这种分开
                 const meta = { type, root, source };
                 if (ext === '.json') {
                     meta['mbp-scan-json-dep'] = 'usingComponents';
                 }
-                return this.mpb.assetManager.addAsset(
-                    this.mpb.helper.getFilePath(base, `${prefixPath}${ext}`),
-                    `${prefixOutputPath}${ext}`,
-                    meta
-                );
+                const filePath = this.mpb.helper.getFilePath(base, `${prefixPath}${ext}`);
+                if (['.jsx', '.tsx'].includes(ext)) {
+                    this.mpb.jsxPagesMap[filePath] = filePath;
+                }
+                return this.mpb.assetManager.addAsset(filePath, `${prefixOutputPath}${ext}`, meta);
             })
         );
     }

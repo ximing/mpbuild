@@ -16,7 +16,36 @@ module.exports = class HandleJSDep {
         this.mainPkgPathMap = {};
     }
 
+    findJSFile(dir, lib) {
+        let libPath = '';
+        if (path.extname(lib)) {
+            libPath = resolve.sync(path.join(dir, `${lib}`));
+        } else {
+            for (let i = 0, l = this.mpb.config.resolve.extensions.length; i < l; i++) {
+                const ext = this.mpb.config.resolve.extensions[i];
+                try {
+                    // console.log('->', path.join(dir, `${lib}${ext}`));
+                    libPath = resolve.sync(path.join(dir, `${lib}${ext}`));
+                    if (libPath) break;
+                } catch (e) {
+                    try {
+                        // console.log('----->', path.join(dir, lib, `index${ext}`));
+                        libPath = resolve.sync(path.join(dir, lib, `index${ext}`));
+                        if (libPath) break;
+                    } catch (e) {
+                        // console.log(e);
+                    }
+                }
+            }
+            if (!libPath) {
+                throw new Error(`找不到${lib}${  dir}`);
+            }
+        }
+        return libPath;
+    }
+
     apply(mpb) {
+        this.mpb = mpb;
         mpb.hooks.beforeEmitFile.tapPromise('HandleJSDep', async (asset) => {
             const deps = [];
             try {
@@ -39,19 +68,7 @@ module.exports = class HandleJSDep {
                                         const lib = node.arguments[0].value;
                                         let libPath;
                                         if (lib[0] === '.') {
-                                            try {
-                                                libPath = resolve.sync(path.join(asset.dir, lib));
-                                            } catch (e) {
-                                                try {
-                                                    libPath = resolve.sync(
-                                                        path.join(asset.dir, `${lib}.ts`)
-                                                    );
-                                                } catch (e) {
-                                                    libPath = resolve.sync(
-                                                        path.join(asset.dir, `${lib}.tsx`)
-                                                    );
-                                                }
-                                            }
+                                            libPath = this.findJSFile(asset.dir, lib);
                                         } else if (lib[0] === '/') {
                                             libPath = lib;
                                         } else {
@@ -61,9 +78,16 @@ module.exports = class HandleJSDep {
                                             } catch (e) {
                                                 // 尝试寻找当前项目node_modules文件夹下是否存在
                                                 try {
-                                                    libPath = bresolve.sync(lib, {
-                                                        basedir: process.cwd()
-                                                    });
+                                                    if (lib.includes('/') && !lib.startsWith('@')) {
+                                                        libPath = this.findJSFile(
+                                                            `${process.cwd()}/node_modules`,
+                                                            lib
+                                                        );
+                                                    } else {
+                                                        libPath = bresolve.sync(lib, {
+                                                            basedir: process.cwd()
+                                                        });
+                                                    }
                                                 } catch (e) {
                                                 } finally {
                                                     // 如果不存在就去从当前npm包位置开始向上查找
@@ -113,6 +137,7 @@ module.exports = class HandleJSDep {
                                         // TODO How to handle renamed files more gracefully
                                         if (
                                             libOutputPath.endsWith('.ts') ||
+                                            libOutputPath.endsWith('.jsx') ||
                                             libOutputPath.endsWith('.tsx')
                                         ) {
                                             const [libOutputPathPrefix] = mpb.helper.splitExtension(
