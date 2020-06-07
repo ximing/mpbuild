@@ -29,7 +29,7 @@ module.exports = class ScanDep {
         source = ''
     ) {
         return Promise.all(
-            this.exts.map((ext) => {
+            this.exts.map(async (ext) => {
                 // @TODO 这里的ext 应该和js寻址 .webchat.js 这种分开
                 const meta = { type, root, source };
                 if (ext === '.json') {
@@ -42,7 +42,14 @@ module.exports = class ScanDep {
                     }
                     this.mpb.pagesMap[filePath] = filePath;
                 }
-                return this.mpb.assetManager.addAsset(filePath, `${prefixOutputPath}${ext}`, meta);
+                // console.log('__++')
+                const res = await this.mpb.assetManager.addAsset(
+                    filePath,
+                    `${prefixOutputPath}${ext}`,
+                    meta
+                );
+                // console.log('--->', prefixPath);
+                return res;
             })
         );
     }
@@ -111,6 +118,7 @@ module.exports = class ScanDep {
         perf.start('init');
         // find App
         await this.addAssetByEXT('app', path.join(this.mpb.dest, 'app'), assetType.app);
+        console.log('--------_>app');
         // find Pages
         await this.pages();
         log.info(`完成编译,耗时:${formatBuildTime(perf.stop('init').time)}`);

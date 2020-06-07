@@ -188,6 +188,7 @@ module.exports = class HandleJSDep {
             }
             if (deps.length) {
                 try {
+                    // console.log('before', asset.path);
                     await Promise.all(
                         deps.map((dep) => {
                             const { libPath, libOutputPath } = dep;
@@ -198,6 +199,7 @@ module.exports = class HandleJSDep {
                             });
                         })
                     );
+                    // console.log('after', asset.path);
                 } catch (e) {
                     console.error('[handleJSDep]', e);
                 }

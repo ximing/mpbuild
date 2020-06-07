@@ -34,6 +34,9 @@ module.exports = class NPMRewrite {
                 if (asset.filePath.endsWith('react/index.js')) {
                     asset.contents = `module.exports = require('./cjs/react.production.min.js');`;
                 }
+                if (asset.filePath.endsWith('reflect-metadata/Reflect.js')) {
+                    asset.contents = asset.contents.replace('var Reflect;', '');
+                }
             }
             return Promise.resolve();
         });

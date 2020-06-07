@@ -24,7 +24,7 @@ module.exports = class HandleJSONComponentDep {
                     if (componets) {
                         // TODO 这里需要支持 alias
                         await Promise.all(
-                            Object.keys(componets).map((componentName) => {
+                            Object.keys(componets).map(async (componentName) => {
                                 let filePath = '',
                                     src = componets[componentName];
                                 if (src[0] === '/') {
@@ -62,7 +62,7 @@ module.exports = class HandleJSONComponentDep {
                                     if (!root) {
                                         this.mainPkgPathMap[filePath] = outputPath;
                                     }
-                                    mpb.scan.addAssetByEXT(
+                                    await mpb.scan.addAssetByEXT(
                                         filePath.replace(mpb.src, ''),
                                         outputPath,
                                         assetType.component,

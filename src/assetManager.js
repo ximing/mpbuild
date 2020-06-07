@@ -37,6 +37,7 @@ module.exports = class AssetManager {
     }
 
     setAsset(asset) {
+        // console.log('setAsset',asset.path)
         if(this.map[asset.path]) {
             let index = this.findExistAsset(asset);
             if(index === -1) {
