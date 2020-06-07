@@ -35,8 +35,11 @@ module.exports = class ScanDep {
                     meta['mbp-scan-json-dep'] = 'usingComponents';
                 }
                 const filePath = this.mpb.helper.getFilePath(base, `${prefixPath}${ext}`);
-                if (['.jsx', '.tsx'].includes(ext)) {
-                    this.mpb.jsxPagesMap[filePath] = filePath;
+                if (type === assetType.page) {
+                    if (['.jsx', '.tsx'].includes(ext)) {
+                        this.mpb.jsxPagesMap[filePath] = filePath;
+                    }
+                    this.mpb.pagesMap[filePath] = filePath;
                 }
                 return this.mpb.assetManager.addAsset(filePath, `${prefixOutputPath}${ext}`, meta);
             })
