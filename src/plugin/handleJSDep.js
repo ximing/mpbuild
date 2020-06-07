@@ -18,7 +18,8 @@ module.exports = class HandleJSDep {
 
     findJSFile(dir, lib) {
         let libPath = '';
-        if (path.extname(lib)) {
+        // TODO 更好的办法  case index.service
+        if (['.js', '.ts', '.jsx', '.tsx', '.wxs'].includes(path.extname(lib))) {
             libPath = resolve.sync(path.join(dir, `${lib}`));
         } else {
             for (let i = 0, l = this.mpb.config.resolve.extensions.length; i < l; i++) {
@@ -38,7 +39,7 @@ module.exports = class HandleJSDep {
                 }
             }
             if (!libPath) {
-                throw new Error(`找不到${lib}${dir}`);
+                throw new Error(`找不到${dir}${lib}`);
             }
         }
         return libPath;

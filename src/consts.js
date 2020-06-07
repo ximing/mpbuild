@@ -7,3 +7,5 @@ module.exports.assetType = {
     app: 'app',
     normal: 'normal'
 };
+
+module.exports.virtual_file = 'virtual_file';

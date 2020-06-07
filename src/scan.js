@@ -17,6 +17,7 @@ module.exports = class ScanDep {
         }
         this.modules = {};
         this.mpb.jsxPagesMap = {};
+        this.mpb.pagesMap = {};
     }
 
     addAssetByEXT(

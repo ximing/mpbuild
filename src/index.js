@@ -13,6 +13,7 @@ const {
 const LoaderManager = require('./loaderManager');
 const AssetManager = require('./assetManager');
 const log = require('./log');
+const Asset = require('./asset');
 const Scan = require('./scan');
 const Watching = require('./watching');
 const Helper = require('./helper');
@@ -111,6 +112,7 @@ class Mpbuilder {
 }
 
 module.exports = Mpbuilder;
+module.exports.Asset = Asset;
 module.exports.AppJSONPick = AppJSONPick;
 module.exports.CopyPlugin = CopyPlugin;
 module.exports.CopyImagePlugin = CopyImagePlugin;
