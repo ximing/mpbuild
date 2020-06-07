@@ -141,10 +141,13 @@ module.exports = class HandleJSDep {
                                             libOutputPath.endsWith('.jsx') ||
                                             libOutputPath.endsWith('.tsx')
                                         ) {
-                                            const [libOutputPathPrefix] = mpb.helper.splitExtension(
-                                                libOutputPath
-                                            );
-                                            libOutputPath = `${libOutputPathPrefix}.js`;
+                                            const [
+                                                libOutputPathPrefix,
+                                                ext
+                                            ] = mpb.helper.splitExtension(libOutputPath);
+                                            libOutputPath = `${libOutputPathPrefix}.${
+                                                ext === 'wxs' ? ext : 'js'
+                                            }`;
                                         }
                                         // JSON 被直接替换
                                         if (libOutputPath.endsWith('.json')) {
@@ -173,8 +176,8 @@ module.exports = class HandleJSDep {
                             }
                         }
                     });
-                    const [outputPrefix] = mpb.helper.splitExtension(asset.outputFilePath);
-                    asset.outputFilePath = `${outputPrefix}.js`;
+                    const [outputPrefix, ext] = mpb.helper.splitExtension(asset.outputFilePath);
+                    asset.outputFilePath = `${outputPrefix}.${ext === 'wxs' ? ext : 'js'}`;
                     asset.contents = generate(ast, {
                         quotes: 'single',
                         retainLines: true
