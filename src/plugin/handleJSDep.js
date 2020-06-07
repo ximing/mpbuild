@@ -50,7 +50,7 @@ module.exports = class HandleJSDep {
         mpb.hooks.beforeEmitFile.tapPromise('HandleJSDep', async (asset) => {
             const deps = [];
             try {
-                if (/\.(js|jsx|wxs)$/.test(asset.outputFilePath) && asset.contents) {
+                if (/\.(js|jsx|wxs|ts|tsx)$/.test(asset.outputFilePath) && asset.contents) {
                     const code = asset.contents;
                     const ast = babylon.parse(code, { sourceType: 'module' });
                     babelTraverse(ast, {

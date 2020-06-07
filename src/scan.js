@@ -118,7 +118,6 @@ module.exports = class ScanDep {
         perf.start('init');
         // find App
         await this.addAssetByEXT('app', path.join(this.mpb.dest, 'app'), assetType.app);
-        console.log('--------_>app');
         // find Pages
         await this.pages();
         log.info(`完成编译,耗时:${formatBuildTime(perf.stop('init').time)}`);

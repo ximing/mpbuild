@@ -40,13 +40,13 @@ class Mpbuilder {
         this.appEntry = {};
         this.cwd = process.cwd();
         this.hooks = {
-            addAsset: new AsyncSeriesBailHook(['asset']),
             delAsset: new AsyncSeriesBailHook(['asset']),
             start: new AsyncParallelHook(['mpb']),
             beforeCompile: new AsyncParallelHook(['mpb']),
-            afterCompile: new AsyncParallelHook(['mpb']),
+            addAsset: new AsyncSeriesBailHook(['asset']),
             afterGenerateEntry: new AsyncSeriesBailHook(['afterGenerateEntry']),
             beforeEmitFile: new AsyncSeriesWaterfallHook(['asset']),
+            afterCompile: new AsyncParallelHook(['mpb']),
             watchRun: new AsyncSeriesHook(['compiler'])
         };
         this.optimization = Object.assign(
