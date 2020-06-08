@@ -62,18 +62,29 @@ module.exports = class ScanDep {
             if (!root) {
                 root = '';
             }
+            const pagesKeys = Object.keys(pages);
+            for (let j = 0, ll = pagesKeys.length; j < ll; j++) {
+                const pageRouter = pagesKeys[j];
+                await this.addAssetByEXT(
+                    pages[pageRouter],
+                    path.join(this.mpb.dest, root, pageRouter),
+                    undefined,
+                    undefined,
+                    root
+                );
+            }
             // eslint-disable-next-line no-await-in-loop
-            await Promise.all(
-                Object.keys(pages).map((pageRouter) =>
-                    this.addAssetByEXT(
-                        pages[pageRouter],
-                        path.join(this.mpb.dest, root, pageRouter),
-                        undefined,
-                        undefined,
-                        root
-                    )
-                )
-            );
+            // await Promise.all(
+            //     Object.keys(pages).map((pageRouter) =>
+            //         this.addAssetByEXT(
+            //             pages[pageRouter],
+            //             path.join(this.mpb.dest, root, pageRouter),
+            //             undefined,
+            //             undefined,
+            //             root
+            //         )
+            //     )
+            // );
         }
     }
 

@@ -31,9 +31,8 @@ module.exports = class AssetManager {
                 }
             }
             return index;
-        } 
-            throw new Error(`This.map[${asset.path}] is undefined`);
-        
+        }
+        throw new Error(`This.map[${asset.path}] is undefined`);
     }
 
     setAsset(asset) {
@@ -61,6 +60,7 @@ module.exports = class AssetManager {
 
     // 尝试添加新的资源文件
     async addAsset(path, outputPath, meta) {
+        // console.log('addAsset',path)
         let asset;
         if (path instanceof Asset) {
             asset = path;
@@ -89,6 +89,7 @@ module.exports = class AssetManager {
                     try {
                         asset = await this.mpb.hooks.beforeEmitFile.promise(asset);
                         await this.emitFile(asset);
+                        await this.mpb.hooks.afterEmitFile.promise(asset);
                         return asset;
                     } catch (err) {
                         if (this.mpb.isWatch) {

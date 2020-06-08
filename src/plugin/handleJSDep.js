@@ -45,6 +45,14 @@ module.exports = class HandleJSDep {
         return libPath;
     }
 
+    // @TODO: 是否open出去，到配置上
+    aliasLibName(lib) {
+        if (lib === 'react-dom') {
+            return '@r2m/runtime';
+        }
+        return lib;
+    }
+
     apply(mpb) {
         this.mpb = mpb;
         mpb.hooks.beforeEmitFile.tapPromise('HandleJSDep', async (asset) => {
@@ -66,7 +74,7 @@ module.exports = class HandleJSDep {
                                         node.arguments.length === 1 &&
                                         t.isStringLiteral(node.arguments[0])
                                     ) {
-                                        const lib = node.arguments[0].value;
+                                        const lib = this.aliasLibName(node.arguments[0].value);
                                         let libPath;
                                         if (lib[0] === '.') {
                                             libPath = this.findJSFile(asset.dir, lib);
@@ -189,17 +197,25 @@ module.exports = class HandleJSDep {
             if (deps.length) {
                 try {
                     // console.log('before', asset.path);
-                    await Promise.all(
-                        deps.map((dep) => {
-                            const { libPath, libOutputPath } = dep;
-                            const root = asset.getMeta('root');
-                            return mpb.assetManager.addAsset(libPath, libOutputPath, {
-                                root,
-                                source: asset.filePath
-                            });
-                        })
-                    );
-                    // console.log('after', asset.path);
+                    for (let i = 0, l = deps.length; i < l; i++) {
+                        const { libPath, libOutputPath } = deps[i];
+                        const root = asset.getMeta('root');
+                        await mpb.assetManager.addAsset(libPath, libOutputPath, {
+                            root,
+                            source: asset.filePath
+                        });
+                    }
+                    // await Promise.all(
+                    //     deps.map((dep) => {
+                    //         const { libPath, libOutputPath } = dep;
+                    //         const root = asset.getMeta('root');
+                    //         return mpb.assetManager.addAsset(libPath, libOutputPath, {
+                    //             root,
+                    //             source: asset.filePath
+                    //         });
+                    //     })
+                    // );
+                    // console.log('after deps', asset.path);
                 } catch (e) {
                     console.error('[handleJSDep]', e);
                 }
