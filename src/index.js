@@ -43,6 +43,7 @@ class Mpbuilder {
             delAsset: new AsyncSeriesBailHook(['asset']),
             start: new AsyncParallelHook(['mpb']),
             beforeCompile: new AsyncParallelHook(['mpb']),
+            beforeAddAsset: new AsyncSeriesBailHook(['asset']),
             addAsset: new AsyncSeriesBailHook(['asset']),
             afterGenerateEntry: new AsyncSeriesBailHook(['afterGenerateEntry']),
             beforeEmitFile: new AsyncSeriesWaterfallHook(['asset']),

@@ -84,6 +84,7 @@ module.exports = class AssetManager {
             // 更新asset
             this.setAsset(asset);
             try {
+                asset = (await this.mpb.hooks.beforeAddAsset.promise(asset)) || asset;
                 asset = await this.mpb.hooks.addAsset.promise(asset);
                 if (asset.shouldOutput) {
                     try {
