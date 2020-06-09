@@ -6,6 +6,7 @@ const chalk = require('chalk');
 
 module.exports = class CleanMbpPlugin {
     constructor(options) {
+        this.name = 'CleanMbpPlugin';
         this.options = Object.assign(
             {},
             {
@@ -18,7 +19,11 @@ module.exports = class CleanMbpPlugin {
     apply(mpb) {
         mpb.hooks.start.tapPromise('CleanMbpPlugin', async () => {
             if (Array.isArray(this.options.path) && this.options.path.length > 0) {
-                console.log(chalk.gray('[CleanMbpPlugin]: '), chalk.blue('删除文件:'), this.options.path);
+                console.log(
+                    chalk.gray('[CleanMbpPlugin]: '),
+                    chalk.blue('删除文件:'),
+                    this.options.path
+                );
                 await del(this.options.path);
             }
             return Promise.resolve();

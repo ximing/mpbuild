@@ -5,8 +5,9 @@ const _ = require('lodash');
 _;
 const Asset = require('../asset');
 
-module.exports = class AppJSON {
+module.exports = class AppJSONPick {
     constructor(options) {
+        this.name = 'AppJSONPick';
         this.appEntry = '';
         this.options = Object.assign(
             {},

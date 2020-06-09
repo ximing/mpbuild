@@ -70,6 +70,10 @@ class Mpbuilder {
         this.isWatch = false;
     }
 
+    getPlugin(name) {
+        return this.config.plugins.find((item) => item.name === name);
+    }
+
     initPlugin() {
         if (!Array.isArray(this.config.plugins)) {
             this.config.plugins = [];

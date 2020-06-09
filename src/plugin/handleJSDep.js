@@ -13,6 +13,7 @@ const fs = require('fs');
 
 module.exports = class HandleJSDep {
     constructor() {
+        this.name = 'HandleJSDep';
         this.mainPkgPathMap = {};
     }
 

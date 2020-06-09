@@ -36,9 +36,7 @@ module.exports = class Watching {
 
     listenWatcherEvent() {
         this.watcher.on('aggregated', (changes, removals) => {
-            this.watchTimer = Date.now();
-            this.watcher && this.watcher.close();
-            this.watcher = null;
+            this.close();
             changes.forEach((filePath) => {
                 this.handleWatch(filePath, 'change');
             });
@@ -97,10 +95,14 @@ module.exports = class Watching {
         perf.start(perfId);
         const assets = this.mpb.assetManager.getAssets(path);
         if (assets) {
-            for(let asset of assets) {
+            for (const asset of assets) {
                 if (type === 'change') {
                     console.log('[watching-add-asset]', path);
-                    await this.mpb.assetManager.addAsset(path, asset.outputFilePath, asset.getMeta());
+                    await this.mpb.assetManager.addAsset(
+                        path,
+                        asset.outputFilePath,
+                        asset.getMeta()
+                    );
                 } else if (type === 'unlink') {
                     await this.mpb.assetManager.delAsset(asset);
                 } else {
@@ -157,6 +159,8 @@ module.exports = class Watching {
     }
 
     close() {
+        this.watchTimer = Date.now();
         this.watcher && this.watcher.close();
+        this.watcher = null;
     }
 };

@@ -4,6 +4,7 @@ const Asset = require('../asset');
 
 module.exports = class AppJSON {
     constructor(options) {
+        this.name = 'AppJSON';
         this.appEntry = '';
         this.options = Object.assign(
             {},
@@ -12,6 +13,7 @@ module.exports = class AppJSON {
             },
             options
         );
+        this.usingComponents = {};
     }
 
     apply(mpb) {
@@ -33,7 +35,8 @@ module.exports = class AppJSON {
             });
             const appOutput = Object.assign({}, appEntry, {
                 pages,
-                subPackages
+                subPackages,
+                usingComponents: this.usingComponents || {}
             });
             delete appOutput.router;
             const strAppEntry = JSON.stringify(appOutput);

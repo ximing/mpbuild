@@ -20,7 +20,7 @@ module.exports = class ScanDep {
         this.mpb.pagesMap = {};
     }
 
-    addAssetByEXT(
+    async addAssetByEXT(
         prefixPath,
         prefixOutputPath,
         type = assetType.page,
@@ -28,30 +28,52 @@ module.exports = class ScanDep {
         root = '',
         source = ''
     ) {
-        return Promise.all(
-            this.exts.map(async (ext) => {
-                // @TODO 这里的ext 应该和js寻址 .webchat.js 这种分开
-                const meta = { type, root, source };
-                if (ext === '.json') {
-                    meta['mbp-scan-json-dep'] = 'usingComponents';
+        for (let i = 0, l = this.exts.length; i < l; i++) {
+            const ext = this.exts[i];
+            // @TODO 这里的ext 应该和js寻址 .webchat.js 这种分开
+            const meta = { type, root, source };
+            if (ext === '.json') {
+                meta['mbp-scan-json-dep'] = 'usingComponents';
+            }
+            const filePath = this.mpb.helper.getFilePath(base, `${prefixPath}${ext}`);
+            if (type === assetType.page) {
+                if (['.jsx', '.tsx'].includes(ext)) {
+                    this.mpb.jsxPagesMap[filePath] = filePath;
                 }
-                const filePath = this.mpb.helper.getFilePath(base, `${prefixPath}${ext}`);
-                if (type === assetType.page) {
-                    if (['.jsx', '.tsx'].includes(ext)) {
-                        this.mpb.jsxPagesMap[filePath] = filePath;
-                    }
-                    this.mpb.pagesMap[filePath] = filePath;
-                }
-                // console.log('__++')
-                const res = await this.mpb.assetManager.addAsset(
-                    filePath,
-                    `${prefixOutputPath}${ext}`,
-                    meta
-                );
-                // console.log('--->', prefixPath);
-                return res;
-            })
-        );
+                this.mpb.pagesMap[filePath] = filePath;
+            }
+            // console.log('__++')
+            if (['.json', '.wxml'].includes(ext)) {
+                this.mpb.assetManager.addAsset(filePath, `${prefixOutputPath}${ext}`, meta);
+            } else {
+                await this.mpb.assetManager.addAsset(filePath, `${prefixOutputPath}${ext}`, meta);
+            }
+            // console.log('--->', prefixPath);
+        }
+        // return Promise.all(
+        //     this.exts.map(async (ext) => {
+        //         // @TODO 这里的ext 应该和js寻址 .webchat.js 这种分开
+        //         const meta = { type, root, source };
+        //         if (ext === '.json') {
+        //             meta['mbp-scan-json-dep'] = 'usingComponents';
+        //         }
+        //         const filePath = this.mpb.helper.getFilePath(base, `${prefixPath}${ext}`);
+        //         if (type === assetType.page) {
+        //             if (['.jsx', '.tsx'].includes(ext)) {
+        //                 this.mpb.jsxPagesMap[filePath] = filePath;
+        //             }
+        //             this.mpb.pagesMap[filePath] = filePath;
+        //         }
+        //         // console.log('__++')
+        //         const res = await this.mpb.assetManager.addAsset(
+        //             filePath,
+        //             `${prefixOutputPath}${ext}`,
+        //             meta
+        //         );
+        //         // console.log('--->', prefixPath);
+        //         return res;
+        //     })
+        // );
     }
 
     async pages() {
