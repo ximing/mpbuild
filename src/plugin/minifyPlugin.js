@@ -20,8 +20,10 @@ function clearPool() {
 }
 
 function minifyJS(contents) {
-    const UglifyJS = require('uglify-js');
-    const result = UglifyJS.minify(contents);
+    // const UglifyJS = require('uglify-js');
+    // const result = UglifyJS.minify(contents);
+    const Terser = require('terser');
+    const result = Terser.minify(contents);
     if (result.error) {
         console.error('[MinifyPlugin]', result.error);
         throw result.error;
@@ -88,7 +90,7 @@ module.exports = class MinifyPlugin {
                         asset.contents = await pool.exec(minifyWXML, [asset.contents]);
                     }
                 }
-                return Promise.resolve();
+                return Promise.resolve(asset);
             });
             mpb.hooks.afterCompile.tapPromise('MinifyPlugin', async () => {
                 if (!mpb.isWatch) {

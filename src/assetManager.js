@@ -42,6 +42,8 @@ module.exports = class AssetManager {
             if (index === -1) {
                 this.map[asset.path].push(asset);
             } else {
+                // TODO 更好的办法  比如抽离一个 template 来做这个事情
+                asset.render = this.map[asset.path][index].render;
                 this.map[asset.path][index] = asset;
             }
 
@@ -89,8 +91,10 @@ module.exports = class AssetManager {
                 if (asset.shouldOutput) {
                     try {
                         asset = await this.mpb.hooks.beforeEmitFile.promise(asset);
-                        await this.emitFile(asset);
-                        await this.mpb.hooks.afterEmitFile.promise(asset);
+                        if (asset) {
+                            await this.emitFile(asset);
+                            await this.mpb.hooks.afterEmitFile.promise(asset);
+                        }
                         return asset;
                     } catch (err) {
                         if (this.mpb.isWatch) {
