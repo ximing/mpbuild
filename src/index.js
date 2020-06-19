@@ -4,6 +4,8 @@
 const path = require('path');
 
 const {
+    SyncBailHook,
+    SyncWaterfallHook,
     AsyncParallelHook,
     AsyncSeriesWaterfallHook,
     AsyncSeriesHook,
@@ -17,6 +19,7 @@ const Asset = require('./asset');
 const Scan = require('./scan');
 const Watching = require('./watching');
 const Helper = require('./helper');
+const Resolve = require('./resolve');
 const HandleJSDep = require('./plugin/handleJSDep');
 const WatchEntry = require('./plugin/watchEntry');
 const HandleJSONComponentDep = require('./plugin/handleJSONComponentDep');
@@ -30,13 +33,24 @@ const ProjectConfigPlugin = require('./plugin/projectConfigPlugin.js');
 const CopyPlugin = require('./plugin/copyPlugin');
 const CleanMbpPlugin = require('./plugin/cleanMbpPlugin.js');
 const TsTypeCheckPlugin = require('./plugin/tsTypeCheckPlugin');
+const ResolvePlugin = require('./plugin/resolvePlugin');
 const NodeEnvironmentPlugin = require('./node/NodeEnvironmentPlugin');
 
 class Mpbuilder {
     constructor(config) {
-        this.dest = path.resolve(process.cwd(), config.output.path);
-        this.src = path.resolve(process.cwd(), config.src);
+        this.root = process.cwd();
+        this.dest = path.resolve(this.root, config.output.path);
+        this.src = path.resolve(this.root, config.src);
         this.config = config;
+        this.extensions = Object.assign(
+            {
+                es: ['.js'],
+                tpl: ['.wxml'],
+                style: ['.wxss'],
+                manifest: ['.json']
+            },
+            config.resolve.extensions
+        );
         this.appEntry = {};
         this.cwd = process.cwd();
         this.hooks = {
@@ -44,6 +58,8 @@ class Mpbuilder {
             start: new AsyncParallelHook(['mpb']),
             beforeCompile: new AsyncParallelHook(['mpb']),
             beforeAddAsset: new AsyncSeriesBailHook(['asset']),
+            beforeResolve: new SyncBailHook(['resolveObj']),
+            resolve: new SyncWaterfallHook(['resolveObj']),
             addAsset: new AsyncSeriesBailHook(['asset']),
             afterGenerateEntry: new AsyncSeriesBailHook(['afterGenerateEntry']),
             beforeEmitFile: new AsyncSeriesWaterfallHook(['asset']),
@@ -51,12 +67,14 @@ class Mpbuilder {
             afterCompile: new AsyncParallelHook(['mpb']),
             watchRun: new AsyncSeriesHook(['compiler'])
         };
+        this.moduleComposition = ['es', 'tpl', 'style', 'manifest'];
         this.optimization = Object.assign(
             {
                 minimize: true
             },
             config.optimization
         );
+        this.initResolve();
         this.watching = new Watching(this, async () => {
             await this.hooks.afterCompile.promise(this);
         });
@@ -70,6 +88,18 @@ class Mpbuilder {
         this.isWatch = false;
     }
 
+    initResolve() {
+        this.resolve = {};
+        this.moduleComposition.forEach((ext) => {
+            this.resolve[ext] = Resolve.create(
+                Object.assign({}, this.config.resolve, {
+                    lookupStartPath: this.src,
+                    extensions: this.extensions[ext]
+                })
+            ).bind(this);
+        });
+    }
+
     getPlugin(name) {
         return this.config.plugins.find((item) => item.name === name);
     }
@@ -81,6 +111,7 @@ class Mpbuilder {
         this.config.plugins = [].concat(
             [
                 new NodeEnvironmentPlugin(),
+                new ResolvePlugin(),
                 new HandleJSDep(),
                 new HandleJSONComponentDep(),
                 new HandleWXMLDep(),

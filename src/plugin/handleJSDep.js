@@ -17,49 +17,52 @@ module.exports = class HandleJSDep {
         this.mainPkgPathMap = {};
     }
 
-    findJSFile(dir, lib) {
-        let libPath = '';
-        // TODO 更好的办法  case index.service
-        if (['.js', '.ts', '.jsx', '.tsx', '.wxs'].includes(path.extname(lib))) {
-            libPath = resolve.sync(path.join(dir, `${lib}`));
-        } else {
-            for (let i = 0, l = this.mpb.config.resolve.extensions.length; i < l; i++) {
-                const ext = this.mpb.config.resolve.extensions[i];
-                try {
-                    // console.log('->', path.join(dir, `${lib}${ext}`));
-                    libPath = resolve.sync(path.join(dir, `${lib}${ext}`));
-                    if (libPath) break;
-                } catch (e) {
-                    try {
-                        // console.log('----->', path.join(dir, lib, `index${ext}`));
-                        libPath = resolve.sync(path.join(dir, lib, `index${ext}`));
-                        if (libPath) break;
-                    } catch (e) {
-                        // console.log(e);
-                    }
-                }
-            }
-            if (!libPath) {
-                throw new Error(`找不到${dir}${lib}`);
-            }
-        }
-        return libPath;
-    }
+    // findJSFile(dir, lib) {
+    //     let libPath = '';
+    //     // TODO 更好的办法  case index.service
+    //     if (['.js', '.ts', '.jsx', '.tsx', '.wxs'].includes(path.extname(lib))) {
+    //         libPath = resolve.sync(path.join(dir, `${lib}`));
+    //     } else {
+    //         for (let i = 0, l = this.mpb.config.resolve.extensions.length; i < l; i++) {
+    //             const ext = this.mpb.config.resolve.extensions[i];
+    //             try {
+    //                 // console.log('->', path.join(dir, `${lib}${ext}`));
+    //                 libPath = resolve.sync(path.join(dir, `${lib}${ext}`));
+    //                 if (libPath) break;
+    //             } catch (e) {
+    //                 try {
+    //                     // console.log('----->', path.join(dir, lib, `index${ext}`));
+    //                     libPath = resolve.sync(path.join(dir, lib, `index${ext}`));
+    //                     if (libPath) break;
+    //                 } catch (e) {
+    //                     // console.log(e);
+    //                 }
+    //             }
+    //         }
+    //         if (!libPath) {
+    //             throw new Error(`找不到${dir}${lib}`);
+    //         }
+    //     }
+    //     return libPath;
+    // }
 
     // @TODO: 是否open出去，到配置上
-    aliasLibName(lib) {
-        if (lib === 'react-dom') {
-            return '@r2m/runtime';
-        }
-        return lib;
-    }
+    // aliasLibName(lib) {
+    //     if (lib === 'react-dom') {
+    //         return '@r2m/runtime';
+    //     }
+    //     return lib;
+    // }
 
     apply(mpb) {
         this.mpb = mpb;
+        const exts = mpb.extensions.es.filter((item) => item !== '.json');
         mpb.hooks.beforeEmitFile.tapPromise('HandleJSDep', async (asset) => {
             const deps = [];
             try {
-                if (/\.(js|jsx|wxs|ts|tsx)$/.test(asset.outputFilePath) && asset.contents) {
+                console.log(mpb.extensions.es, asset.ext);
+                if (exts.includes(asset.ext) && asset.contents) {
+                    // if (/\.(js|jsx|wxs|ts|tsx)$/.test(asset.outputFilePath) && asset.contents) {
                     const code = asset.contents;
                     const ast = babylon.parse(code, { sourceType: 'module' });
                     babelTraverse(ast, {
@@ -75,47 +78,54 @@ module.exports = class HandleJSDep {
                                         node.arguments.length === 1 &&
                                         t.isStringLiteral(node.arguments[0])
                                     ) {
-                                        const lib = this.aliasLibName(node.arguments[0].value);
-                                        let libPath;
-                                        if (lib[0] === '.') {
-                                            libPath = this.findJSFile(asset.dir, lib);
-                                        } else if (lib[0] === '/') {
-                                            libPath = lib;
-                                        } else {
-                                            try {
-                                                // 先找相对路径
-                                                libPath = resolve.sync(path.join(asset.dir, lib));
-                                            } catch (e) {
-                                                // 尝试寻找当前项目node_modules文件夹下是否存在
-                                                try {
-                                                    if (lib.includes('/') && !lib.startsWith('@')) {
-                                                        libPath = this.findJSFile(
-                                                            `${process.cwd()}/node_modules`,
-                                                            lib
-                                                        );
-                                                    } else {
-                                                        libPath = bresolve.sync(lib, {
-                                                            basedir: process.cwd()
-                                                        });
-                                                    }
-                                                } catch (e) {
-                                                } finally {
-                                                    // 如果不存在就去从当前npm包位置开始向上查找
-                                                    if (
-                                                        !(
-                                                            libPath &&
-                                                            libPath.startsWith(process.cwd())
-                                                        )
-                                                    ) {
-                                                        libPath = bresolve.sync(lib, {
-                                                            basedir: asset.dir,
-                                                            filename: asset.path
-                                                        });
-                                                    }
-                                                }
-                                            }
-                                        }
-
+                                        const lib =
+                                            mpb.hooks.beforeResolve.call(node.arguments[0].value) ||
+                                            node.arguments[0].value;
+                                        // const lib = this.aliasLibName(node.arguments[0].value);
+                                        // let libPath;
+                                        // if (lib[0] === '.') {
+                                        //     libPath = this.findJSFile(asset.dir, lib);
+                                        // } else if (lib[0] === '/') {
+                                        //     libPath = lib;
+                                        // } else {
+                                        //     try {
+                                        //         // 先找相对路径
+                                        //         libPath = resolve.sync(path.join(asset.dir, lib));
+                                        //     } catch (e) {
+                                        //         // 尝试寻找当前项目node_modules文件夹下是否存在
+                                        //         try {
+                                        //             if (lib.includes('/') && !lib.startsWith('@')) {
+                                        //                 libPath = this.findJSFile(
+                                        //                     `${process.cwd()}/node_modules`,
+                                        //                     lib
+                                        //                 );
+                                        //             } else {
+                                        //                 libPath = bresolve.sync(lib, {
+                                        //                     basedir: process.cwd()
+                                        //                 });
+                                        //             }
+                                        //         } catch (e) {
+                                        //         } finally {
+                                        //             // 如果不存在就去从当前npm包位置开始向上查找
+                                        //             if (
+                                        //                 !(
+                                        //                     libPath &&
+                                        //                     libPath.startsWith(process.cwd())
+                                        //                 )
+                                        //             ) {
+                                        //                 libPath = bresolve.sync(lib, {
+                                        //                     basedir: asset.dir,
+                                        //                     filename: asset.path
+                                        //                 });
+                                        //             }
+                                        //         }
+                                        //     }
+                                        // }
+                                        console.log('lib', lib);
+                                        const { imported: libPath } = mpb.hooks.resolve.call({
+                                            imported: lib,
+                                            asset
+                                        });
                                         const root = asset.getMeta('root');
                                         const isNPM = libPath.includes('node_modules');
                                         let libOutputPath = this.mainPkgPathMap[libPath];

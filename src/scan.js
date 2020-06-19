@@ -15,6 +15,7 @@ module.exports = class ScanDep {
         if (!this.exts) {
             throw new Error('exts required');
         }
+        this.exts.es = this.exts.es.filter((item) => item !== 'json');
         this.modules = {};
         this.mpb.jsxPagesMap = {};
         this.mpb.pagesMap = {};
@@ -28,28 +29,52 @@ module.exports = class ScanDep {
         root = '',
         source = ''
     ) {
-        for (let i = 0, l = this.exts.length; i < l; i++) {
-            const ext = this.exts[i];
-            // @TODO 这里的ext 应该和js寻址 .webchat.js 这种分开
-            const meta = { type, root, source };
-            if (ext === '.json') {
-                meta['mbp-scan-json-dep'] = 'usingComponents';
+        console.log(prefixPath);
+        const pagePath = this.mpb.resolve.es(prefixPath, base);
+        const meta = { type, root, source };
+        if (type === assetType.page) {
+            if (pagePath.endsWith('.tsx') || pagePath.endsWith('.jsx')) {
+                this.mpb.jsxPagesMap[pagePath] = pagePath;
             }
-            const filePath = this.mpb.helper.getFilePath(base, `${prefixPath}${ext}`);
-            if (type === assetType.page) {
-                if (['.jsx', '.tsx'].includes(ext)) {
-                    this.mpb.jsxPagesMap[filePath] = filePath;
-                }
-                this.mpb.pagesMap[filePath] = filePath;
-            }
-            // console.log('__++')
-            if (['.json', '.wxml'].includes(ext)) {
-                this.mpb.assetManager.addAsset(filePath, `${prefixOutputPath}${ext}`, meta);
-            } else {
-                await this.mpb.assetManager.addAsset(filePath, `${prefixOutputPath}${ext}`, meta);
-            }
-            // console.log('--->', prefixPath);
+            this.mpb.pagesMap[pagePath] = pagePath;
         }
+        await this.mpb.assetManager.addAsset(pagePath, `${prefixOutputPath}.js`, meta);
+        try {
+            const stylePath = this.mpb.resolve.style(prefixPath, base);
+            await this.mpb.assetManager.addAsset(stylePath, `${prefixOutputPath}.wxss`, meta);
+        } catch (e) {}
+        try {
+            const tplPath = this.mpb.resolve.tpl(prefixPath, base);
+            this.mpb.assetManager.addAsset(tplPath, `${prefixOutputPath}.wxml`, meta);
+        } catch (e) {}
+        try {
+            const manifestPath = this.mpb.resolve.manifest(prefixPath, base);
+            const meta = { type, root, source, 'mbp-scan-json-dep': 'usingComponents' };
+            this.mpb.assetManager.addAsset(manifestPath, `${prefixOutputPath}.json`, meta);
+        } catch (e) {}
+        //
+        // for (let i = 0, l = this.exts.length; i < l; i++) {
+        //     const ext = this.exts[i];
+        //     // @TODO 这里的ext 应该和js寻址 .webchat.js 这种分开
+        //     const meta = { type, root, source };
+        //     if (ext === '.json') {
+        //         meta['mbp-scan-json-dep'] = 'usingComponents';
+        //     }
+        //     const filePath = this.mpb.helper.getFilePath(base, `${prefixPath}${ext}`);
+        //     if (type === assetType.page) {
+        //         if (['.jsx', '.tsx'].includes(ext)) {
+        //             this.mpb.jsxPagesMap[filePath] = filePath;
+        //         }
+        //         this.mpb.pagesMap[filePath] = filePath;
+        //     }
+        //     // console.log('__++')
+        //     if (['.json', '.wxml'].includes(ext)) {
+        //         this.mpb.assetManager.addAsset(filePath, `${prefixOutputPath}${ext}`, meta);
+        //     } else {
+        //         await this.mpb.assetManager.addAsset(filePath, `${prefixOutputPath}${ext}`, meta);
+        //     }
+        //     // console.log('--->', prefixPath);
+        // }
         // return Promise.all(
         //     this.exts.map(async (ext) => {
         //         // @TODO 这里的ext 应该和js寻址 .webchat.js 这种分开
@@ -88,7 +113,7 @@ module.exports = class ScanDep {
             for (let j = 0, ll = pagesKeys.length; j < ll; j++) {
                 const pageRouter = pagesKeys[j];
                 await this.addAssetByEXT(
-                    pages[pageRouter],
+                    `.${pages[pageRouter]}`,
                     path.join(this.mpb.dest, root, pageRouter),
                     undefined,
                     undefined,
@@ -150,7 +175,7 @@ module.exports = class ScanDep {
     async init() {
         perf.start('init');
         // find App
-        await this.addAssetByEXT('app', path.join(this.mpb.dest, 'app'), assetType.app);
+        await this.addAssetByEXT('./app', path.join(this.mpb.dest, 'app'), assetType.app);
         // find Pages
         await this.pages();
         log.info(`完成编译,耗时:${formatBuildTime(perf.stop('init').time)}`);
