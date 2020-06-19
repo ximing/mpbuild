@@ -126,20 +126,21 @@ module.exports = class HandleJSDep {
                                             imported: lib,
                                             asset
                                         });
+                                        console.log('libPath', libPath);
                                         const root = asset.getMeta('root');
                                         const isNPM = libPath.includes('node_modules');
                                         let libOutputPath = this.mainPkgPathMap[libPath];
                                         if (!libOutputPath) {
                                             if (isNPM) {
+                                                const npmPath = libPath
+                                                    .split('/node_modules/')
+                                                    .slice(1)
+                                                    .join('/npm/');
                                                 libOutputPath = path.join(
                                                     mpb.dest,
                                                     `./${root || ''}`,
-                                                    path
-                                                        .relative(mpb.cwd, libPath)
-                                                        .replace(
-                                                            /node_modules/g,
-                                                            mpb.config.output.npm
-                                                        )
+                                                    'npm',
+                                                    npmPath
                                                 );
                                             } else {
                                                 libOutputPath = path.join(
