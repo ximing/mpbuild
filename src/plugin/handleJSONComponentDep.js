@@ -51,9 +51,9 @@ module.exports = class HandleJSONComponentDep {
                                     asset,
                                     resolveType: 'manifest'
                                 });
-                                // TODO 这里不能写死
-                                if (filePath.endsWith('.json')) {
-                                    filePath = path.dirname(filePath);
+                                const file = path.parse(filePath);
+                                if (file.ext) {
+                                    filePath = `${file.dir}/${file.name}`;
                                 }
                                 const nmPathIndex = filePath.indexOf(NPM_PATH_NAME);
                                 const root = asset.getMeta('root');

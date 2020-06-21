@@ -34,7 +34,8 @@ module.exports = (entry, { needUglify, replaceMap } = { needUglify: true, replac
                 manifest: ['.json']
             },
             alias: {
-                '@utils': path.join(__dirname, './wechat/utils')
+                '@utils': path.join(__dirname, './wechat/utils'),
+                '@': path.join(__dirname, './wechat')
             }
         },
         optimization: {
