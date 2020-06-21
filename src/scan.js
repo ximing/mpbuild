@@ -29,7 +29,6 @@ module.exports = class ScanDep {
         root = '',
         source = ''
     ) {
-        console.log(prefixPath);
         const pagePath = this.mpb.resolve.es(prefixPath, base);
         const meta = { type, root, source };
         if (type === assetType.page) {

@@ -1,9 +1,5 @@
 "use strict";
 
-var _interopRequireDefault = require("./npm/@babel/runtime/helpers/interopRequireDefault.js");
-
-var _lodash = _interopRequireDefault(require("./npm/lodash/lodash.js"));
-
 App({
   onLaunch: function onLaunch() {
     var _this = this;

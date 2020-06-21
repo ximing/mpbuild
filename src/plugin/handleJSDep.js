@@ -10,6 +10,7 @@ const template = require('@babel/template').default;
 const bresolve = require('browser-resolve');
 const resolve = require('resolve');
 const fs = require('fs');
+const { rewriteNpm } = require('../util');
 
 module.exports = class HandleJSDep {
     constructor() {
@@ -78,70 +79,22 @@ module.exports = class HandleJSDep {
                                         node.arguments.length === 1 &&
                                         t.isStringLiteral(node.arguments[0])
                                     ) {
-                                        const lib =
-                                            mpb.hooks.beforeResolve.call(node.arguments[0].value) ||
-                                            node.arguments[0].value;
-                                        // const lib = this.aliasLibName(node.arguments[0].value);
-                                        // let libPath;
-                                        // if (lib[0] === '.') {
-                                        //     libPath = this.findJSFile(asset.dir, lib);
-                                        // } else if (lib[0] === '/') {
-                                        //     libPath = lib;
-                                        // } else {
-                                        //     try {
-                                        //         // 先找相对路径
-                                        //         libPath = resolve.sync(path.join(asset.dir, lib));
-                                        //     } catch (e) {
-                                        //         // 尝试寻找当前项目node_modules文件夹下是否存在
-                                        //         try {
-                                        //             if (lib.includes('/') && !lib.startsWith('@')) {
-                                        //                 libPath = this.findJSFile(
-                                        //                     `${process.cwd()}/node_modules`,
-                                        //                     lib
-                                        //                 );
-                                        //             } else {
-                                        //                 libPath = bresolve.sync(lib, {
-                                        //                     basedir: process.cwd()
-                                        //                 });
-                                        //             }
-                                        //         } catch (e) {
-                                        //         } finally {
-                                        //             // 如果不存在就去从当前npm包位置开始向上查找
-                                        //             if (
-                                        //                 !(
-                                        //                     libPath &&
-                                        //                     libPath.startsWith(process.cwd())
-                                        //                 )
-                                        //             ) {
-                                        //                 libPath = bresolve.sync(lib, {
-                                        //                     basedir: asset.dir,
-                                        //                     filename: asset.path
-                                        //                 });
-                                        //             }
-                                        //         }
-                                        //     }
-                                        // }
-                                        console.log('lib', lib);
+                                        const { imported: lib } = mpb.hooks.beforeResolve.call({
+                                            imported: node.arguments[0].value,
+                                            asset,
+                                            resolveType: 'es'
+                                        }) || { lib: node.arguments[0].value };
                                         const { imported: libPath } = mpb.hooks.resolve.call({
                                             imported: lib,
-                                            asset
+                                            asset,
+                                            resolveType: 'es'
                                         });
-                                        console.log('libPath', libPath);
                                         const root = asset.getMeta('root');
                                         const isNPM = libPath.includes('node_modules');
                                         let libOutputPath = this.mainPkgPathMap[libPath];
                                         if (!libOutputPath) {
                                             if (isNPM) {
-                                                const npmPath = libPath
-                                                    .split('/node_modules/')
-                                                    .slice(1)
-                                                    .join('/npm/');
-                                                libOutputPath = path.join(
-                                                    mpb.dest,
-                                                    `./${root || ''}`,
-                                                    'npm',
-                                                    npmPath
-                                                );
+                                                libOutputPath = rewriteNpm(libPath, root, mpb.dest);
                                             } else {
                                                 libOutputPath = path.join(
                                                     mpb.dest,
@@ -179,13 +132,22 @@ module.exports = class HandleJSDep {
                                                 `(${fs.readFileSync(libPath, 'utf-8')})`
                                             );
                                         } else {
-                                            node.arguments[0].value = path.relative(
-                                                path.parse(asset.outputFilePath).dir,
-                                                libOutputPath
-                                            );
-                                            if (node.arguments[0].value[0] !== '.') {
-                                                node.arguments[0].value = `./${node.arguments[0].value}`;
-                                            }
+                                            const {
+                                                importedDest: destPath
+                                            } = mpb.hooks.reWriteImported.call({
+                                                importedSrc: libPath,
+                                                importedDest: libOutputPath,
+                                                asset,
+                                                resolveType: 'es'
+                                            });
+                                            node.arguments[0].value = destPath;
+                                            // node.arguments[0].value = path.relative(
+                                            //     path.parse(asset.outputFilePath).dir,
+                                            //     libOutputPath
+                                            // );
+                                            // if (node.arguments[0].value[0] !== '.') {
+                                            //     node.arguments[0].value = `./${node.arguments[0].value}`;
+                                            // }
                                             deps.push({
                                                 libPath,
                                                 libOutputPath

@@ -7,6 +7,14 @@ module.exports = {
                 'pages/index/index': '/pages/index/index',
                 'pages/logs/index': '/pages/logs/logs'
             }
+        },
+        {
+            root: 'subPacks',
+            pages: {
+                // key路由跳转的页面：value源代码所在位置
+                'pages/index/index': '/subPacks/pages/index/index',
+                'pages/logs/index': '/subPacks/pages/logs/logs'
+            }
         }
     ],
     networkTimeout: {

@@ -20,8 +20,8 @@ const Scan = require('./scan');
 const Watching = require('./watching');
 const Helper = require('./helper');
 const Resolve = require('./resolve');
-const HandleJSDep = require('./plugin/handleJSDep');
 const WatchEntry = require('./plugin/watchEntry');
+const HandleJSDep = require('./plugin/handleJSDep');
 const HandleJSONComponentDep = require('./plugin/handleJSONComponentDep');
 const HandleWXSSDep = require('./plugin/handleWXSSDep');
 const HandleWXMLDep = require('./plugin/handleWXMLDep');
@@ -34,6 +34,8 @@ const CopyPlugin = require('./plugin/copyPlugin');
 const CleanMbpPlugin = require('./plugin/cleanMbpPlugin.js');
 const TsTypeCheckPlugin = require('./plugin/tsTypeCheckPlugin');
 const ResolvePlugin = require('./plugin/resolvePlugin');
+const BeforeResolvePlugin = require('./plugin/beforeResolvePlugin');
+const ReWriteImportedPlugin = require('./plugin/reWriteImportedPlugin');
 const NodeEnvironmentPlugin = require('./node/NodeEnvironmentPlugin');
 
 class Mpbuilder {
@@ -58,8 +60,9 @@ class Mpbuilder {
             start: new AsyncParallelHook(['mpb']),
             beforeCompile: new AsyncParallelHook(['mpb']),
             beforeAddAsset: new AsyncSeriesBailHook(['asset']),
-            beforeResolve: new SyncBailHook(['resolveObj']),
+            beforeResolve: new SyncWaterfallHook(['resolveObj']),
             resolve: new SyncWaterfallHook(['resolveObj']),
+            reWriteImported: new SyncWaterfallHook(['reWriteObj']),
             addAsset: new AsyncSeriesBailHook(['asset']),
             afterGenerateEntry: new AsyncSeriesBailHook(['afterGenerateEntry']),
             beforeEmitFile: new AsyncSeriesWaterfallHook(['asset']),
@@ -92,7 +95,7 @@ class Mpbuilder {
         this.resolve = {};
         this.moduleComposition.forEach((ext) => {
             this.resolve[ext] = Resolve.create(
-                Object.assign({}, this.config.resolve, {
+                Object.assign({ unsafeCache: true }, this.config.resolve, {
                     lookupStartPath: this.src,
                     extensions: this.extensions[ext]
                 })
@@ -111,7 +114,9 @@ class Mpbuilder {
         this.config.plugins = [].concat(
             [
                 new NodeEnvironmentPlugin(),
+                new BeforeResolvePlugin(),
                 new ResolvePlugin(),
+                new ReWriteImportedPlugin(),
                 new HandleJSDep(),
                 new HandleJSONComponentDep(),
                 new HandleWXMLDep(),

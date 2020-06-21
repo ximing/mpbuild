@@ -1,0 +1,4 @@
+<!--index.wxml-->
+<view class="container">
+  comp1
+</view>

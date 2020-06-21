@@ -5,8 +5,9 @@ const htmlparser = require('htmlparser2');
 const path = require('path');
 const fs = require('fs');
 const resolve = require('resolve');
+const { rewriteNpm } = require('../util');
 
-const generateCode = function(ast, code = '', distDeps, asset) {
+const generateCode = function(mpb, ast, code = '', distDeps, asset) {
     const { length } = ast;
     for (let i = 0; i < length; i++) {
         const node = ast[i];
@@ -17,10 +18,18 @@ const generateCode = function(ast, code = '', distDeps, asset) {
             code += `<!-- ${data} -->`;
         } else {
             if (['include', 'wxs', 'import'].indexOf(name) >= 0 && attribs.src) {
-                attribs.src = path.relative(
-                    path.dirname(asset.outputFilePath),
-                    distDeps[attribs.src]
-                );
+                // SyncWaterfallHook
+                const { importedDest: filePath } = mpb.hooks.reWriteImported.call({
+                    importedSrc: attribs.src,
+                    importedDest: distDeps[attribs.src],
+                    asset,
+                    resolveType: 'tpl'
+                });
+                attribs.src = filePath;
+                // attribs.src = path.relative(
+                //     path.dirname(asset.outputFilePath),
+                //     distDeps[attribs.src]
+                // );
             }
             code += `<${name} ${Object.keys(attribs).reduce(
                 (total, next) =>
@@ -28,7 +37,7 @@ const generateCode = function(ast, code = '', distDeps, asset) {
                 ''
             )}`;
             if (Array.isArray(children) && children.length) {
-                code += `>${generateCode(children, '', distDeps, asset)}</${name}>`;
+                code += `>${generateCode(mpb, children, '', distDeps, asset)}</${name}>`;
             } else {
                 code += '/>';
             }
@@ -44,7 +53,8 @@ module.exports = class HandleWXMLDep {
 
     apply(mpb) {
         mpb.hooks.beforeEmitFile.tapPromise('HandleWXMLDep', async (asset) => {
-            if (/\.wxml$/.test(asset.name)) {
+            // if (/\.wxml$/.test(asset.name)) {
+            if (mpb.extensions.tpl.includes(asset.ext) && asset.contents) {
                 try {
                     const deps = [];
                     const distDeps = {};
@@ -74,33 +84,45 @@ module.exports = class HandleWXMLDep {
                     });
                     await Promise.all(
                         deps.map((src) => {
-                            let filePath = '';
-                            if (src[0] === '/') {
-                                filePath = path.resolve(mpb.src, `.${src}`);
-                            } else if (src[0] === '.') {
-                                filePath = path.resolve(asset.dir, src);
-                            } else {
-                                filePath = path.resolve(asset.dir, `./${src}`);
-                                const { ext } = path.parse(filePath);
-                                if (!fs.existsSync(filePath)) {
-                                    filePath = resolve.sync(src, {
-                                        basedir: mpb.cwd,
-                                        extensions: [ext]
-                                    });
-                                }
-                            }
+                            // let filePath = '';
+                            // if (src[0] === '/') {
+                            //     filePath = path.resolve(mpb.src, `.${src}`);
+                            // } else if (src[0] === '.') {
+                            //     filePath = path.resolve(asset.dir, src);
+                            // } else {
+                            //     filePath = path.resolve(asset.dir, `./${src}`);
+                            //     const { ext } = path.parse(filePath);
+                            //     if (!fs.existsSync(filePath)) {
+                            //         filePath = resolve.sync(src, {
+                            //             basedir: mpb.cwd,
+                            //             extensions: [ext]
+                            //         });
+                            //     }
+                            // }
+                            const { imported: lib } = mpb.hooks.beforeResolve.call({
+                                imported: src,
+                                asset,
+                                resolveType: 'tpl'
+                            });
+                            const { imported: filePath } = mpb.hooks.resolve.call({
+                                imported: lib,
+                                asset,
+                                resolveType: 'tpl'
+                            });
+
                             const root = asset.getMeta('root');
 
                             let outputPath = this.mainPkgPathMap[filePath];
                             if (!outputPath) {
                                 if (filePath.includes('node_modules')) {
-                                    outputPath = path.join(
-                                        mpb.dest,
-                                        `./${root || ''}`,
-                                        path
-                                            .relative(mpb.cwd, filePath)
-                                            .replace('node_modules', mpb.config.output.npm)
-                                    );
+                                    // outputPath = path.join(
+                                    //     mpb.dest,
+                                    //     `./${root || ''}`,
+                                    //     path
+                                    //         .relative(mpb.cwd, filePath)
+                                    //         .replace('node_modules', mpb.config.output.npm)
+                                    // );
+                                    outputPath = rewriteNpm(filePath, root, mpb.dest);
                                 } else {
                                     outputPath = path.resolve(
                                         mpb.dest,
@@ -124,7 +146,7 @@ module.exports = class HandleWXMLDep {
 
                     if (Object.keys(distDeps).length) {
                         const ast = htmlparser.parseDOM(asset.contents, { xmlMode: true });
-                        asset.contents = generateCode(ast, '', distDeps, asset);
+                        asset.contents = generateCode(mpb, ast, '', distDeps, asset);
                     }
                 } catch (e) {
                     console.error(e);

@@ -3,7 +3,7 @@
  */
 const glob = require('glob');
 const mm = require('micromatch');
-const { resolve, sep } = require('path');
+const { join, sep } = require('path');
 
 module.exports.findFilesAsync = (patterns, options = {}) =>
     new Promise((reslove, reject) => {
@@ -58,6 +58,15 @@ function createFilter(include, exclude) {
     };
 }
 module.exports.createFilter = createFilter;
+
+module.exports.rewriteNpm = (filePath, root, dest) => {
+    const npmPath = filePath
+        .split('/node_modules/')
+        .slice(1)
+        .join('/npm/');
+    return join(dest, `./${root || ''}`, 'npm', npmPath);
+};
+
 // const filter = createFilter(
 //     [
 //         'node_modules/@mtfe/mt-weapp*/**/*',

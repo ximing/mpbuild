@@ -1,0 +1,5 @@
+{
+    "usingComponents": {
+        "comp1": "/components/comp2/index"
+    }
+}
