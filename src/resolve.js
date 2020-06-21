@@ -14,8 +14,9 @@ class Resolve {
             unsafeCache,
             enforceExtension: false,
             enableConcord: false,
+            symlinks: false,
             // moduleExtensions:extensions,
-            mainField: ['browser', 'main']
+            mainField: ['browser', 'main'],
         });
         const resolveContext = {};
         return (request, startPath) => {

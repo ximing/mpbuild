@@ -22,6 +22,21 @@ module.exports = class ScanDep {
         this.mpb.pagesMap = {};
     }
 
+    getPath(filePath, ext) {
+        // 按照长度排序，长的优先匹配
+        // TODO $后缀支持
+        const keys = Object.keys(this.mpb.config.resolve.alias || {}).sort(
+            (a, b) => b.length - a.length
+        );
+        for (let i = 0, l = keys.length; i < l; i++) {
+            const key = keys[i];
+            if (filePath.startsWith(key)) {
+                return `${filePath.replace(key, this.mpb.config.resolve.alias[key])}${ext}`;
+            }
+        }
+        return path.join(this.mpb.src, filePath, ext);
+    }
+
     async addAssetByEXT(
         prefixPath,
         prefixOutputPath,
@@ -42,40 +57,58 @@ module.exports = class ScanDep {
         let stylePath;
         try {
             stylePath = this.mpb.resolve.style(prefixPath, base);
-        } catch (e) {
-            emptyManifest();
-        }
+            // await this.mpb.assetManager.addAsset(stylePath, `${prefixOutputPath}.wxss`, meta);
+        } catch (e) {}
         await this.mpb.assetManager.addAsset(
             stylePath ||
-                emptyStyle(
-                    path.join(this.mpb.src, prefixPath, '.wxss'),
-                    `${prefixOutputPath}.wxss`,
-                    meta
-                ),
+                emptyStyle(this.getPath(prefixPath, '.wxss'), `${prefixOutputPath}.wxss`, meta),
             `${prefixOutputPath}.wxss`,
             meta
         );
         let tplPath;
         try {
             tplPath = this.mpb.resolve.tpl(prefixPath, base);
-            this.mpb.assetManager.addAsset(tplPath, `${prefixOutputPath}.wxml`, meta);
+            // await this.mpb.assetManager.addAsset(tplPath, `${prefixOutputPath}.wxml`, meta);
         } catch (e) {}
+        await this.mpb.assetManager.addAsset(
+            tplPath ||
+                emptyStyle(this.getPath(prefixPath, '.wxml'), `${prefixOutputPath}.wxml`, meta),
+            `${prefixOutputPath}.wxml`,
+            meta
+        );
         let manifestPath;
         try {
             manifestPath = this.mpb.resolve.manifest(prefixPath, base);
+            // const manifestMeta = { type, root, source, 'mbp-scan-json-dep': 'usingComponents' };
+            // await this.mpb.assetManager.addAsset(
+            //     manifestPath,
+            //     `${prefixOutputPath}.json`,
+            //     manifestMeta
+            // );
         } catch (e) {}
         const manifestMeta = { type, root, source, 'mbp-scan-json-dep': 'usingComponents' };
-        this.mpb.assetManager.addAsset(
+        await this.mpb.assetManager.addAsset(
             manifestPath ||
                 emptyManifest(
-                    path.join(this.mpb.src, prefixPath, '.json'),
+                    this.getPath(prefixPath, '.json'),
                     `${prefixOutputPath}.json`,
-                    manifestMeta,
+                    meta,
                     type === assetType.component
                 ),
             `${prefixOutputPath}.json`,
             manifestMeta
         );
+        if (type === assetType.page || type === assetType.app) {
+            console.log('type', type, pagePath);
+            try {
+                await this.mpb.hooks.afterBuildPointEntry.promise({
+                    endpoind: pagePath,
+                    assetType: type,
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        }
     }
 
     async pages() {
@@ -90,25 +123,13 @@ module.exports = class ScanDep {
             for (let j = 0, ll = pagesKeys.length; j < ll; j++) {
                 const pageRouter = pagesKeys[j];
                 await this.addAssetByEXT(
-                    `.${pages[pageRouter]}`,
+                    `${pages[pageRouter][0] === '/' ? '.' : ''}${pages[pageRouter]}`,
                     path.join(this.mpb.dest, root, pageRouter),
-                    undefined,
+                    assetType.page,
                     undefined,
                     root
                 );
             }
-            // eslint-disable-next-line no-await-in-loop
-            // await Promise.all(
-            //     Object.keys(pages).map((pageRouter) =>
-            //         this.addAssetByEXT(
-            //             pages[pageRouter],
-            //             path.join(this.mpb.dest, root, pageRouter),
-            //             undefined,
-            //             undefined,
-            //             root
-            //         )
-            //     )
-            // );
         }
     }
 

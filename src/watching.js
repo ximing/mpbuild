@@ -26,7 +26,7 @@ module.exports = class Watching {
         } else {
             this.watcher = new Watchpack({
                 aggregateTimeout: 1000,
-                poll: true
+                poll: true,
             });
             this.listenWatcherEvent();
             this.watcher.watch(files, [], this.watchTimer);
@@ -62,7 +62,7 @@ module.exports = class Watching {
                 ignored: missing,
                 persistent: true,
                 usePolling: true,
-                ignoreInitial: true
+                ignoreInitial: true,
                 // awaitWriteFinish: {
                 //     stabilityThreshold: 2000,
                 //     pollInterval: 100
@@ -112,11 +112,24 @@ module.exports = class Watching {
         } else {
             console.warn('[watching] 这里不应该 在assetManager里面找不到对应的文件');
         }
+        this.emitEvent(assets, type);
         log.info(`${chalk.green('[success]')},耗时:${formatBuildTime(perf.stop(perfId).time)}`);
         const ps = this.pendingPaths;
         if (ps.length) {
             this.pendingPaths = [];
             await Promise.all(ps.map(({ path, type }) => this.handleAsset(path, type)));
+        }
+    }
+
+    emitEvent(assets, type) {
+        if (assets) {
+            for (const asset of assets) {
+                const node = this.mpb.deps.getNode(asset.path);
+                // TODO 删除情况
+                node.getEndpoints().forEach((item) => {
+                    this.mpb.hooks.afterBuildPointEntry.promise(item);
+                });
+            }
         }
     }
 
@@ -133,7 +146,7 @@ module.exports = class Watching {
         } else {
             this.pendingPaths.push({
                 path,
-                type
+                type,
             });
         }
         this.watch();
@@ -142,7 +155,7 @@ module.exports = class Watching {
     watchEntry(entry) {
         this.watcher = chokidar.watch(entry, {
             persistent: true,
-            ignoreInitial: true
+            ignoreInitial: true,
         });
         this.watcher.on('add', () => {
             this.mpb.scan.init();

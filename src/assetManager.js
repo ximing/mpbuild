@@ -83,6 +83,9 @@ module.exports = class AssetManager {
                     }
                 }
             }
+            if (existAssets) {
+                console.log('-------->', asset.mtime, asset.path);
+            }
             // 更新asset
             this.setAsset(asset);
             try {
@@ -100,7 +103,7 @@ module.exports = class AssetManager {
                         if (this.mpb.isWatch) {
                             notifier.notify({
                                 title: 'beforeEmitFile hooks error',
-                                message: '输出文件失败，具体错误请查看命令行'
+                                message: '输出文件失败，具体错误请查看命令行',
                             });
                             console.log(chalk.red('[beforeEmitFile hooks error]'), asset.path);
                             console.error(err);

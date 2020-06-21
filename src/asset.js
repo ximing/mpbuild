@@ -61,7 +61,7 @@ module.exports = class Asset {
     }
 
     get contents() {
-        if (!this.__content) {
+        if (typeof this.__content !== 'string') {
             try {
                 if (
                     /\.(ts|tsx|js|jsx|wxml|wxss|css|less|scss|text|txt|json|wxs)$/.test(this.name)

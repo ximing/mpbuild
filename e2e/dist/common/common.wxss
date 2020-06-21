@@ -1,1 +1,1 @@
-@import "var.wxss";
+@import "./var.wxss";

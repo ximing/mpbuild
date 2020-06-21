@@ -90,6 +90,6 @@ module.exports.emptyManifest = (path, outputPath, meta, isComponent) => {
 module.exports.emptyStyle = (path, outputPath, meta) => {
     const asset = new Asset(path, outputPath, meta);
     asset.switchToVirtualFile();
-    asset.contents = '';
+    asset.contents = '/* virtural file */';
     return asset;
 };

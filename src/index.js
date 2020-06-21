@@ -9,7 +9,7 @@ const {
     AsyncParallelHook,
     AsyncSeriesWaterfallHook,
     AsyncSeriesHook,
-    AsyncSeriesBailHook
+    AsyncSeriesBailHook,
 } = require('tapable');
 
 const LoaderManager = require('./loaderManager');
@@ -20,6 +20,7 @@ const Scan = require('./scan');
 const Watching = require('./watching');
 const Helper = require('./helper');
 const Resolve = require('./resolve');
+const Deps = require('./deps');
 const WatchEntry = require('./plugin/watchEntry');
 const HandleJSDep = require('./plugin/handleJSDep');
 const HandleJSONComponentDep = require('./plugin/handleJSONComponentDep');
@@ -44,15 +45,13 @@ class Mpbuilder {
         this.dest = path.resolve(this.root, config.output.path);
         this.src = path.resolve(this.root, config.src);
         this.config = config;
-        this.extensions = Object.assign(
-            {
-                es: ['.js'],
+        this.extensions = {
+            es: ['.js'],
                 tpl: ['.wxml'],
                 style: ['.wxss'],
-                manifest: ['.json']
-            },
-            config.resolve.extensions
-        );
+                manifest: ['.json'],
+            ...config.resolve.extensions
+        };
         this.appEntry = {};
         this.cwd = process.cwd();
         this.hooks = {
@@ -64,19 +63,18 @@ class Mpbuilder {
             resolve: new SyncWaterfallHook(['resolveObj']),
             reWriteImported: new SyncWaterfallHook(['reWriteObj']),
             addAsset: new AsyncSeriesBailHook(['asset']),
+            afterBuildPointEntry: new AsyncSeriesBailHook(['page']),
             afterGenerateEntry: new AsyncSeriesBailHook(['afterGenerateEntry']),
             beforeEmitFile: new AsyncSeriesWaterfallHook(['asset']),
             afterEmitFile: new AsyncSeriesWaterfallHook(['asset']),
             afterCompile: new AsyncParallelHook(['mpb']),
-            watchRun: new AsyncSeriesHook(['compiler'])
+            watchRun: new AsyncSeriesHook(['compiler']),
         };
         this.moduleComposition = ['es', 'tpl', 'style', 'manifest'];
-        this.optimization = Object.assign(
-            {
-                minimize: true
-            },
-            config.optimization
-        );
+        this.optimization = {
+            minimize: true,
+            ...config.optimization
+        };
         this.initResolve();
         this.watching = new Watching(this, async () => {
             await this.hooks.afterCompile.promise(this);
@@ -87,6 +85,7 @@ class Mpbuilder {
         this.scan = new Scan(this);
         this.initPlugin();
         this.assetManager = new AssetManager(this);
+        this.deps = new Deps(this);
         this.hasInit = false;
         this.isWatch = false;
     }
@@ -95,10 +94,8 @@ class Mpbuilder {
         this.resolve = {};
         this.moduleComposition.forEach((ext) => {
             this.resolve[ext] = Resolve.create(
-                Object.assign({ unsafeCache: true }, this.config.resolve, {
-                    lookupStartPath: this.src,
-                    extensions: this.extensions[ext]
-                })
+                {unsafeCache: true, ...this.config.resolve, lookupStartPath: this.src,
+                    extensions: this.extensions[ext],}
             ).bind(this);
         });
     }
@@ -123,7 +120,7 @@ class Mpbuilder {
                 new HandleWXSSDep(),
                 new NpmRewrite(),
                 new MinifyPlugin(),
-                new WatchEntry()
+                new WatchEntry(),
             ],
             this.config.plugins
         );

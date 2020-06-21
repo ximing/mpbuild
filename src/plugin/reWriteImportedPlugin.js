@@ -10,12 +10,16 @@ module.exports = class ReWriteImportedPlugin {
                     dest = importedDest.replace(mpb.dest, '');
                 } else {
                     dest = path.relative(path.dirname(asset.outputFilePath), importedDest);
+                    if (dest[0] !== '.') {
+                        dest = `./${dest}`;
+                        // console.log(dest, importedDest, importedSrc, asset.outputFilePath);
+                    }
                 }
                 return {
                     importedSrc,
                     asset,
                     resolveType,
-                    importedDest: dest
+                    importedDest: dest,
                 };
             }
         );

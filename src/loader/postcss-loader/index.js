@@ -6,9 +6,9 @@ const Warning = require('./Warning.js');
 const SyntaxError = require('./Error.js');
 const parseOptions = require('./options.js');
 
-module.exports = function(opts = {}) {
+module.exports = function (opts = {}) {
     return async function loader(asset) {
-        let options = Object.assign({}, opts);
+        let options = { ...opts};
         validateOptions(require('./options.json'), options, 'PostCSS Loader');
 
         const file = asset.path;
@@ -35,10 +35,10 @@ module.exports = function(opts = {}) {
                     file: {
                         extname: path.extname(file),
                         dirname: path.dirname(file),
-                        basename: path.basename(file)
+                        basename: path.basename(file),
                     },
-                    options: {}
-                }
+                    options: {},
+                },
             };
 
             if (options.config) {
@@ -73,17 +73,15 @@ module.exports = function(opts = {}) {
 
         const plugins = config.plugins || [];
 
-        options = Object.assign(
-            {
-                from: file,
+        options = {
+            from: file,
                 map: sourceMap
                     ? sourceMap === 'inline'
                         ? { inline: true, annotation: false }
                         : { inline: false, annotation: false }
-                    : false
-            },
-            config.options
-        );
+                    : false,
+            ...config.options
+        };
 
         if (typeof options.parser === 'string') {
             options.parser = require(options.parser);
@@ -123,7 +121,7 @@ module.exports = function(opts = {}) {
             const ast = {
                 type: 'postcss',
                 version: processor.version,
-                root
+                root,
             };
 
             asset.setMeta('ast', ast);
@@ -131,6 +129,7 @@ module.exports = function(opts = {}) {
             asset.setMeta('sourceMap', map);
             asset.contents = css;
         } catch (err) {
+            console.log('postcss loader', asset.path);
             if (err.file) {
                 console.log('postcss loader', err.file);
             }
