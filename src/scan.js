@@ -4,9 +4,10 @@
 const path = require('path');
 const perf = require('execution-time')();
 const log = require('./log');
-const { formatBuildTime } = require('./util');
+const { formatBuildTime, emptyManifest, emptyStyle } = require('./util');
 const AppJSON = require('./plugin/appJSON');
 const { assetType } = require('./consts');
+const Asset = require('./asset');
 
 module.exports = class ScanDep {
     constructor(mpb) {
@@ -38,66 +39,43 @@ module.exports = class ScanDep {
             this.mpb.pagesMap[pagePath] = pagePath;
         }
         await this.mpb.assetManager.addAsset(pagePath, `${prefixOutputPath}.js`, meta);
+        let stylePath;
         try {
-            const stylePath = this.mpb.resolve.style(prefixPath, base);
-            await this.mpb.assetManager.addAsset(stylePath, `${prefixOutputPath}.wxss`, meta);
-        } catch (e) {}
+            stylePath = this.mpb.resolve.style(prefixPath, base);
+        } catch (e) {
+            emptyManifest();
+        }
+        await this.mpb.assetManager.addAsset(
+            stylePath ||
+                emptyStyle(
+                    path.join(this.mpb.src, prefixPath, '.wxss'),
+                    `${prefixOutputPath}.wxss`,
+                    meta
+                ),
+            `${prefixOutputPath}.wxss`,
+            meta
+        );
+        let tplPath;
         try {
-            const tplPath = this.mpb.resolve.tpl(prefixPath, base);
+            tplPath = this.mpb.resolve.tpl(prefixPath, base);
             this.mpb.assetManager.addAsset(tplPath, `${prefixOutputPath}.wxml`, meta);
         } catch (e) {}
+        let manifestPath;
         try {
-            const manifestPath = this.mpb.resolve.manifest(prefixPath, base);
-            const meta = { type, root, source, 'mbp-scan-json-dep': 'usingComponents' };
-            this.mpb.assetManager.addAsset(manifestPath, `${prefixOutputPath}.json`, meta);
+            manifestPath = this.mpb.resolve.manifest(prefixPath, base);
         } catch (e) {}
-        //
-        // for (let i = 0, l = this.exts.length; i < l; i++) {
-        //     const ext = this.exts[i];
-        //     // @TODO 这里的ext 应该和js寻址 .webchat.js 这种分开
-        //     const meta = { type, root, source };
-        //     if (ext === '.json') {
-        //         meta['mbp-scan-json-dep'] = 'usingComponents';
-        //     }
-        //     const filePath = this.mpb.helper.getFilePath(base, `${prefixPath}${ext}`);
-        //     if (type === assetType.page) {
-        //         if (['.jsx', '.tsx'].includes(ext)) {
-        //             this.mpb.jsxPagesMap[filePath] = filePath;
-        //         }
-        //         this.mpb.pagesMap[filePath] = filePath;
-        //     }
-        //     // console.log('__++')
-        //     if (['.json', '.wxml'].includes(ext)) {
-        //         this.mpb.assetManager.addAsset(filePath, `${prefixOutputPath}${ext}`, meta);
-        //     } else {
-        //         await this.mpb.assetManager.addAsset(filePath, `${prefixOutputPath}${ext}`, meta);
-        //     }
-        //     // console.log('--->', prefixPath);
-        // }
-        // return Promise.all(
-        //     this.exts.map(async (ext) => {
-        //         // @TODO 这里的ext 应该和js寻址 .webchat.js 这种分开
-        //         const meta = { type, root, source };
-        //         if (ext === '.json') {
-        //             meta['mbp-scan-json-dep'] = 'usingComponents';
-        //         }
-        //         const filePath = this.mpb.helper.getFilePath(base, `${prefixPath}${ext}`);
-        //         if (type === assetType.page) {
-        //             if (['.jsx', '.tsx'].includes(ext)) {
-        //                 this.mpb.jsxPagesMap[filePath] = filePath;
-        //             }
-        //             this.mpb.pagesMap[filePath] = filePath;
-        //         }
-        //         // console.log('__++')
-        //         const res = await this.mpb.assetManager.addAsset(
-        //             filePath,
-        //             `${prefixOutputPath}${ext}`,
-        //             meta
-        //         );
-        //         // console.log('--->', prefixPath);
-        //         return res;
-        //     })
-        // );
+        const manifestMeta = { type, root, source, 'mbp-scan-json-dep': 'usingComponents' };
+        this.mpb.assetManager.addAsset(
+            manifestPath ||
+                emptyManifest(
+                    path.join(this.mpb.src, prefixPath, '.json'),
+                    `${prefixOutputPath}.json`,
+                    manifestMeta,
+                    type === assetType.component
+                ),
+            `${prefixOutputPath}.json`,
+            manifestMeta
+        );
     }
 
     async pages() {
@@ -148,7 +126,7 @@ module.exports = class ScanDep {
                 });
                 this.mpb.appEntry.router.push({
                     root: '',
-                    pages
+                    pages,
                 });
                 delete this.mpb.appEntry.pages;
             }
@@ -160,7 +138,7 @@ module.exports = class ScanDep {
                     });
                     this.mpb.appEntry.router.push({
                         root: subPack.root,
-                        pages
+                        pages,
                     });
                 });
                 delete this.mpb.appEntry.subPackages;

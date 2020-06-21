@@ -61,11 +61,10 @@ module.exports = class HandleJSDep {
         mpb.hooks.beforeEmitFile.tapPromise('HandleJSDep', async (asset) => {
             const deps = [];
             try {
-                console.log(mpb.extensions.es, asset.ext);
                 if (exts.includes(asset.ext) && asset.contents) {
                     // if (/\.(js|jsx|wxs|ts|tsx)$/.test(asset.outputFilePath) && asset.contents) {
                     const code = asset.contents;
-                    const ast = babylon.parse(code, { sourceType: 'module' });
+                    const ast = asset.ast || babylon.parse(code, { sourceType: 'module' });
                     babelTraverse(ast, {
                         Expression: {
                             enter: (astPath) => {
@@ -82,12 +81,12 @@ module.exports = class HandleJSDep {
                                         const { imported: lib } = mpb.hooks.beforeResolve.call({
                                             imported: node.arguments[0].value,
                                             asset,
-                                            resolveType: 'es'
+                                            resolveType: 'es',
                                         }) || { lib: node.arguments[0].value };
                                         const { imported: libPath } = mpb.hooks.resolve.call({
                                             imported: lib,
                                             asset,
-                                            resolveType: 'es'
+                                            resolveType: 'es',
                                         });
                                         const root = asset.getMeta('root');
                                         const isNPM = libPath.includes('node_modules');
@@ -116,7 +115,7 @@ module.exports = class HandleJSDep {
                                         ) {
                                             const [
                                                 libOutputPathPrefix,
-                                                ext
+                                                ext,
                                             ] = mpb.helper.splitExtension(libOutputPath);
                                             libOutputPath = `${libOutputPathPrefix}.${
                                                 ext === 'wxs' ? ext : 'js'
@@ -133,12 +132,12 @@ module.exports = class HandleJSDep {
                                             );
                                         } else {
                                             const {
-                                                importedDest: destPath
+                                                importedDest: destPath,
                                             } = mpb.hooks.reWriteImported.call({
                                                 importedSrc: libPath,
                                                 importedDest: libOutputPath,
                                                 asset,
-                                                resolveType: 'es'
+                                                resolveType: 'es',
                                             });
                                             node.arguments[0].value = destPath;
                                             // node.arguments[0].value = path.relative(
@@ -150,19 +149,19 @@ module.exports = class HandleJSDep {
                                             // }
                                             deps.push({
                                                 libPath,
-                                                libOutputPath
+                                                libOutputPath,
                                             });
                                         }
                                     }
                                 }
-                            }
-                        }
+                            },
+                        },
                     });
                     const [outputPrefix, ext] = mpb.helper.splitExtension(asset.outputFilePath);
                     asset.outputFilePath = `${outputPrefix}.${ext === 'wxs' ? ext : 'js'}`;
                     asset.contents = generate(ast, {
                         quotes: 'single',
-                        retainLines: true
+                        retainLines: true,
                     }).code;
                 }
             } catch (e) {
@@ -176,7 +175,7 @@ module.exports = class HandleJSDep {
                         const root = asset.getMeta('root');
                         await mpb.assetManager.addAsset(libPath, libOutputPath, {
                             root,
-                            source: asset.filePath
+                            source: asset.filePath,
                         });
                     }
                     // await Promise.all(

@@ -18,7 +18,7 @@ module.exports = class Asset {
         this.filePath = filePath;
         this.__content = null;
         this.__meta = meta || {
-            type: assetType.normal
+            type: assetType.normal,
         };
         this.shouldOutput = true;
         this.outputFilePath = outputFilePath;
@@ -32,6 +32,10 @@ module.exports = class Asset {
     getMeta(key) {
         if (key === undefined) return this.__meta;
         return this.__meta[key];
+    }
+
+    switchToVirtualFile() {
+        this.setMeta(virtual_file, virtual_file);
     }
 
     get stats() {

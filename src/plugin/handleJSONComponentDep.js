@@ -44,17 +44,13 @@ module.exports = class HandleJSONComponentDep {
                                 const { imported: lib } = mpb.hooks.beforeResolve.call({
                                     imported: componets[componentName],
                                     asset,
-                                    resolveType: 'manifest'
+                                    resolveType: 'manifest',
                                 });
-                                let { imported: filePath } = mpb.hooks.resolve.call({
+                                const { imported: filePath } = mpb.hooks.resolve.call({
                                     imported: lib,
                                     asset,
-                                    resolveType: 'manifest'
+                                    resolveType: 'manifest',
                                 });
-                                const file = path.parse(filePath);
-                                if (file.ext) {
-                                    filePath = `${file.dir}/${file.name}`;
-                                }
                                 const nmPathIndex = filePath.indexOf(NPM_PATH_NAME);
                                 const root = asset.getMeta('root');
                                 let outputPath = this.mainPkgPathMap[filePath];
@@ -91,7 +87,7 @@ module.exports = class HandleJSONComponentDep {
                                     importedSrc: filePath,
                                     importedDest: outputPath,
                                     asset,
-                                    resolveType: 'manifest'
+                                    resolveType: 'manifest',
                                 });
                                 componets[componentName] = destPath;
                                 asset.contents = JSON.stringify(code);
