@@ -30,7 +30,7 @@ module.exports = class ScanDep {
         root = '',
         source = ''
     ) {
-        console.log('prefixPath', prefixPath);
+        // console.log('prefixPath', prefixPath);
         const pagePath = this.mpb.resolve.es(prefixPath, base);
         const meta = { type, root, source };
         const { asset: esAsset } = await this.mpb.hooks.resolveEntry.promise({

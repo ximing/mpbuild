@@ -32,7 +32,6 @@ module.exports = class ResolveEntryPlugin {
                         manifestPath = this.mpb.resolve.manifest(prefixPath, base);
                     } catch (e) {}
                     if (!manifestPath) {
-                        console.log('this.getPath', this.getPath(prefixPath, '.json'));
                         asset = emptyManifest(
                             this.getPath(prefixPath, '.json'),
                             `${prefixOutputPath}.json`,
