@@ -68,6 +68,7 @@ class Mpbuilder {
             afterBuildPointEntry: new AsyncSeriesBailHook(['page']),
             afterGenerateEntry: new AsyncSeriesBailHook(['afterGenerateEntry']),
             beforeEmitFile: new AsyncSeriesWaterfallHook(['asset']),
+            renderTemplate: new AsyncSeriesWaterfallHook(['asset']),
             afterEmitFile: new AsyncSeriesWaterfallHook(['asset']),
             afterCompile: new AsyncParallelHook(['mpb']),
             watchRun: new AsyncSeriesHook(['compiler']),
@@ -81,15 +82,6 @@ class Mpbuilder {
         this.watching = new Watching(this, async () => {
             await this.hooks.afterCompile.promise(this);
         });
-        // 保证顺序
-        this.helper = new Helper(this);
-        this.loaderManager = new LoaderManager(this);
-        this.scan = new Scan(this);
-        this.initPlugin();
-        this.assetManager = new AssetManager(this);
-        this.deps = new Deps(this);
-        this.hasInit = false;
-        this.isWatch = false;
     }
 
     initResolve() {
@@ -102,6 +94,18 @@ class Mpbuilder {
                 extensions: this.extensions[ext],
             }).bind(this);
         });
+    }
+
+    init() {
+        // 保证顺序
+        this.helper = new Helper(this);
+        this.loaderManager = new LoaderManager(this);
+        this.scan = new Scan(this);
+        this.initPlugin();
+        this.assetManager = new AssetManager(this);
+        this.deps = new Deps(this);
+        this.hasInit = false;
+        this.isWatch = false;
     }
 
     getPlugin(name) {
@@ -148,6 +152,7 @@ class Mpbuilder {
     }
 
     async run() {
+        this.init();
         await this.loaderManager.initRules();
         await this.hooks.start.promise(this.mpb);
         await this.scan.run();

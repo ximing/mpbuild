@@ -10,66 +10,109 @@ module.exports = class Node {
         this.childs = new Set();
     }
 
-    addChild(path) {
-        this.childs.add(path);
+    addChild(node) {
+        this.childs.add(node);
     }
 
-    removeChild(path) {
-        this.childs.delete(path);
+    removeChild(node) {
+        this.childs.delete(node);
     }
 
-    addParent(path) {
-        this.parents.add(path);
+    addParent(node) {
+        this.parents.add(node);
     }
 
-    removeParent(path) {
-        this.parents.delete(path);
+    removeParent(node) {
+        this.parents.delete(node);
     }
 
     getEndpoints() {
         const endpoints = [];
-        for (const p of this.parents) {
-            const assets = this.mpb.assetManager.getAssets(p.path);
-            if (assets && assets[0]) {
-                if (
-                    assets[0].getMeta('type') === assetType.page ||
-                    assets[0].getMeta('type') === assetType.app
-                ) {
-                    endpoints.push({
-                        entryPath: assets[0].path,
-                        endpoind: this.mpb.scan.entryMap.get(
-                            path.join(assets[0].dir, assets[0].fileName)
-                        ),
-                        assetType: assets[0].getMeta('type'),
-                    });
+        const stack = new WeakSet();
+        const _getEndpoints = (parents) => {
+            for (const p of parents) {
+                if (!stack.has(p)) {
+                    stack.add(p);
+                    const assets = this.mpb.assetManager.getAssets(p.path);
+                    if (assets && assets[0]) {
+                        if (
+                            assets[0].getMeta('type') === assetType.page ||
+                            assets[0].getMeta('type') === assetType.app
+                        ) {
+                            const modulePath = path.join(assets[0].dir, assets[0].fileName);
+                            endpoints.push({
+                                modulePath,
+                                entryPath: assets[0].path,
+                                endpoind: this.mpb.scan.moduleMap.get(modulePath),
+                                assetType: assets[0].getMeta('type'),
+                            });
+                        } else {
+                            _getEndpoints(p.parents);
+                        }
+                    } else {
+                        console.warn(`没找到对应的资源${p.path}`);
+                    }
                 }
-            } else {
-                console.warn(`没找到对应的资源${p.path}`);
             }
-        }
+        };
+        _getEndpoints(this.parents);
         return _.unionBy(endpoints, 'endpoind');
     }
 
     getNearestModules() {
         const modules = [];
-        for (const p of this.parents) {
-            const assets = this.mpb.assetManager.getAssets(p.path);
-            if (assets && assets[0]) {
-                if (
-                    assets[0].getMeta('type') === assetType.page ||
-                    assets[0].getMeta('type') === assetType.component ||
-                    assets[0].getMeta('type') === assetType.app
-                ) {
-                    modules.push({
-                        endpoind: path.join(assets[0].dir, assets[0].name, '.js'),
-                        assetType: assets[0].getMeta('type'),
-                    });
+        const stack = new WeakSet();
+        const _getNearestModules = (parents) => {
+            for (const p of parents) {
+                if (!stack.has(p)) {
+                    stack.add(p);
+                    const assets = this.mpb.assetManager.getAssets(p.path);
+                    if (assets && assets[0]) {
+                        if (
+                            assets[0].getMeta('type') === assetType.page ||
+                            assets[0].getMeta('type') === assetType.component ||
+                            assets[0].getMeta('type') === assetType.app
+                        ) {
+                            const modulePath = path.join(assets[0].dir, assets[0].fileName);
+                            modules.push({
+                                modulePath,
+                                endpoind: this.mpb.scan.moduleMap.get(modulePath),
+                                assetType: assets[0].getMeta('type'),
+                            });
+                        } else {
+                            _getNearestModules(p.parents);
+                        }
+                    } else {
+                        console.warn(`没找到对应的资源${p.path}`);
+                    }
                 }
-            } else {
-                console.warn(`没找到对应的资源${p.path}`);
             }
-        }
+        };
+        _getNearestModules(this.parents);
         return _.unionBy(modules, 'endpoind');
+    }
+
+    getAllChildrens() {
+        const childs = new Set();
+        const stack = new WeakSet();
+        const _getChildrens = (_childs) => {
+            for (const p of _childs) {
+                if (!stack.has(p)) {
+                    stack.add(p);
+                    const assets = this.mpb.assetManager.getAssets(p.path);
+                    if (assets && assets[0]) {
+                        // const modulePath = path.join(assets[0].dir, assets[0].fileName);
+                        childs.add(p.path);
+                    } else {
+                        console.warn(`没找到对应的资源${p.path}`);
+                    }
+                    _getChildrens(p.childs);
+                }
+            }
+        };
+        _getChildrens(this.childs);
+        return Array.from(childs);
+        // return _.unionBy(childs, 'path');
     }
 
     remove() {

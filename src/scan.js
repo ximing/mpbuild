@@ -19,7 +19,7 @@ module.exports = class ScanDep {
         this.modules = {};
         this.mpb.jsxPagesMap = {};
         this.mpb.pagesMap = {};
-        this.entryMap = new Map();
+        this.moduleMap = new Map();
     }
 
     async addAssetByEXT(
@@ -74,9 +74,9 @@ module.exports = class ScanDep {
             meta: { type, root, source, 'mbp-scan-json-dep': 'usingComponents' },
         });
         await this.mpb.assetManager.addAsset(manifestAsset);
+        const { name, dir } = path.parse(pagePath);
+        this.moduleMap.set(path.join(dir, name), pagePath);
         if (type === assetType.page || type === assetType.app) {
-            const { name, dir } = path.parse(pagePath);
-            this.entryMap.set(path.join(dir, name), pagePath);
             try {
                 await this.mpb.hooks.afterBuildPointEntry.promise({
                     entryPath: pagePath,

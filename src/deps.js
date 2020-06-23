@@ -25,9 +25,9 @@ module.exports = class Deps {
         this.nodes.delete(path);
     }
 
-    getNode(path) {
+    getNode(path, createNew = true) {
         let node = this.nodes.get(path);
-        if (!node) {
+        if (!node && createNew) {
             node = new Node(path, this.mpb);
             this.nodes.set(path, node);
         }

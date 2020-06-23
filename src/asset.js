@@ -97,18 +97,26 @@ module.exports = class Asset {
         return this.mtime !== asset.mtime;
     }
 
-    render(mpb) {
+    async render(mpb) {
         if (this.outputFilePath) {
             if (this.__content != null) {
                 if (mpb.hasInit && mpb.isWatch) {
                     console.log(chalk.cyan('[watching-output]'), this.outputFilePath);
                 }
-                // TODO 做一个
+                // TODO 做一个安全监测
                 // if (this.outputFilePath.includes('/mnt/d/project/mall-wxapp/dist')) {
                 //     return fse.outputFile(this.outputFilePath, this.contents);
                 // }
                 // return Promise.reject(new Error('dist not in project: ' + this.outputFilePath));
-                return fse.outputFile(this.outputFilePath, this.contents);
+                const { contents } = await mpb.hooks.renderTemplate.promise({
+                    path: this.path,
+                    name: this.name,
+                    ext: this.ext,
+                    meta: this.__meta,
+                    outputFilePath: this.outputFilePath,
+                    contents: this.contents,
+                });
+                return fse.outputFile(this.outputFilePath, contents);
             }
             if (mpb.hasInit && mpb.isWatch) {
                 console.log('[watch]:文件内容为空，不输出', this.outputFilePath);
