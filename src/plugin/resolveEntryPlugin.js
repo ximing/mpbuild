@@ -57,13 +57,13 @@ module.exports = class ResolveEntryPlugin {
                         );
                     }
                 } else if (entryType === 'es') {
+                    asset = new Asset(pagePath, `${prefixOutputPath}.js`, meta);
                     if (type === assetType.page) {
                         if (pagePath.endsWith('.tsx') || pagePath.endsWith('.jsx')) {
-                            this.mpb.jsxPagesMap[pagePath] = pagePath;
+                            this.mpb.jsxPagesMap[`${asset.dir}/${asset.fileName}`] = pagePath;
                         }
-                        this.mpb.pagesMap[pagePath] = pagePath;
+                        this.mpb.pagesMap[`${asset.dir}/${asset.fileName}`] = pagePath;
                     }
-                    asset = new Asset(pagePath, `${prefixOutputPath}.js`, meta);
                 }
                 return {
                     base,

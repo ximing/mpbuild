@@ -108,7 +108,7 @@ module.exports = class Asset {
                 //     return fse.outputFile(this.outputFilePath, this.contents);
                 // }
                 // return Promise.reject(new Error('dist not in project: ' + this.outputFilePath));
-                const { contents } = await mpb.hooks.renderTemplate.promise({
+                const { contents, outputFilePath } = await mpb.hooks.renderTemplate.promise({
                     path: this.path,
                     name: this.name,
                     ext: this.ext,
@@ -116,7 +116,7 @@ module.exports = class Asset {
                     outputFilePath: this.outputFilePath,
                     contents: this.contents,
                 });
-                return fse.outputFile(this.outputFilePath, contents);
+                return fse.outputFile(outputFilePath, contents);
             }
             if (mpb.hasInit && mpb.isWatch) {
                 console.log('[watch]:文件内容为空，不输出', this.outputFilePath);

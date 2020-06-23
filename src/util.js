@@ -93,3 +93,7 @@ module.exports.emptyStyle = (path, outputPath, meta) => {
     asset.contents = '/* virtural file */';
     return asset;
 };
+
+module.exports.getMatcher = (exts) => {
+    return new RegExp(`(${exts.map((i) => i.replace('.', '\\.')).join('|')})$`);
+};

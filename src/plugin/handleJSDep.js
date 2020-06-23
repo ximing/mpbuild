@@ -7,10 +7,8 @@ const t = require('@babel/types');
 const babelTraverse = require('@babel/traverse').default;
 const generate = require('@babel/generator').default;
 const template = require('@babel/template').default;
-const bresolve = require('browser-resolve');
-const resolve = require('resolve');
 const fs = require('fs');
-const { rewriteNpm } = require('../util');
+const { rewriteNpm, getMatcher } = require('../util');
 
 module.exports = class HandleJSDep {
     constructor() {
@@ -18,50 +16,18 @@ module.exports = class HandleJSDep {
         this.mainPkgPathMap = {};
     }
 
-    // findJSFile(dir, lib) {
-    //     let libPath = '';
-    //     // TODO 更好的办法  case index.service
-    //     if (['.js', '.ts', '.jsx', '.tsx', '.wxs'].includes(path.extname(lib))) {
-    //         libPath = resolve.sync(path.join(dir, `${lib}`));
-    //     } else {
-    //         for (let i = 0, l = this.mpb.config.resolve.extensions.length; i < l; i++) {
-    //             const ext = this.mpb.config.resolve.extensions[i];
-    //             try {
-    //                 // console.log('->', path.join(dir, `${lib}${ext}`));
-    //                 libPath = resolve.sync(path.join(dir, `${lib}${ext}`));
-    //                 if (libPath) break;
-    //             } catch (e) {
-    //                 try {
-    //                     // console.log('----->', path.join(dir, lib, `index${ext}`));
-    //                     libPath = resolve.sync(path.join(dir, lib, `index${ext}`));
-    //                     if (libPath) break;
-    //                 } catch (e) {
-    //                     // console.log(e);
-    //                 }
-    //             }
-    //         }
-    //         if (!libPath) {
-    //             throw new Error(`找不到${dir}${lib}`);
-    //         }
-    //     }
-    //     return libPath;
-    // }
-
-    // @TODO: 是否open出去，到配置上
-    // aliasLibName(lib) {
-    //     if (lib === 'react-dom') {
-    //         return '@r2m/runtime';
-    //     }
-    //     return lib;
-    // }
-
     apply(mpb) {
         this.mpb = mpb;
-        const exts = mpb.extensions.es.filter((item) => item !== '.json');
+        const manifestMatcher = getMatcher(mpb.extensions.manifest);
+        const esMatcher = getMatcher(mpb.extensions.es);
         mpb.hooks.beforeEmitFile.tapPromise('HandleJSDep', async (asset) => {
             const deps = [];
             try {
-                if (exts.includes(asset.ext) && asset.contents) {
+                if (
+                    esMatcher.test(asset.path) &&
+                    !manifestMatcher.test(asset.path) &&
+                    asset.contents
+                ) {
                     // if (/\.(js|jsx|wxs|ts|tsx)$/.test(asset.outputFilePath) && asset.contents) {
                     const code = asset.contents;
                     const ast = babylon.parse(code, { sourceType: 'module' });

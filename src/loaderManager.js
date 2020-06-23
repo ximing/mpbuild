@@ -11,6 +11,7 @@ const tsLoaderNext = require('./loader/ts-loader-next');
 const postcssLoader = require('./loader/postcss-loader');
 const jsonLoader = require('./loader/json-loader');
 const renameLoader = require('./loader/rename-loader');
+const { getMatcher } = require('./util');
 
 const map = {
     'babel-loader': babelLoader,
@@ -20,39 +21,36 @@ const map = {
     'json-loader': jsonLoader,
     'ts-loader-next': tsLoaderNext,
     'postcss-loader': postcssLoader,
-    'rename-loader': renameLoader
+    'rename-loader': renameLoader,
 };
 
 module.exports = class LoaderManager {
     constructor(mpb) {
         this.mpb = mpb;
+        const manifestMatcher = getMatcher(mpb.extensions.manifest);
+        const esMatcher = getMatcher(mpb.extensions.es);
+        const styleMatcher = getMatcher(mpb.extensions.style);
+        const tplMatcher = getMatcher(mpb.extensions.tpl);
+        this.loader = {};
+        this.mpb.moduleComposition.forEach((key) => {
+            this.loader[key] = {};
+        });
         // 通过loader处理文件
         this.mpb.hooks.addAsset.tapPromise('LoaderManager', async (asset) => {
-            for (let i = this.rules.length - 1; i >= 0; i--) {
-                const rule = this.rules[i];
-                const { use, test, exclude, include } = rule;
-                if (test.test(asset.name)) {
-                    let shouleRunLoder = true;
-                    if (Array.isArray(exclude)) {
-                        const shouldExclude = mm.any(asset.path, exclude);
-                        if (shouldExclude && Array.isArray(include)) {
-                            shouleRunLoder = mm.any(asset.path, include);
-                        }
-                    }
-                    if (shouleRunLoder) {
-                        for (let j = use.length - 1; j >= 0; j--) {
-                            const { loaderInstance } = use[j];
-                            try {
-                                await loaderInstance.call(this.mpb, asset);
-                            } catch (e) {
-                                console.error(e);
-                                asset.contents = null;
-                                asset.shouldOutput = false;
-                                break;
-                            }
-                        }
-                    }
-                }
+            if (manifestMatcher.test(asset.path)) {
+                const { use, exclude, include } = this.loader.manifest;
+                await this.runLoader(asset, exclude, include, use);
+            } else if (esMatcher.test(asset.path)) {
+                const { use, exclude, include } = this.loader.es;
+                await this.runLoader(asset, exclude, include, use);
+            } else if (styleMatcher.test(asset.path)) {
+                const { use, exclude, include } = this.loader.style;
+                await this.runLoader(asset, exclude, include, use);
+            } else if (tplMatcher.test(asset.path)) {
+                const { use, exclude, include } = this.loader.tpl;
+                await this.runLoader(asset, exclude, include, use);
+            } else {
+                console.error(`不识别的文件格式:${asset.path}`);
             }
             return Promise.resolve();
         });
@@ -64,11 +62,38 @@ module.exports = class LoaderManager {
         };
     }
 
+    async runLoader(asset, exclude, include, use) {
+        if (!use) {
+            return;
+        }
+        let shouleRunLoder = true;
+        if (Array.isArray(exclude)) {
+            const shouldExclude = mm.any(asset.path, exclude);
+            if (shouldExclude && Array.isArray(include)) {
+                shouleRunLoder = mm.any(asset.path, include);
+            }
+        }
+        if (shouleRunLoder) {
+            for (let j = use.length - 1; j >= 0; j--) {
+                const { loaderInstance } = use[j];
+                try {
+                    await loaderInstance.call(this.mpb, asset);
+                } catch (e) {
+                    console.error(e);
+                    asset.contents = null;
+                    asset.shouldOutput = false;
+                    break;
+                }
+            }
+        }
+    }
+
     async initRules() {
-        this.rules = [];
-        for (let i = this.mpb.config.module.rules.length - 1; i >= 0; i--) {
-            const rule = this.mpb.config.module.rules[i];
-            const { use, test, exclude, include } = rule;
+        const { module } = this.mpb.config;
+        const keys = Object.keys(module);
+        for (let i = 0, l = keys.length; i < l; i++) {
+            const key = keys[i];
+            const { use, exclude, include } = module[key];
             for (let j = use.length - 1; j >= 0; j--) {
                 const { loader, options } = use[j];
                 if (!use[j].loaderInstance) {
@@ -87,7 +112,11 @@ module.exports = class LoaderManager {
                     }
                 }
             }
-            this.rules.push({ use, test, exclude, include });
+            this.loader[key] = {
+                use,
+                exclude,
+                include,
+            };
         }
     }
 };
