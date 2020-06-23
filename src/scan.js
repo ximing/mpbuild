@@ -4,10 +4,9 @@
 const path = require('path');
 const perf = require('execution-time')();
 const log = require('./log');
-const { formatBuildTime, emptyManifest, emptyStyle } = require('./util');
+const { formatBuildTime } = require('./util');
 const AppJSON = require('./plugin/appJSON');
 const { assetType } = require('./consts');
-const Asset = require('./asset');
 
 module.exports = class ScanDep {
     constructor(mpb) {
@@ -20,21 +19,7 @@ module.exports = class ScanDep {
         this.modules = {};
         this.mpb.jsxPagesMap = {};
         this.mpb.pagesMap = {};
-    }
-
-    getPath(filePath, ext) {
-        // 按照长度排序，长的优先匹配
-        // TODO $后缀支持
-        const keys = Object.keys(this.mpb.config.resolve.alias || {}).sort(
-            (a, b) => b.length - a.length
-        );
-        for (let i = 0, l = keys.length; i < l; i++) {
-            const key = keys[i];
-            if (filePath.startsWith(key)) {
-                return `${filePath.replace(key, this.mpb.config.resolve.alias[key])}${ext}`;
-            }
-        }
-        return path.join(this.mpb.src, filePath, ext);
+        this.entryMap = new Map();
     }
 
     async addAssetByEXT(
@@ -45,63 +30,56 @@ module.exports = class ScanDep {
         root = '',
         source = ''
     ) {
+        console.log('prefixPath', prefixPath);
         const pagePath = this.mpb.resolve.es(prefixPath, base);
         const meta = { type, root, source };
-        if (type === assetType.page) {
-            if (pagePath.endsWith('.tsx') || pagePath.endsWith('.jsx')) {
-                this.mpb.jsxPagesMap[pagePath] = pagePath;
-            }
-            this.mpb.pagesMap[pagePath] = pagePath;
-        }
-        await this.mpb.assetManager.addAsset(pagePath, `${prefixOutputPath}.js`, meta);
-        let stylePath;
-        try {
-            stylePath = this.mpb.resolve.style(prefixPath, base);
-            // await this.mpb.assetManager.addAsset(stylePath, `${prefixOutputPath}.wxss`, meta);
-        } catch (e) {}
-        await this.mpb.assetManager.addAsset(
-            stylePath ||
-                emptyStyle(this.getPath(prefixPath, '.wxss'), `${prefixOutputPath}.wxss`, meta),
-            `${prefixOutputPath}.wxss`,
-            meta
-        );
-        let tplPath;
-        try {
-            tplPath = this.mpb.resolve.tpl(prefixPath, base);
-            // await this.mpb.assetManager.addAsset(tplPath, `${prefixOutputPath}.wxml`, meta);
-        } catch (e) {}
-        await this.mpb.assetManager.addAsset(
-            tplPath ||
-                emptyStyle(this.getPath(prefixPath, '.wxml'), `${prefixOutputPath}.wxml`, meta),
-            `${prefixOutputPath}.wxml`,
-            meta
-        );
-        let manifestPath;
-        try {
-            manifestPath = this.mpb.resolve.manifest(prefixPath, base);
-            // const manifestMeta = { type, root, source, 'mbp-scan-json-dep': 'usingComponents' };
-            // await this.mpb.assetManager.addAsset(
-            //     manifestPath,
-            //     `${prefixOutputPath}.json`,
-            //     manifestMeta
-            // );
-        } catch (e) {}
-        const manifestMeta = { type, root, source, 'mbp-scan-json-dep': 'usingComponents' };
-        await this.mpb.assetManager.addAsset(
-            manifestPath ||
-                emptyManifest(
-                    this.getPath(prefixPath, '.json'),
-                    `${prefixOutputPath}.json`,
-                    meta,
-                    type === assetType.component
-                ),
-            `${prefixOutputPath}.json`,
-            manifestMeta
-        );
+        const { asset: esAsset } = await this.mpb.hooks.resolveEntry.promise({
+            base,
+            prefixPath,
+            prefixOutputPath,
+            pagePath,
+            type,
+            entryType: 'es',
+            meta,
+        });
+        await this.mpb.assetManager.addAsset(esAsset);
+        const { asset: styleAsset } = await this.mpb.hooks.resolveEntry.promise({
+            base,
+            prefixPath,
+            prefixOutputPath,
+            pagePath,
+            type,
+            entryType: 'style',
+            meta,
+        });
+        await this.mpb.assetManager.addAsset(styleAsset);
+        // console.log(styleAsset)
+        const { asset: tplAsset } = await this.mpb.hooks.resolveEntry.promise({
+            base,
+            prefixPath,
+            prefixOutputPath,
+            pagePath,
+            type,
+            entryType: 'tpl',
+            meta,
+        });
+        await this.mpb.assetManager.addAsset(tplAsset);
+        const { asset: manifestAsset } = await this.mpb.hooks.resolveEntry.promise({
+            base,
+            prefixPath,
+            prefixOutputPath,
+            pagePath,
+            type,
+            entryType: 'manifest',
+            meta: { type, root, source, 'mbp-scan-json-dep': 'usingComponents' },
+        });
+        await this.mpb.assetManager.addAsset(manifestAsset);
         if (type === assetType.page || type === assetType.app) {
-            console.log('type', type, pagePath);
+            const { name, dir } = path.parse(pagePath);
+            this.entryMap.set(path.join(dir, name), pagePath);
             try {
                 await this.mpb.hooks.afterBuildPointEntry.promise({
+                    entryPath: pagePath,
                     endpoind: pagePath,
                     assetType: type,
                 });

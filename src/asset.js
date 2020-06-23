@@ -11,6 +11,7 @@ module.exports = class Asset {
     constructor(filePath, outputFilePath, meta) {
         const parse = path.parse(filePath);
         this.name = parse.base;
+        this.fileName = parse.name;
         this.ext = parse.ext;
         this.parentDir = parse.dir;
         this.dir = parse.dir;

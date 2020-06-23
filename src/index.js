@@ -35,6 +35,7 @@ const CopyPlugin = require('./plugin/copyPlugin');
 const CleanMbpPlugin = require('./plugin/cleanMbpPlugin.js');
 const TsTypeCheckPlugin = require('./plugin/tsTypeCheckPlugin');
 const ResolvePlugin = require('./plugin/resolvePlugin');
+const ResolveEntryPlugin = require('./plugin/resolveEntryPlugin');
 const BeforeResolvePlugin = require('./plugin/beforeResolvePlugin');
 const ReWriteImportedPlugin = require('./plugin/reWriteImportedPlugin');
 const NodeEnvironmentPlugin = require('./node/NodeEnvironmentPlugin');
@@ -47,10 +48,10 @@ class Mpbuilder {
         this.config = config;
         this.extensions = {
             es: ['.js'],
-                tpl: ['.wxml'],
-                style: ['.wxss'],
-                manifest: ['.json'],
-            ...config.resolve.extensions
+            tpl: ['.wxml'],
+            style: ['.wxss'],
+            manifest: ['.json'],
+            ...config.resolve.extensions,
         };
         this.appEntry = {};
         this.cwd = process.cwd();
@@ -61,6 +62,7 @@ class Mpbuilder {
             beforeAddAsset: new AsyncSeriesBailHook(['asset']),
             beforeResolve: new SyncWaterfallHook(['resolveObj']),
             resolve: new SyncWaterfallHook(['resolveObj']),
+            resolveEntry: new AsyncSeriesWaterfallHook(['resolveEntryObj']),
             reWriteImported: new SyncWaterfallHook(['reWriteObj']),
             addAsset: new AsyncSeriesBailHook(['asset']),
             afterBuildPointEntry: new AsyncSeriesBailHook(['page']),
@@ -73,7 +75,7 @@ class Mpbuilder {
         this.moduleComposition = ['es', 'tpl', 'style', 'manifest'];
         this.optimization = {
             minimize: true,
-            ...config.optimization
+            ...config.optimization,
         };
         this.initResolve();
         this.watching = new Watching(this, async () => {
@@ -93,10 +95,12 @@ class Mpbuilder {
     initResolve() {
         this.resolve = {};
         this.moduleComposition.forEach((ext) => {
-            this.resolve[ext] = Resolve.create(
-                {unsafeCache: true, ...this.config.resolve, lookupStartPath: this.src,
-                    extensions: this.extensions[ext],}
-            ).bind(this);
+            this.resolve[ext] = Resolve.create({
+                unsafeCache: true,
+                ...this.config.resolve,
+                lookupStartPath: this.src,
+                extensions: this.extensions[ext],
+            }).bind(this);
         });
     }
 
@@ -112,6 +116,7 @@ class Mpbuilder {
             [
                 new NodeEnvironmentPlugin(),
                 new BeforeResolvePlugin(),
+                new ResolveEntryPlugin(),
                 new ResolvePlugin(),
                 new ReWriteImportedPlugin(),
                 new HandleJSDep(),

@@ -4,10 +4,13 @@ module.exports = class Deps {
     constructor(mpb) {
         this.mpb = mpb;
         this.nodes = new Map();
-        mpb.hooks.resolve.tap('ResolvePlugin', ({ imported, asset, resolveType }) => {
-            this.addEdge(asset.path, imported);
-            return { imported, asset, resolveType };
-        });
+        mpb.hooks.resolve.tap(
+            'ResolvePlugin',
+            ({ imported, originImported, asset, resolveType }) => {
+                this.addEdge(asset.path, imported);
+                return { imported, asset, resolveType, originImported };
+            }
+        );
     }
 
     addNode(path) {

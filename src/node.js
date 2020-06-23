@@ -6,8 +6,8 @@ module.exports = class Node {
     constructor(path, mpb) {
         this.path = path;
         this.mpb = mpb;
-        this.parents = new WeakSet();
-        this.childs = new WeakSet();
+        this.parents = new Set();
+        this.childs = new Set();
     }
 
     addChild(path) {
@@ -36,7 +36,10 @@ module.exports = class Node {
                     assets[0].getMeta('type') === assetType.app
                 ) {
                     endpoints.push({
-                        endpoind: path.join(assets[0].dir, assets[0].name, '.js'),
+                        entryPath: assets[0].path,
+                        endpoind: this.mpb.scan.entryMap.get(
+                            path.join(assets[0].dir, assets[0].fileName)
+                        ),
                         assetType: assets[0].getMeta('type'),
                     });
                 }
@@ -76,5 +79,10 @@ module.exports = class Node {
         for (const c of this.childs) {
             c.removeParent(this);
         }
+        this.parents.clear();
+        this.childs.clear();
+        this.mpb = null;
+        this.parents = null;
+        this.childs = null;
     }
 };

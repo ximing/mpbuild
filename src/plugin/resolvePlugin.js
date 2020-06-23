@@ -5,7 +5,7 @@ module.exports = class ResolvePlugin {
         // const extensionsKey = Object.keys(mpb.extensions);
         mpb.hooks.resolve.tap('ResolvePlugin', ({ imported, asset, resolveType }) => {
             if (imported.includes(mpb.root)) {
-                return { imported, asset, resolveType };
+                return { imported, originImported: imported, asset, resolveType };
             }
             let type = resolveType;
             if (resolveType === 'manifest') {
@@ -20,7 +20,12 @@ module.exports = class ResolvePlugin {
             // });
             if (resolve) {
                 if (imported[0] === '/') {
-                    return { imported: path.join(mpb.src, imported), asset, resolveType };
+                    return {
+                        imported: path.join(mpb.src, imported),
+                        originImported: imported,
+                        asset,
+                        resolveType,
+                    };
                 }
                 let res = resolve(imported, asset.dir);
                 if (resolveType === 'manifest') {
@@ -29,7 +34,7 @@ module.exports = class ResolvePlugin {
                         res = `${file.dir}/${file.name}`;
                     }
                 }
-                return { imported: res, asset, resolveType };
+                return { imported: res, originImported: imported, asset, resolveType };
             }
             throw new Error(`不识别的文件格式: ${asset.path}`);
         });

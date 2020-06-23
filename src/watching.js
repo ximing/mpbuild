@@ -97,13 +97,14 @@ module.exports = class Watching {
         if (assets) {
             for (const asset of assets) {
                 if (type === 'change') {
-                    console.log('[watching-add-asset]', path);
+                    console.log('[watching-asset-change]', path);
                     await this.mpb.assetManager.addAsset(
                         path,
                         asset.outputFilePath,
                         asset.getMeta()
                     );
                 } else if (type === 'unlink') {
+                    console.log('[watching-asset-unlink]', path);
                     await this.mpb.assetManager.delAsset(asset);
                 } else {
                     console.error('不支持的watch类型:', type);
