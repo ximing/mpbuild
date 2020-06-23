@@ -55,7 +55,7 @@ module.exports = class Node {
                 }
             }
         };
-        _getEndpoints(this.parents);
+        _getEndpoints([this]);
         return _.unionBy(endpoints, 'endpoind');
     }
 
@@ -88,7 +88,7 @@ module.exports = class Node {
                 }
             }
         };
-        _getNearestModules(this.parents);
+        _getNearestModules([this]);
         return _.unionBy(modules, 'endpoind');
     }
 
