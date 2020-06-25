@@ -10,7 +10,7 @@ function fixNPM(code) {
     //     code = `var process={};${code}`;
     // }
     if (/[^\w_]process\.\w/.test(code)) {
-        code = `var process={env:{NODE_ENV:"${process.env.NODE_ENV || 'production'}"}};${code}`;
+        code = `var process={env:{NODE_ENV:"${process.env.NODE_ENV || 'development'}"}};${code}`;
     }
     return code;
 }
