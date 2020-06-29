@@ -54,16 +54,18 @@ module.exports = class ScanDep {
         });
         await this.mpb.assetManager.addAsset(styleAsset);
         // console.log(styleAsset)
-        const { asset: tplAsset } = await this.mpb.hooks.resolveEntry.promise({
-            base,
-            prefixPath,
-            prefixOutputPath,
-            pagePath,
-            type,
-            entryType: 'tpl',
-            meta,
-        });
-        await this.mpb.assetManager.addAsset(tplAsset);
+        if (type !== assetType.app) {
+            const { asset: tplAsset } = await this.mpb.hooks.resolveEntry.promise({
+                base,
+                prefixPath,
+                prefixOutputPath,
+                pagePath,
+                type,
+                entryType: 'tpl',
+                meta,
+            });
+            await this.mpb.assetManager.addAsset(tplAsset);
+        }
         const { asset: manifestAsset } = await this.mpb.hooks.resolveEntry.promise({
             base,
             prefixPath,
@@ -149,22 +151,24 @@ module.exports = class ScanDep {
     }
 
     async init() {
-        perf.start('init');
         // find App
         await this.addAssetByEXT('./app', path.join(this.mpb.dest, 'app'), assetType.app);
         // find Pages
         await this.pages();
-        log.info(`完成编译,耗时:${formatBuildTime(perf.stop('init').time)}`);
     }
 
     async watch() {
+        perf.start('init');
         await this.init();
+        log.info(`完成编译,耗时:${formatBuildTime(perf.stop('init').time)}`);
         this.mpb.watchFileSystem.watch();
     }
 
     async run() {
+        perf.start('init');
         await this.mpb.hooks.beforeCompile.promise(this.mpb);
         await this.init();
         await this.mpb.hooks.afterCompile.promise(this.mpb);
+        log.info(`完成编译,耗时:${formatBuildTime(perf.stop('init').time)}`);
     }
 };
