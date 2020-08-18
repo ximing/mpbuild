@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 
 module.exports = class ResolvePlugin {
     apply(mpb) {
@@ -20,8 +21,25 @@ module.exports = class ResolvePlugin {
             // });
             if (resolve) {
                 if (imported[0] === '/') {
+                    let i = imported;
+                    // TODO 如何更好的处理 / 这种绝对路径的逻辑
+                    if (
+                        !(
+                            mpb.assetManager.getAssets(`${imported}.js`) ||
+                            mpb.assetManager.getAssets(`${imported}.ts`) ||
+                            mpb.assetManager.getAssets(`${imported}.tsx`) ||
+                            mpb.assetManager.getAssets(`${imported}.json`) ||
+                            fs.existsSync(`${imported}.js`) ||
+                            fs.existsSync(`${imported}.ts`) ||
+                            fs.existsSync(`${imported}.tsx`) ||
+                            fs.existsSync(`${imported}.json`)
+                        )
+                    ) {
+                        i = path.join(mpb.src, imported);
+                    }
+                    console.log('imported', imported, i);
                     return {
-                        imported: path.join(mpb.src, imported),
+                        imported: i,
                         originImported: imported,
                         asset,
                         resolveType,

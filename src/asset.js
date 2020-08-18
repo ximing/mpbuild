@@ -73,7 +73,7 @@ module.exports = class Asset {
                 }
                 this.__stats = fs.statSync(this.filePath);
             } catch (e) {
-                console.log('读取文件失败', this.filePath);
+                console.error('读取文件失败', this.filePath);
                 console.error(e);
                 this.__content = null;
             }
@@ -82,6 +82,10 @@ module.exports = class Asset {
     }
 
     set contents(__content) {
+        // if(this.outputFilePath.endsWith('.json') && this.outputFilePath.includes('/pages/')){
+        //     console.trace()
+        //     console.log(this.outputFilePath, __content)
+        // }
         this.__content = __content;
     }
 
