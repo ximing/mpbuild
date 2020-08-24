@@ -105,7 +105,7 @@ class Mpbuilder {
         this.assetManager = new AssetManager(this);
         this.deps = new Deps(this);
         this.hasInit = false;
-        this.isWatch = false;
+        // this.isWatch = false;
     }
 
     getPlugin(name) {

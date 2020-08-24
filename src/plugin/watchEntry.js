@@ -2,6 +2,8 @@ const chokidar = require('chokidar');
 const path = require('path');
 const _ = require('lodash');
 
+let inited = false;
+
 module.exports = class WatchEntry {
     constructor() {
         this.rebuild = _.throttle(this.rebuild, 500);
@@ -10,7 +12,8 @@ module.exports = class WatchEntry {
     apply(mpb) {
         this.mpb = mpb;
         mpb.hooks.afterCompile.tapPromise('WatchEntry', async () => {
-            if (mpb.isWatch) {
+            if (mpb.isWatch && !inited) {
+                inited = true;
                 let oldRouter = mpb.appEntry.router;
                 let pagesMap = {};
                 oldRouter.forEach((route) => {
@@ -32,7 +35,7 @@ module.exports = class WatchEntry {
 
                 chokidar
                     .watch(`${mpb.src}/**/*`, {
-                        ignoreInitial: true
+                        ignoreInitial: true,
                     })
                     .on('add', async (p) => {
                         if (pagesMap[path.dirname(p)]) {
