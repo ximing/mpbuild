@@ -129,7 +129,7 @@ class Mpbuilder {
                 new HandleWXSSDep(),
                 new NpmRewrite(),
                 new MinifyPlugin(),
-                new WatchEntry(),
+                // new WatchEntry(),
             ],
             this.config.plugins
         );
