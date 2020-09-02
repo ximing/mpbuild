@@ -20,6 +20,7 @@ module.exports = class ScanDep {
         this.mpb.jsxPagesMap = {};
         this.mpb.pagesMap = {};
         this.moduleMap = new Map();
+        this.cyclicDeps = new Set();
     }
 
     async addAssetByEXT(
@@ -30,6 +31,12 @@ module.exports = class ScanDep {
         root = '',
         source = ''
     ) {
+        // 处理循环依赖
+        const key = `${prefixPath}#${prefixOutputPath}`;
+        if (this.cyclicDeps.has(key)) {
+            return;
+        }
+        this.cyclicDeps.add(key);
         // console.log('prefixPath', prefixPath);
         const pagePath = this.mpb.resolve.es(prefixPath, base);
         const meta = { type, root, source };

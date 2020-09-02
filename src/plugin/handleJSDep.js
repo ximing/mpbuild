@@ -49,12 +49,18 @@ module.exports = class HandleJSDep {
                                             asset,
                                             resolveType: 'es',
                                         }) || { lib: node.arguments[0].value };
-                                        // console.log('--->', lib, node.arguments[0].value,asset.path);
                                         const { imported: libPath } = mpb.hooks.resolve.call({
                                             imported: lib,
                                             asset,
                                             resolveType: 'es',
                                         });
+                                        // console.log(
+                                        //     '--->',
+                                        //     lib,
+                                        //     node.arguments[0].value,
+                                        //     asset.path,
+                                        //     libPath
+                                        // );
                                         const root = asset.getMeta('root');
                                         const isNPM = libPath.includes('node_modules');
                                         let libOutputPath = this.mainPkgPathMap[libPath];
@@ -62,9 +68,17 @@ module.exports = class HandleJSDep {
                                             if (isNPM) {
                                                 libOutputPath = rewriteNpm(libPath, root, mpb.dest);
                                             } else {
+                                                // if (libPath.includes('index.service')) {
+                                                //     console.log(
+                                                //         '===>',
+                                                //         `./${root || ''}`,
+                                                //         path.relative(mpb.src, libPath)
+                                                //     );
+                                                // }
                                                 libOutputPath = path.join(
                                                     mpb.dest,
-                                                    `./${root || ''}`,
+                                                    // `./${root || ''}`,
+                                                    `./`,
                                                     path.relative(mpb.src, libPath)
                                                 );
                                             }
@@ -73,7 +87,15 @@ module.exports = class HandleJSDep {
                                                 this.mainPkgPathMap[libPath] = libOutputPath;
                                             }
                                         }
-
+                                        // if (libOutputPath.includes('index.service')) {
+                                        //     console.log(
+                                        //         libOutputPath,
+                                        //         lib,
+                                        //         node.arguments[0].value,
+                                        //         asset.path,
+                                        //         libPath
+                                        //     );
+                                        // }
                                         // TODO How to handle renamed files more gracefully
                                         if (
                                             libOutputPath.endsWith('.ts') ||
