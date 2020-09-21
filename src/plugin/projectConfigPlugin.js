@@ -10,14 +10,12 @@ const chalk = require('chalk');
 
 module.exports = class ProjectConfigPlugin {
     constructor(options) {
-        this.options = Object.assign(
-            {},
-            {
-                projectname: '',
-                appId: ''
-            },
-            options
-        );
+        this.options = {
+            
+            projectname: '',
+                appId: '',
+            ...options
+        };
     }
 
     apply(mpb) {
@@ -27,52 +25,59 @@ module.exports = class ProjectConfigPlugin {
             const projectConfigFile = path.join(distDir, 'project.config.json');
             const isExist = fs.existsSync(projectConfigFile);
             if (!isExist) {
-                console.log(chalk.gray('[ProjectConfigPlugin]: '), chalk.blue('project.config.json 不存在，重新生成'));
+                console.log(
+                    chalk.gray('[ProjectConfigPlugin]: '),
+                    chalk.blue('project.config.json 不存在，重新生成')
+                );
                 await fse.outputJson(projectConfigFile, {
                     description: '项目配置文件',
                     packOptions: {
-                        ignore: []
+                        ignore: [],
                     },
                     setting: {
                         urlCheck: false,
-                        es6: false,
-                        postcss: true,
-                        minified: false,
-                        newFeature: true
+                            es6: false,
+                            postcss: true,
+                            minified: false,
+                            newFeature: true,
+                        ...this.options.setting
                     },
                     compileType: 'miniprogram',
-                    libVersion: '2.0.3',
+                    libVersion: this.options.libVersion || '2.10.4',
                     appid: this.options.appId,
                     projectname: this.options.projectname,
                     scripts: {
                         beforeCompile: '',
                         beforePreview: '',
-                        beforeUpload: ''
+                        beforeUpload: '',
                     },
                     condition: {
                         search: {
                             current: -1,
-                            list: []
+                            list: [],
                         },
                         conversation: {
                             current: -1,
-                            list: []
+                            list: [],
                         },
                         plugin: {
                             current: -1,
-                            list: []
+                            list: [],
                         },
                         game: {
-                            list: []
+                            list: [],
                         },
                         miniprogram: {
                             current: 31,
-                            list: []
-                        }
-                    }
+                            list: [],
+                        },
+                    },
                 });
-            }else{
-                console.log(chalk.gray('[ProjectConfigPlugin]: '), chalk.blue('project.config.json 存在，不需要重新生成'));
+            } else {
+                console.log(
+                    chalk.gray('[ProjectConfigPlugin]: '),
+                    chalk.blue('project.config.json 存在，不需要重新生成')
+                );
             }
             return Promise.resolve();
         });
