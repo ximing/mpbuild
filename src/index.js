@@ -4,6 +4,7 @@
 const path = require('path');
 
 const {
+    SyncBailHook,
     AsyncParallelHook,
     AsyncSeriesWaterfallHook,
     AsyncSeriesHook,
@@ -46,7 +47,8 @@ class Mpbuilder {
             afterCompile: new AsyncParallelHook(['mpb']),
             afterGenerateEntry: new AsyncSeriesBailHook(['afterGenerateEntry']),
             beforeEmitFile: new AsyncSeriesWaterfallHook(['asset']),
-            watchRun: new AsyncSeriesHook(['compiler'])
+            watchRun: new AsyncSeriesHook(['compiler']),
+            resolveJS: new SyncBailHook(['libName'])
         };
         this.optimization = Object.assign(
             {

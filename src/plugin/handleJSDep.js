@@ -36,8 +36,13 @@ module.exports = class HandleJSDep {
                                         node.arguments.length === 1 &&
                                         t.isStringLiteral(node.arguments[0])
                                     ) {
-                                        const lib = node.arguments[0].value;
+                                        let lib = node.arguments[0].value;
                                         let libPath;
+                                        const resolveRes = mpb.resolveJS.call({ lib, asset });
+                                        if (!resolveRes) {
+                                            return;
+                                        }
+                                        lib = resolveRes;
                                         if (lib[0] === '.') {
                                             try {
                                                 libPath = resolve.sync(path.join(asset.dir, lib));
