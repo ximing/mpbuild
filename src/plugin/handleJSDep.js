@@ -38,7 +38,7 @@ module.exports = class HandleJSDep {
                                     ) {
                                         let lib = node.arguments[0].value;
                                         let libPath;
-                                        const resolveRes = mpb.resolveJS.call({ lib, asset });
+                                        const resolveRes = mpb.hooks.resolveJS.call({ lib, asset });
                                         if (!resolveRes) {
                                             return;
                                         }
