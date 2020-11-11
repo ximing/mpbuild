@@ -20,14 +20,14 @@ function clearPool() {
 }
 
 function minifyJS(contents, options) {
-  const UglifyJS = require('uglify-js');
-  if(options && options.output && options.output.comments) {
-    const comments = options.output.comments
-    if (comments !== 'all' && comments !== 'some' && typeof comments !== 'boolean') {
-      options.output.comments = /javascript-obfuscator:disable|javascript-obfuscator:enable/
+    const UglifyJS = require('uglify-js');
+    if(options && options.output && options.output.comments) {
+      const comments = options.output.comments
+      if (comments !== 'all' && comments !== 'some' && typeof comments !== 'boolean') {
+        options.output.comments = /javascript-obfuscator:disable|javascript-obfuscator:enable/
+      }
     }
-  }
-  const result = UglifyJS.minify(contents, typeof options === 'undefined' ? undefined : options);
+    const result = UglifyJS.minify(contents, typeof options === 'undefined' ? undefined : options);
     if (result.error) {
         console.error('[MinifyPlugin]', result.error);
         throw result.error;
