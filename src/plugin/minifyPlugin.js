@@ -20,9 +20,14 @@ function clearPool() {
 }
 
 function minifyJS(contents, options) {
-    const opts = JSON.parse(options);
     const UglifyJS = require('uglify-js');
-    const result = UglifyJS.minify(contents, typeof opts === 'object' ? opts : undefined);
+    if(options && options.output && options.output.comments) {
+      const comments = options.output.comments
+      if (comments !== 'all' && comments !== 'some' && typeof comments !== 'boolean') {
+        options.output.comments = /javascript-obfuscator:disable|javascript-obfuscator:enable/
+      }
+    }
+    const result = UglifyJS.minify(contents, typeof options === 'undefined' ? undefined : options);
     if (result.error) {
         console.error('[MinifyPlugin]', result.error);
         throw result.error;
@@ -73,7 +78,7 @@ module.exports = class MinifyPlugin {
                         // asset.contents = result.code;
                         asset.contents = await pool.exec(minifyJS, [
                             asset.contents,
-                            JSON.stringify(this.js)
+                            this.js
                         ]);
                     } else if (/\.json$/.test(asset.outputFilePath) && this.json) {
                         // asset.contents = jsonminify(asset.contents).toString();
