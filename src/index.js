@@ -89,6 +89,7 @@ class Mpbuilder {
         this.config.plugins.forEach((p) => {
             p.apply(this);
         });
+        this.hooks.resolveJS.tap('resolveJS_MP', (item) => item);
     }
 
     mountPlugin(plugin) {
