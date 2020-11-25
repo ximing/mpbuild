@@ -67,7 +67,7 @@ module.exports = class ScanDep {
     async findEntry() {
         this.mpb.entryPath = path.resolve(process.cwd(), this.mpb.config.entry);
         // eslint-disable-next-line
-        this.mpb.appEntry = require(this.mpb.entryPath);
+        this.mpb.appEntry = this.mpb.hooks.resolveAppEntryJS.call(require(this.mpb.entryPath));
         if (!this.mpb.appEntry.router) {
             this.mpb.appEntry.router = [];
             // 处理 标准app.json

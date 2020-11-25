@@ -48,7 +48,8 @@ class Mpbuilder {
             afterGenerateEntry: new AsyncSeriesBailHook(['afterGenerateEntry']),
             beforeEmitFile: new AsyncSeriesWaterfallHook(['asset']),
             watchRun: new AsyncSeriesHook(['compiler']),
-            resolveJS: new SyncBailHook(['libName'])
+            resolveJS: new SyncBailHook(['libName']),
+            resolveAppEntryJS: new SyncBailHook(['entryPath'])
         };
         this.optimization = Object.assign(
             {
@@ -90,6 +91,7 @@ class Mpbuilder {
             p.apply(this);
         });
         this.hooks.resolveJS.tap('resolveJS_MP', (item) => item);
+        this.hooks.resolveAppEntryJS.tap('resolveAppEntryJS', (item) => item);
     }
 
     mountPlugin(plugin) {
