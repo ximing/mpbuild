@@ -5,6 +5,7 @@
 // const jsonminify = require('jsonminify');
 // const htmlmin = require('html-minifier');
 const workerpool = require('workerpool');
+const mm = require('micromatch');
 
 const pool = workerpool.pool();
 
@@ -51,6 +52,27 @@ function minifyJSON(contents) {
     return jsonminify(contents).toString();
 }
 
+function sholdRunMiniFunc(asset, rule) {
+    if(!rule) {
+        return false;
+    }
+    if(typeof rule === "boolean" && rule) {
+        return true;
+    }
+    if(Object.prototype.toString.call(rule) === '[object Object]') {
+        const {include, exclude} = rule || {};
+        let sholdRunMini = true;
+        if (Array.isArray(exclude)) {
+            sholdRunMini = !mm.any(asset.path, exclude);
+            if (!sholdRunMini && Array.isArray(include)) {
+                sholdRunMini = mm.any(asset.path, include);
+            }
+        }
+        return sholdRunMini;
+    }
+    return false
+}
+
 module.exports = class MinifyPlugin {
     constructor() {
         this.js = true;
@@ -80,10 +102,10 @@ module.exports = class MinifyPlugin {
                             asset.contents,
                             this.js
                         ]);
-                    } else if (/\.json$/.test(asset.outputFilePath) && this.json) {
+                    } else if (/\.json$/.test(asset.outputFilePath) && sholdRunMiniFunc(asset, this.json)) {
                         // asset.contents = jsonminify(asset.contents).toString();
                         asset.contents = await pool.exec(minifyJSON, [asset.contents]);
-                    } else if (/\.wxml$/.test(asset.outputFilePath) && this.wxml) {
+                    } else if (/\.wxml$/.test(asset.outputFilePath) && sholdRunMiniFunc(asset, this.wxml)) {
                         // asset.contents = asset.contents = htmlmin.minify(asset.contents, {
                         //     removeComments: true,
                         //     keepClosingSlash: true,
