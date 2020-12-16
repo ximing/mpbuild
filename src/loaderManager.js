@@ -34,8 +34,8 @@ module.exports = class LoaderManager {
                 if (test.test(asset.name)) {
                     let shouleRunLoder = true;
                     if (Array.isArray(exclude)) {
-                        const shouldExclude = mm.any(asset.path, exclude);
-                        if (shouldExclude && Array.isArray(include)) {
+                        shouleRunLoder = mm.any(asset.path, exclude);
+                        if (!shouldExclude && Array.isArray(include)) {
                             shouleRunLoder = mm.any(asset.path, include);
                         }
                     }
