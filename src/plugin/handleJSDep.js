@@ -17,7 +17,6 @@ module.exports = class HandleJSDep {
     }
 
     apply(mpb) {
-        mpb.hooks.resolveJS.tap('HandleJSDep',(item) => item);
         mpb.hooks.beforeEmitFile.tapPromise('HandleJSDep', async (asset) => {
             const deps = [];
             try {
