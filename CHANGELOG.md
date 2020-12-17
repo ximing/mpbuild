@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.4.13](https://github.com/ximing/mpbuild/compare/v1.4.12...v1.4.13) (2020-12-17)
+
+
+### Features
+
+* 修改变量名 ([aef44e1](https://github.com/ximing/mpbuild/commit/aef44e1))
+
+
+
 ### 1.4.12 (2020-12-17)
 
 
