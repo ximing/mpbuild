@@ -3,8 +3,8 @@
  */
 const path = require('path');
 const fs = require('fs');
-const resolve = require('resolve');
 const { assetType } = require('../consts');
+const resolve = require('../resolve');
 
 const NPM_PATH_NAME = 'node_modules';
 
@@ -27,19 +27,26 @@ module.exports = class HandleJSONComponentDep {
                             Object.keys(componets).map((componentName) => {
                                 let filePath = '',
                                     src = componets[componentName];
-                                if (src[0] === '/') {
-                                    filePath = path.resolve(mpb.src, `.${src}`);
-                                } else if (src[0] === '.') {
-                                    filePath = path.resolve(asset.dir, src);
-                                } else {
-                                    filePath = path.resolve(asset.dir, `./${src}`);
 
-                                    if (!fs.existsSync(`${filePath}.json`)) {
-                                        filePath = resolve.sync(src, { basedir: mpb.cwd });
-                                        filePath = filePath.replace(path.parse(filePath).ext, '');
-                                    }
-                                }
-
+                                filePath = resolve(
+                                    src,
+                                    asset,
+                                    mpb.exts.config,
+                                    mpb.src,
+                                    mpb.config.alias
+                                );
+                                // if (src[0] === '/') {
+                                //     filePath = path.resolve(mpb.src, `.${src}`);
+                                // } else if (src[0] === '.') {
+                                //     filePath = path.resolve(asset.dir, src);
+                                // } else {
+                                //     filePath = path.resolve(asset.dir, `./${src}`);
+                                //
+                                //     if (!fs.existsSync(`${filePath}.json`)) {
+                                //         filePath = resolve.sync(src, { basedir: mpb.cwd });
+                                //         filePath = filePath.replace(path.parse(filePath).ext, '');
+                                //     }
+                                // }
                                 const nmPathIndex = filePath.indexOf(NPM_PATH_NAME);
                                 const root = asset.getMeta('root');
                                 let outputPath = this.mainPkgPathMap[filePath];

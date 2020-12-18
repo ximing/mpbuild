@@ -4,7 +4,7 @@
 const postcss = require('postcss');
 const path = require('path');
 const fs = require('fs');
-const resolve = require('resolve');
+const resolve = require('../resolve');
 
 module.exports = class HandleWXSSDep {
     constructor() {
@@ -25,21 +25,27 @@ module.exports = class HandleWXSSDep {
                     try {
                         await Promise.all(
                             deps.map((src) => {
-                                let filePath = '';
-                                if (src[0] === '/') {
-                                    filePath = path.resolve(mpb.src, `.${src}`);
-                                } else if (src[0] === '.') {
-                                    filePath = path.resolve(asset.dir, src);
-                                } else {
-                                    filePath = path.resolve(asset.dir, `./${src}`);
-
-                                    if (!fs.existsSync(filePath)) {
-                                        filePath = resolve.sync(src, {
-                                            basedir: mpb.cwd,
-                                            extensions: ['.wxss']
-                                        });
-                                    }
-                                }
+                                const filePath = resolve(
+                                    src,
+                                    asset,
+                                    mpb.exts.wxml,
+                                    mpb.src,
+                                    mpb.config.alias
+                                );
+                                // if (src[0] === '/') {
+                                //     filePath = path.resolve(mpb.src, `.${src}`);
+                                // } else if (src[0] === '.') {
+                                //     filePath = path.resolve(asset.dir, src);
+                                // } else {
+                                //     filePath = path.resolve(asset.dir, `./${src}`);
+                                //
+                                //     if (!fs.existsSync(filePath)) {
+                                //         filePath = resolve.sync(src, {
+                                //             basedir: mpb.cwd,
+                                //             extensions: ['.wxss']
+                                //         });
+                                //     }
+                                // }
 
                                 const root = asset.getMeta('root');
                                 let outputPath = this.mainPkgPathMap[filePath];

@@ -5,6 +5,7 @@ const path = require('path');
 
 const {
     SyncBailHook,
+    SyncWaterfallHook,
     AsyncParallelHook,
     AsyncSeriesWaterfallHook,
     AsyncSeriesHook,
@@ -30,6 +31,7 @@ const ProjectConfigPlugin = require('./plugin/projectConfigPlugin.js');
 const CopyPlugin = require('./plugin/copyPlugin');
 const CleanMbpPlugin = require('./plugin/cleanMbpPlugin.js');
 const TsTypeCheckPlugin = require('./plugin/tsTypeCheckPlugin');
+const PolymorphismPlugin = require('./plugin/polymorphismPlugin');
 const NodeEnvironmentPlugin = require('./node/NodeEnvironmentPlugin');
 
 class Mpbuilder {
@@ -49,7 +51,8 @@ class Mpbuilder {
             beforeEmitFile: new AsyncSeriesWaterfallHook(['asset']),
             watchRun: new AsyncSeriesHook(['compiler']),
             resolveJS: new SyncBailHook(['libName']),
-            resolveAppEntryJS: new SyncBailHook(['entryPath'])
+            resolveAppEntryJS: new SyncBailHook(['entryPath']),
+            extension: new SyncWaterfallHook(['ext'])
         };
         this.optimization = Object.assign(
             {
@@ -64,6 +67,13 @@ class Mpbuilder {
         this.helper = new Helper(this);
         this.loaderManager = new LoaderManager(this);
         this.scan = new Scan(this);
+        this.exts = {
+            js: ['.js', '.ts', '.jsx', '.tsx'],
+            wxml: ['.wxml'],
+            wxss: ['.wxss'],
+            wxs: ['.wxs'],
+            json: ['.json']
+        };
         this.initPlugin();
         this.assetManager = new AssetManager(this);
         this.hasInit = false;
@@ -77,6 +87,7 @@ class Mpbuilder {
         this.config.plugins = [].concat(
             [
                 new NodeEnvironmentPlugin(),
+                new PolymorphismPlugin(),
                 new HandleJSDep(),
                 new HandleJSONComponentDep(),
                 new HandleWXMLDep(),
@@ -90,6 +101,7 @@ class Mpbuilder {
         this.config.plugins.forEach((p) => {
             p.apply(this);
         });
+        this.exts = this.hooks.extension.call(this.exts);
         this.hooks.resolveJS.tap('resolveJS_MP', (item) => item);
         this.hooks.resolveAppEntryJS.tap('resolveAppEntryJS', (item) => item);
     }

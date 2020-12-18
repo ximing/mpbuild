@@ -4,7 +4,7 @@
 const htmlparser = require('htmlparser2');
 const path = require('path');
 const fs = require('fs');
-const resolve = require('resolve');
+const resolve = require('../resolve');
 
 const generateCode = function(ast, code = '', distDeps, asset) {
     const { length } = ast;
@@ -74,21 +74,27 @@ module.exports = class HandleWXMLDep {
                     });
                     await Promise.all(
                         deps.map((src) => {
-                            let filePath = '';
-                            if (src[0] === '/') {
-                                filePath = path.resolve(mpb.src, `.${src}`);
-                            } else if (src[0] === '.') {
-                                filePath = path.resolve(asset.dir, src);
-                            } else {
-                                filePath = path.resolve(asset.dir, `./${src}`);
-                                const { ext } = path.parse(filePath);
-                                if (!fs.existsSync(filePath)) {
-                                    filePath = resolve.sync(src, {
-                                        basedir: mpb.cwd,
-                                        extensions: [ext]
-                                    });
-                                }
-                            }
+                            const filePath = resolve(
+                                src,
+                                asset,
+                                mpb.exts.wxml,
+                                mpb.src,
+                                mpb.config.alias
+                            );
+                            // if (src[0] === '/') {
+                            //     filePath = path.resolve(mpb.src, `.${src}`);
+                            // } else if (src[0] === '.') {
+                            //     filePath = path.resolve(asset.dir, src);
+                            // } else {
+                            //     filePath = path.resolve(asset.dir, `./${src}`);
+                            //     const { ext } = path.parse(filePath);
+                            //     if (!fs.existsSync(filePath)) {
+                            //         filePath = resolve.sync(src, {
+                            //             basedir: mpb.cwd,
+                            //             extensions: [ext]
+                            //         });
+                            //     }
+                            // }
                             const root = asset.getMeta('root');
 
                             let outputPath = this.mainPkgPathMap[filePath];
