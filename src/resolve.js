@@ -5,7 +5,9 @@ const resolve = require('resolve');
 function resolveSync(lib, base, exts) {
     for (let i = 0; i < exts.length; i++) {
         try {
-            return resolve.sync(path.join(base, `${lib}${exts[i]}`));
+            return resolve.sync(
+                path.join(base, `${lib.endsWith(exts[i]) ? lib : `${lib}${exts[i]}`}`)
+            );
         } catch (e) {}
     }
 }

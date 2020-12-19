@@ -5,6 +5,7 @@
 module.exports = class PolymorphismPlugin {
     apply(mpb) {
         mpb.hooks.extension.tap('extension', (exts) => {
+            exts.js = exts.js.concat(['.json']);
             if (mpb.config.platform) {
                 Object.keys(exts).forEach((item) => {
                     exts[item] = exts[item]

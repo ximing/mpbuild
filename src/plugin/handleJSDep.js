@@ -94,7 +94,7 @@ module.exports = class HandleJSDep {
                                             //     libOutputPath
                                             // );
                                             // libOutputPath = `${libOutputPathPrefix}.js`;
-                                            parent.right = template.ast(
+                                            parent.init = template.ast(
                                                 `(${fs.readFileSync(libPath, 'utf-8')})`
                                             );
                                         } else {
