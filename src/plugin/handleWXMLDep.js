@@ -5,6 +5,7 @@ const htmlparser = require('htmlparser2');
 const path = require('path');
 const fs = require('fs');
 const resolve = require('../resolve');
+const { rewriteNpm } = require('../util');
 
 const generateCode = function(ast, code = '', distDeps, asset) {
     const { length } = ast;
@@ -100,12 +101,11 @@ module.exports = class HandleWXMLDep {
                             let outputPath = this.mainPkgPathMap[filePath];
                             if (!outputPath) {
                                 if (filePath.includes('node_modules')) {
-                                    outputPath = path.join(
+                                    outputPath = rewriteNpm(
+                                        filePath,
+                                        root,
                                         mpb.dest,
-                                        `./${root || ''}`,
-                                        path
-                                            .relative(mpb.cwd, filePath)
-                                            .replace('node_modules', mpb.config.output.npm)
+                                        mpb.config.output.npm
                                     );
                                 } else {
                                     outputPath = path.resolve(

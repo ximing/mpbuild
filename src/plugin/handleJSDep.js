@@ -10,6 +10,7 @@ const template = require('@babel/template').default;
 const fs = require('fs');
 
 const resolve = require('../resolve');
+const { rewriteNpm } = require('../util');
 
 module.exports = class HandleJSDep {
     constructor() {
@@ -54,15 +55,11 @@ module.exports = class HandleJSDep {
                                         let libOutputPath = this.mainPkgPathMap[libPath];
                                         if (!libOutputPath) {
                                             if (isNPM) {
-                                                libOutputPath = path.join(
+                                                libOutputPath = rewriteNpm(
+                                                    libPath,
+                                                    root,
                                                     mpb.dest,
-                                                    `./${root || ''}`,
-                                                    path
-                                                        .relative(mpb.cwd, libPath)
-                                                        .replace(
-                                                            /node_modules/g,
-                                                            mpb.config.output.npm
-                                                        )
+                                                    mpb.config.output.npm
                                                 );
                                             } else {
                                                 libOutputPath = path.join(

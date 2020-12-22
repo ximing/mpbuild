@@ -3,7 +3,7 @@
  */
 const glob = require('glob');
 const mm = require('micromatch');
-const { resolve, sep } = require('path');
+const { join, sep, relative } = require('path');
 
 module.exports.findFilesAsync = (patterns, options = {}) =>
     new Promise((reslove, reject) => {
@@ -30,9 +30,11 @@ function ensureArray(thing) {
     if (thing == undefined) return [];
     return [thing];
 }
+
 function isRegexp(val) {
     return val instanceof RegExp;
 }
+
 function createFilter(include, exclude) {
     const getMatcher = (id) => (isRegexp(id) ? id : { test: mm.matcher(id) });
     include = ensureArray(include).map(getMatcher);
@@ -57,6 +59,7 @@ function createFilter(include, exclude) {
         return !include.length;
     };
 }
+
 module.exports.createFilter = createFilter;
 // const filter = createFilter(
 //     [
@@ -67,3 +70,11 @@ module.exports.createFilter = createFilter;
 //     ['node_modules/**/*', '!node_modules/@mtfe/jsvm/**/*']
 // );
 // console.log(filter('node_modules/@mtfe/jsvm/a.tss'));
+
+module.exports.rewriteNpm = (filePath, root, dest, npmDirName = 'npm') => {
+    const npmPath = filePath
+        .split('/node_modules/')
+        .slice(1)
+        .join('/npm/');
+    return join(dest, `./${root || ''}`, npmDirName, npmPath);
+};

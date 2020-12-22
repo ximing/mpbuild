@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const { assetType } = require('../consts');
 const resolve = require('../resolve');
+const { rewriteNpm } = require('../util');
 
 const NPM_PATH_NAME = 'node_modules';
 
@@ -52,12 +53,11 @@ module.exports = class HandleJSONComponentDep {
                                 let outputPath = this.mainPkgPathMap[filePath];
                                 if (!outputPath) {
                                     if (~nmPathIndex) {
-                                        outputPath = path.join(
+                                        outputPath = rewriteNpm(
+                                            filePath,
+                                            root,
                                             mpb.dest,
-                                            `./${root || ''}`,
-                                            path
-                                                .relative(mpb.cwd, filePath)
-                                                .replace('node_modules', mpb.config.output.npm)
+                                            mpb.config.output.npm
                                         );
                                     } else {
                                         outputPath = path.resolve(

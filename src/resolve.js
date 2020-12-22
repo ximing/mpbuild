@@ -11,6 +11,10 @@ function resolveSync(lib, base, exts) {
     } catch (e) {}
 }
 
+const shims = {
+    util: path.join(__dirname, '../node_modules/util/util.js')
+};
+
 module.exports = (lib, asset, exts = [], src = '', alias = {}) => {
     const aliasArr = Object.keys(alias);
     for (let i = 0; i < aliasArr.length; i++) {
@@ -29,32 +33,36 @@ module.exports = (lib, asset, exts = [], src = '', alias = {}) => {
             libPath = lib;
         }
     } else {
+        // 尝试寻找当前项目node_modules文件夹下是否存在
         try {
-            // 先找相对路径
-            libPath = resolve.sync(path.join(asset.dir, lib), { extensions: exts });
+            libPath = bresolve.sync(lib, {
+                basedir: asset.dir,
+                filename: asset.path,
+                extensions: exts,
+                modules: shims
+            });
         } catch (e) {
-            // 尝试寻找当前项目node_modules文件夹下是否存在
+        } finally {
             try {
-                libPath = bresolve.sync(lib, {
-                    basedir: process.cwd()
-                });
-            } catch (e) {
-            } finally {
-                // 如果不存在就去从当前npm包位置开始向上查找
-                if (!(libPath && libPath.startsWith(process.cwd()))) {
-                    libPath = bresolve.sync(lib, {
-                        basedir: asset.dir,
-                        filename: asset.path
-                    });
+                // libPath = resolveSync(lib, asset.dir, exts);
+                // 先找相对路径
+                libPath = resolve.sync(path.join(asset.dir, lib), { extensions: exts });
+                if (lib === 'util') {
+                    console.log('2', lib, libPath);
                 }
+            } catch (e) {}
+            // 如果不存在就去从当前npm包位置开始向上查找
+            if (!(libPath && libPath.startsWith(process.cwd()))) {
+                libPath = bresolve.sync(lib, {
+                    basedir: asset.dir,
+                    filename: asset.path,
+                    modules: shims
+                });
             }
         }
     }
     if (!libPath) {
-        console.log('libPath', lib, exts, src, alias);
-    }
-    if (libPath.includes('json.js')) {
-        console.log('libPath-------', libPath, lib, exts, src, alias);
+        console.error('[mpbuild resolve]', lib, exts, src, alias);
     }
     return libPath;
 };
