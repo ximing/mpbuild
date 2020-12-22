@@ -121,7 +121,7 @@ module.exports = class HandleJSDep {
                     }).code;
                 }
             } catch (e) {
-                console.error('[handleJSDep parse error]', e, asset.path);
+                console.error('[handleJSDep parse error]', e, asset.path, asset.outputFilePath);
             }
             if (deps.length) {
                 try {

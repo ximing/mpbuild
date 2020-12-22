@@ -3,13 +3,12 @@ const bresolve = require('browser-resolve');
 const resolve = require('resolve');
 
 function resolveSync(lib, base, exts) {
-    for (let i = 0; i < exts.length; i++) {
-        try {
-            return resolve.sync(
-                path.join(base, `${lib.endsWith(exts[i]) ? lib : `${lib}${exts[i]}`}`)
-            );
-        } catch (e) {}
-    }
+    try {
+        return resolve.sync(lib, {
+            basedir: base,
+            extensions: exts
+        });
+    } catch (e) {}
 }
 
 module.exports = (lib, asset, exts = [], src = '', alias = {}) => {
@@ -24,7 +23,7 @@ module.exports = (lib, asset, exts = [], src = '', alias = {}) => {
         libPath = resolveSync(lib, asset.dir, exts);
     } else if (lib[0] === '/') {
         if (src) {
-            libPath = resolveSync(lib, src, exts);
+            libPath = resolveSync(`.${lib}`, src, exts);
         }
         if (!libPath) {
             libPath = lib;
@@ -50,6 +49,12 @@ module.exports = (lib, asset, exts = [], src = '', alias = {}) => {
                 }
             }
         }
+    }
+    if (!libPath) {
+        console.log('libPath', lib, exts, src, alias);
+    }
+    if (libPath.includes('json.js')) {
+        console.log('libPath-------', libPath, lib, exts, src, alias);
     }
     return libPath;
 };
