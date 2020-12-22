@@ -71,7 +71,7 @@
         "moment": "^2.18.1",
         "p-queue": "^6.0.2",
         "p-retry": "^4.1.0",
-        "node-notifier": "5.4.0",
+        "node-notifier": "8.0.1",
         "postcss-load-config": "^2.1.0",
         "path-alias": "0.0.12",
         "tapable": "^1.1.3",
