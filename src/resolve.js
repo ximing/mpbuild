@@ -11,9 +11,9 @@ function resolveSync(lib, base, exts) {
     } catch (e) {}
 }
 
-const shims = {
-    util: path.join(__dirname, '../node_modules/util/util.js')
-};
+// const shims = {
+//     util: path.join(__dirname, '../node_modules/util/util.js')
+// };
 
 module.exports = (lib, asset, exts = [], src = '', alias = {}) => {
     const aliasArr = Object.keys(alias);
@@ -33,31 +33,31 @@ module.exports = (lib, asset, exts = [], src = '', alias = {}) => {
             libPath = lib;
         }
     } else {
-        // 尝试寻找当前项目node_modules文件夹下是否存在
         try {
-            libPath = bresolve.sync(lib, {
-                basedir: asset.dir,
-                filename: asset.path,
-                extensions: exts,
-                modules: shims
-            });
+            // libPath = resolveSync(lib, asset.dir, exts);
+            // 先找相对路径
+            libPath = resolve.sync(path.join(asset.dir, lib), { extensions: exts });
         } catch (e) {
-        } finally {
+            // 尝试寻找当前项目node_modules文件夹下是否存在
             try {
-                // libPath = resolveSync(lib, asset.dir, exts);
-                // 先找相对路径
-                libPath = resolve.sync(path.join(asset.dir, lib), { extensions: exts });
-                if (lib === 'util') {
-                    console.log('2', lib, libPath);
-                }
-            } catch (e) {}
-            // 如果不存在就去从当前npm包位置开始向上查找
-            if (!(libPath && libPath.startsWith(process.cwd()))) {
                 libPath = bresolve.sync(lib, {
                     basedir: asset.dir,
                     filename: asset.path,
-                    modules: shims
+                    extensions: exts,
+                    // modules: shims,
+                    includeCoreModules: false
                 });
+            } catch (e) {
+            } finally {
+                // 如果不存在就去从当前npm包位置开始向上查找
+                if (!(libPath && libPath.startsWith(process.cwd()))) {
+                    libPath = bresolve.sync(lib, {
+                        basedir: asset.dir,
+                        filename: asset.path,
+                        // modules: shims,
+                        includeCoreModules: false
+                    });
+                }
             }
         }
     }

@@ -10,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "querystring": "^0.2.0",
     "util": "^0.12.3"
   }
 }
