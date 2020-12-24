@@ -66,25 +66,29 @@ module.exports = class HandleJSONComponentDep {
                                             path.relative(mpb.src, filePath)
                                         );
                                     }
-                                    if (!root) {
-                                        this.mainPkgPathMap[filePath] = outputPath;
-                                    }
                                     const filePathRes = path.parse(filePath);
                                     const outputPathRes = path.parse(outputPath);
+                                    const componentPath = path
+                                        .join(outputPathRes.dir, outputPathRes.name)
+                                        .replace('.json', '');
                                     mpb.scan.addAssetByEXT(
                                         path
                                             .join(filePathRes.dir, filePathRes.name)
                                             .replace(mpb.src, ''),
-                                        path
-                                            .join(outputPathRes.dir, outputPathRes.name)
-                                            .replace('.json', ''),
+                                        componentPath,
                                         assetType.component,
                                         undefined,
                                         root,
                                         asset.filePath
                                     );
+                                    const compPath = componentPath.replace(mpb.dest, '');
+                                    if (!root) {
+                                        this.mainPkgPathMap[filePath] = compPath;
+                                    }
+                                    componets[componentName] = compPath;
+                                } else {
+                                    componets[componentName] = outputPath;
                                 }
-                                componets[componentName] = outputPath.replace(mpb.dest, '');
                                 asset.contents = JSON.stringify(code);
                             })
                         );
