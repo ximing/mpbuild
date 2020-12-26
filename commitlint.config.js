@@ -1,7 +1,6 @@
 /**
  * Created by ximing on 2018/7/11.
  */
-'use strict';
 module.exports = {
     extends: ['@commitlint/config-conventional'],
     rules: {
