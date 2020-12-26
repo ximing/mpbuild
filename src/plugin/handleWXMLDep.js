@@ -3,10 +3,6 @@
  */
 const htmlparser = require('htmlparser2');
 const path = require('path');
-const fs = require('fs');
-const resolve = require('../resolve');
-const { rewriteOutput } = require('../util');
-const { rewriteNpm } = require('../util');
 
 const generateCode = function (ast, code = '', distDeps, asset) {
     const { length } = ast;
@@ -78,13 +74,15 @@ module.exports = class HandleWXMLDep {
                     });
                     await Promise.all(
                         deps.map((src) => {
-                            const filePath = resolve(
-                                src,
+                            const res = mpb.hooks.resolve.call({
+                                lib: src,
+                                resolveLib: '',
                                 asset,
-                                mpb.exts.wxml,
-                                mpb.src,
-                                mpb.config.alias
-                            );
+                                resolveType: 'wxml',
+                                exts: mpb.exts.wxml,
+                            });
+                            const filePath = res.resolveLib;
+
                             // if (src[0] === '/') {
                             //     filePath = path.resolve(mpb.src, `.${src}`);
                             // } else if (src[0] === '.') {

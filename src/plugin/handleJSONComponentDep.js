@@ -2,13 +2,8 @@
  * Created by ximing on 2019-03-15.
  */
 const path = require('path');
-const fs = require('fs');
-const { assetType } = require('../consts');
-const resolve = require('../resolve');
-const { rewriteOutput } = require('../util');
-const { rewriteNpm } = require('../util');
 
-const NPM_PATH_NAME = 'node_modules';
+const { assetType } = require('../consts');
 
 module.exports = class HandleJSONComponentDep {
     constructor() {
@@ -39,25 +34,15 @@ module.exports = class HandleJSONComponentDep {
                                 let filePath = '',
                                     src = componets[componentName];
 
-                                filePath = resolve(
-                                    src,
+                                const res = mpb.hooks.resolve.call({
+                                    lib: src,
+                                    resolveLib: '',
                                     asset,
-                                    mpb.exts.json,
-                                    mpb.src,
-                                    mpb.config.alias
-                                );
-                                // if (src[0] === '/') {
-                                //     filePath = path.resolve(mpb.src, `.${src}`);
-                                // } else if (src[0] === '.') {
-                                //     filePath = path.resolve(asset.dir, src);
-                                // } else {
-                                //     filePath = path.resolve(asset.dir, `./${src}`);
-                                //
-                                //     if (!fs.existsSync(`${filePath}.json`)) {
-                                //         filePath = resolve.sync(src, { basedir: mpb.cwd });
-                                //         filePath = filePath.replace(path.parse(filePath).ext, '');
-                                //     }
-                                // }
+                                    resolveType: 'json',
+                                    exts: mpb.exts.json,
+                                });
+                                filePath = res.resolveLib;
+
                                 const { outputPath } = mpb.hooks.rewriteOutputPath.call({
                                     filePath,
                                     asset,
