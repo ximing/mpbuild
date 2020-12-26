@@ -7,14 +7,11 @@ const chalk = require('chalk');
 
 module.exports = class TsTypeCheckPlugin {
     constructor(options) {
-        this.options = Object.assign(
-            {},
-            {
-                project: process.cwd(),
-                kill: true
-            },
-            options
-        );
+        this.options = {
+            project: process.cwd(),
+            kill: true,
+            ...options,
+        };
     }
 
     apply(mpb) {
@@ -26,15 +23,11 @@ module.exports = class TsTypeCheckPlugin {
             }
         });
 
-        watch.on('subsequent_success', () => {
-            // Your code goes here...
-        });
-
         watch.on('compile_errors', () => {
             if (mpb.isWatch) {
                 notifier.notify({
                     title: 'typescript-error',
-                    message: 'typescript类型校验出错！'
+                    message: 'typescript类型校验出错！',
                 });
             } else {
                 // 如果编译报错，不是watch模式下就直接退出进程

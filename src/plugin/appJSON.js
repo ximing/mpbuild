@@ -5,13 +5,11 @@ const Asset = require('../asset');
 module.exports = class AppJSON {
     constructor(options) {
         this.appEntry = '';
-        this.options = Object.assign(
-            {},
-            {
-                output: 'app.json'
-            },
-            options
-        );
+        this.options = {
+            
+            output: 'app.json',
+            ...options
+        };
     }
 
     apply(mpb) {
@@ -24,17 +22,15 @@ module.exports = class AppJSON {
                 if (router.root) {
                     const subPack = {
                         root: router.root,
-                        pages: Object.keys(router.pages)
+                        pages: Object.keys(router.pages),
                     };
                     subPackages.push(subPack);
                 } else {
                     pages = Object.keys(router.pages);
                 }
             });
-            const appOutput = Object.assign({}, appEntry, {
-                pages,
-                subPackages
-            });
+            const appOutput = { ...appEntry, pages,
+                subPackages,};
             delete appOutput.router;
             const strAppEntry = JSON.stringify(appOutput);
             if (this.appEntry !== strAppEntry) {

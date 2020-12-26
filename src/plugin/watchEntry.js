@@ -32,7 +32,7 @@ module.exports = class WatchEntry {
 
                 chokidar
                     .watch(`${mpb.src}/**/*`, {
-                        ignoreInitial: true
+                        ignoreInitial: true,
                     })
                     .on('add', async (p) => {
                         if (pagesMap[path.dirname(p)]) {

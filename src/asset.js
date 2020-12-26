@@ -3,8 +3,8 @@
  */
 const path = require('path');
 const fs = require('fs');
-const fse = require('fs-extra');
 const chalk = require('chalk');
+const fse = require('fs-extra');
 const { assetType } = require('./consts');
 
 module.exports = class Asset {
@@ -18,7 +18,7 @@ module.exports = class Asset {
         this.filePath = filePath;
         this.__content = null;
         this.__meta = meta || {
-            type: assetType.normal
+            type: assetType.normal,
         };
         this.shouldOutput = true;
         this.outputFilePath = outputFilePath;
@@ -30,7 +30,7 @@ module.exports = class Asset {
     }
 
     getMeta(key) {
-        if(key === undefined) return this.__meta;
+        if (key === undefined) return this.__meta;
         return this.__meta[key];
     }
 
@@ -68,7 +68,8 @@ module.exports = class Asset {
                 }
                 this.__stats = fs.statSync(this.filePath);
             } catch (e) {
-                console.log('读取文件失败', this.filePath);
+                console.log(chalk.red('[asset] 读取文件失败'));
+                console.log(chalk.red(this.filePath));
                 console.error(e);
                 this.__content = null;
             }

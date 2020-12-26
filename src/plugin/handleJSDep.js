@@ -2,14 +2,17 @@
  * Created by ximing on 2019-03-15.
  */
 const path = require('path');
+const chalk = require('chalk');
 const babylon = require('@babel/parser');
 const t = require('@babel/types');
 const babelTraverse = require('@babel/traverse').default;
 const generate = require('@babel/generator').default;
 const template = require('@babel/template').default;
-const bresolve = require('browser-resolve');
-const resolve = require('resolve');
 const fs = require('fs');
+
+const resolve = require('../resolve');
+const { rewriteOutput } = require('../util');
+const { rewriteNpm } = require('../util');
 
 module.exports = class HandleJSDep {
     constructor() {
@@ -17,6 +20,9 @@ module.exports = class HandleJSDep {
     }
 
     apply(mpb) {
+        const keys = Object.keys(mpb.config.alias || {});
+        const alias = { keys, aliasMap: mpb.config.alias };
+        this.exts = [...new Set(mpb.exts.js.concat(['.json']))];
         mpb.hooks.beforeEmitFile.tapPromise('HandleJSDep', async (asset) => {
             const deps = [];
             try {
@@ -36,88 +42,30 @@ module.exports = class HandleJSDep {
                                         node.arguments.length === 1 &&
                                         t.isStringLiteral(node.arguments[0])
                                     ) {
-                                        let lib = node.arguments[0].value;
+                                        const lib = node.arguments[0].value;
                                         let libPath;
                                         const resolveRes = mpb.hooks.resolveJS.call({ lib, asset });
                                         if (!resolveRes) {
                                             return;
                                         }
-                                        lib = resolveRes.lib;
-                                        if (lib[0] === '.') {
-                                            try {
-                                                libPath = resolve.sync(path.join(asset.dir, lib));
-                                            } catch (e) {
-                                                try {
-                                                    libPath = resolve.sync(
-                                                        path.join(asset.dir, `${lib}.ts`)
-                                                    );
-                                                } catch (e) {
-                                                    libPath = resolve.sync(
-                                                        path.join(asset.dir, `${lib}.tsx`)
-                                                    );
-                                                }
-                                            }
-                                        } else if (lib[0] === '/') {
-                                            libPath = lib;
-                                        } else {
-                                            try {
-                                                // 先找相对路径
-                                                libPath = resolve.sync(path.join(asset.dir, lib));
-                                            } catch (e) {
-                                                // 尝试寻找当前项目node_modules文件夹下是否存在
-                                                try {
-                                                    libPath = bresolve.sync(lib, {
-                                                        basedir: process.cwd()
-                                                    });
-                                                } catch (e) {
-                                                } finally {
-                                                    // 如果不存在就去从当前npm包位置开始向上查找
-                                                    if (
-                                                        !(
-                                                            libPath &&
-                                                            libPath.startsWith(process.cwd())
-                                                        )
-                                                    ) {
-                                                        libPath = bresolve.sync(lib, {
-                                                            basedir: asset.dir,
-                                                            filename: asset.path
-                                                        });
-                                                    }
-                                                }
-                                            }
-                                        }
-
-                                        const root = asset.getMeta('root');
-                                        const isNPM = libPath.includes('node_modules');
-                                        let libOutputPath = this.mainPkgPathMap[libPath];
-                                        if (!libOutputPath) {
-                                            if (isNPM) {
-                                                libOutputPath = path.join(
-                                                    mpb.dest,
-                                                    `./${root || ''}`,
-                                                    path
-                                                        .relative(mpb.cwd, libPath)
-                                                        .replace(
-                                                            /node_modules/g,
-                                                            mpb.config.output.npm
-                                                        )
-                                                );
-                                            } else {
-                                                libOutputPath = path.join(
-                                                    mpb.dest,
-                                                    `./${root || ''}`,
-                                                    path.relative(mpb.src, libPath)
-                                                );
-                                            }
-
-                                            if (!root) {
-                                                this.mainPkgPathMap[libPath] = libOutputPath;
-                                            }
-                                        }
-
+                                        libPath = resolve(
+                                            resolveRes.lib,
+                                            asset,
+                                            this.exts,
+                                            mpb.src,
+                                            mpb.config.alias
+                                        );
+                                        let {
+                                            outputPath: libOutputPath,
+                                        } = mpb.hooks.rewriteOutputPath.call({
+                                            filePath: libPath,
+                                            asset,
+                                            depType: 'js',
+                                        });
                                         // TODO How to handle renamed files more gracefully
                                         if (
                                             libOutputPath.endsWith('.ts') ||
+                                            libOutputPath.endsWith('.jsx') ||
                                             libOutputPath.endsWith('.tsx')
                                         ) {
                                             const [libOutputPathPrefix] = mpb.helper.splitExtension(
@@ -131,7 +79,7 @@ module.exports = class HandleJSDep {
                                             //     libOutputPath
                                             // );
                                             // libOutputPath = `${libOutputPathPrefix}.js`;
-                                            parent.right = template.ast(
+                                            parent.init = template.ast(
                                                 `(${fs.readFileSync(libPath, 'utf-8')})`
                                             );
                                         } else {
@@ -144,21 +92,23 @@ module.exports = class HandleJSDep {
                                             }
                                             deps.push({
                                                 libPath,
-                                                libOutputPath
+                                                libOutputPath,
                                             });
                                         }
                                     }
                                 }
-                            }
-                        }
+                            },
+                        },
                     });
                     asset.contents = generate(ast, {
                         quotes: 'single',
-                        retainLines: true
+                        retainLines: true,
                     }).code;
                 }
             } catch (e) {
-                console.error('[handleJSDep parse error]', e, asset.path);
+                console.log(chalk.red('[handleJSDep parse error]'));
+                console.log(chalk.red(asset.path, asset.outputFilePath));
+                console.error(e);
             }
             if (deps.length) {
                 try {
@@ -168,7 +118,7 @@ module.exports = class HandleJSDep {
                             const root = asset.getMeta('root');
                             return mpb.assetManager.addAsset(libPath, libOutputPath, {
                                 root,
-                                source: asset.filePath
+                                source: asset.filePath,
                             });
                         })
                     );
