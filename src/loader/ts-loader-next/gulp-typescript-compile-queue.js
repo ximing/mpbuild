@@ -14,7 +14,7 @@ const { PassThrough } = require('stream');
  * @returns {CompileStream} compiled project stream
  */
 function tsCompileQStream(project, reporter) {
-    return new class extends PassThrough {
+    return new (class extends PassThrough {
         constructor() {
             super({ objectMode: true });
             this.js = this;
@@ -31,12 +31,12 @@ function tsCompileQStream(project, reporter) {
             this.signal = CompileScheduler.scheduleCompilation(project, () => {
                 this.transformStream = project(reporter).on('finish', () => this.signal());
 
-                let compileStream = src.pipe(this.transformStream);
+                const compileStream = src.pipe(this.transformStream);
                 compileStream.js.pipe(this.js);
                 compileStream.dts.pipe(this.dts);
             });
         }
-    }();
+    })();
 }
 
 class CompileScheduler {
@@ -44,13 +44,13 @@ class CompileScheduler {
 }
 CompileScheduler.compileGateKeeper = new Map();
 
-CompileScheduler.scheduleCompilation = function(project, beginCompilation) {
+CompileScheduler.scheduleCompilation = function (project, beginCompilation) {
     let projectQueue = CompileScheduler.compileGateKeeper.get(project);
     if (!projectQueue) {
         projectQueue = [];
         CompileScheduler.compileGateKeeper.set(project, projectQueue);
     }
-    let ret = CompileScheduler.startNext(project);
+    const ret = CompileScheduler.startNext(project);
     if (projectQueue.length) {
         projectQueue.push(beginCompilation);
     } else {
@@ -60,11 +60,11 @@ CompileScheduler.scheduleCompilation = function(project, beginCompilation) {
     return ret;
 };
 
-CompileScheduler.startNext = function(project) {
+CompileScheduler.startNext = function (project) {
     return () => {
-        let projectQueue = CompileScheduler.compileGateKeeper.get(project);
+        const projectQueue = CompileScheduler.compileGateKeeper.get(project);
         if (projectQueue.length) {
-            let nextCompilation = projectQueue.shift();
+            const nextCompilation = projectQueue.shift();
             nextCompilation();
         }
     };

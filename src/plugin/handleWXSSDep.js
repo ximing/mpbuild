@@ -4,7 +4,9 @@
 const postcss = require('postcss');
 const path = require('path');
 const fs = require('fs');
-const resolve = require('resolve');
+const resolve = require('../resolve');
+const { rewriteOutput } = require('../util');
+const { rewriteNpm } = require('../util');
 
 module.exports = class HandleWXSSDep {
     constructor() {
@@ -12,6 +14,8 @@ module.exports = class HandleWXSSDep {
     }
 
     apply(mpb) {
+        const keys = Object.keys(mpb.config.alias || {});
+        const alias = { keys, aliasMap: mpb.config.alias };
         mpb.hooks.beforeEmitFile.tapPromise('HandleWXSSDep', async (asset) => {
             if (/\.wxss$/.test(asset.name)) {
                 const deps = [];
@@ -25,50 +29,38 @@ module.exports = class HandleWXSSDep {
                     try {
                         await Promise.all(
                             deps.map((src) => {
-                                let filePath = '';
-                                if (src[0] === '/') {
-                                    filePath = path.resolve(mpb.src, `.${src}`);
-                                } else if (src[0] === '.') {
-                                    filePath = path.resolve(asset.dir, src);
-                                } else {
-                                    filePath = path.resolve(asset.dir, `./${src}`);
-
-                                    if (!fs.existsSync(filePath)) {
-                                        filePath = resolve.sync(src, {
-                                            basedir: mpb.cwd,
-                                            extensions: ['.wxss']
-                                        });
-                                    }
-                                }
+                                const filePath = resolve(
+                                    src,
+                                    asset,
+                                    mpb.exts.wxml,
+                                    mpb.src,
+                                    mpb.config.alias
+                                );
+                                // if (src[0] === '/') {
+                                //     filePath = path.resolve(mpb.src, `.${src}`);
+                                // } else if (src[0] === '.') {
+                                //     filePath = path.resolve(asset.dir, src);
+                                // } else {
+                                //     filePath = path.resolve(asset.dir, `./${src}`);
+                                //
+                                //     if (!fs.existsSync(filePath)) {
+                                //         filePath = resolve.sync(src, {
+                                //             basedir: mpb.cwd,
+                                //             extensions: ['.wxss']
+                                //         });
+                                //     }
+                                // }
 
                                 const root = asset.getMeta('root');
-                                let outputPath = this.mainPkgPathMap[filePath];
-                                if (!outputPath) {
-                                    if (filePath.includes('node_modules')) {
-                                        outputPath = path.join(
-                                            mpb.dest,
-                                            `./${root || ''}`,
-                                            path
-                                                .relative(mpb.cwd, filePath)
-                                                .replace('node_modules', mpb.config.output.npm)
-                                        );
-                                    } else {
-                                        outputPath = path.resolve(
-                                            mpb.dest,
-                                            `./${root || ''}`,
-                                            path.relative(mpb.src, filePath)
-                                        );
-                                    }
-
-                                    if (!root) {
-                                        this.mainPkgPathMap[filePath] = outputPath;
-                                    }
-                                }
-
+                                const { outputPath } = mpb.hooks.rewriteOutputPath.call({
+                                    filePath,
+                                    asset,
+                                    depType: 'wxml',
+                                });
                                 distDeps.push(outputPath);
                                 return mpb.assetManager.addAsset(filePath, outputPath, {
                                     root,
-                                    source: asset.filePath
+                                    source: asset.filePath,
                                 });
                             })
                         );

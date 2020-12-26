@@ -1,7 +1,7 @@
 /**
  * Created by ximing on 2019-03-14.
  */
-module.exports = function(opts) {
+module.exports = function (opts) {
     let { search, replacement } = opts;
     return function replaceLoader(asset) {
         if (typeof replacement === 'function') {

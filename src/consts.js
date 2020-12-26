@@ -5,5 +5,5 @@ module.exports.assetType = {
     page: 'page',
     component: 'component',
     app: 'app',
-    normal: 'normal'
+    normal: 'normal',
 };

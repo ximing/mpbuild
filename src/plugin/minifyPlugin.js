@@ -22,11 +22,11 @@ function clearPool() {
 
 function minifyJS(contents, options) {
     const UglifyJS = require('uglify-js');
-    if(options && options.output && options.output.comments) {
-      const comments = options.output.comments
-      if (comments !== 'all' && comments !== 'some' && typeof comments !== 'boolean') {
-        options.output.comments = /javascript-obfuscator:disable|javascript-obfuscator:enable/
-      }
+    if (options && options.output && options.output.comments) {
+        const { comments } = options.output;
+        if (comments !== 'all' && comments !== 'some' && typeof comments !== 'boolean') {
+            options.output.comments = /javascript-obfuscator:disable|javascript-obfuscator:enable/;
+        }
     }
     const result = UglifyJS.minify(contents, typeof options === 'undefined' ? undefined : options);
     if (result.error) {
@@ -43,7 +43,7 @@ function minifyWXML(contents) {
         removeComments: true,
         keepClosingSlash: true,
         collapseWhitespace: true,
-        caseSensitive: true
+        caseSensitive: true,
     });
 }
 
@@ -53,14 +53,14 @@ function minifyJSON(contents) {
 }
 
 function sholdRunMiniFunc(asset, rule) {
-    if(!rule) {
+    if (!rule) {
         return false;
     }
-    if(typeof rule === "boolean" && rule) {
+    if (typeof rule === 'boolean' && rule) {
         return true;
     }
-    if(Object.prototype.toString.call(rule) === '[object Object]') {
-        const {include, exclude} = rule || {};
+    if (Object.prototype.toString.call(rule) === '[object Object]') {
+        const { include, exclude } = rule || {};
         let sholdRunMini = true;
         if (Array.isArray(exclude)) {
             sholdRunMini = !mm.any(asset.path, exclude);
@@ -70,7 +70,7 @@ function sholdRunMiniFunc(asset, rule) {
         }
         return sholdRunMini;
     }
-    return false
+    return false;
 }
 
 module.exports = class MinifyPlugin {
@@ -98,14 +98,17 @@ module.exports = class MinifyPlugin {
                         // if (result.error) console.error('[MinifyPlugin]', result.error);
                         // if (result.warnings) console.warn('[MinifyPlugin]', result.warnings);
                         // asset.contents = result.code;
-                        asset.contents = await pool.exec(minifyJS, [
-                            asset.contents,
-                            this.js
-                        ]);
-                    } else if (/\.json$/.test(asset.outputFilePath) && sholdRunMiniFunc(asset, this.json)) {
+                        asset.contents = await pool.exec(minifyJS, [asset.contents, this.js]);
+                    } else if (
+                        /\.json$/.test(asset.outputFilePath) &&
+                        sholdRunMiniFunc(asset, this.json)
+                    ) {
                         // asset.contents = jsonminify(asset.contents).toString();
                         asset.contents = await pool.exec(minifyJSON, [asset.contents]);
-                    } else if (/\.wxml$/.test(asset.outputFilePath) && sholdRunMiniFunc(asset, this.wxml)) {
+                    } else if (
+                        /\.wxml$/.test(asset.outputFilePath) &&
+                        sholdRunMiniFunc(asset, this.wxml)
+                    ) {
                         // asset.contents = asset.contents = htmlmin.minify(asset.contents, {
                         //     removeComments: true,
                         //     keepClosingSlash: true,
