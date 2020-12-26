@@ -3,10 +3,6 @@
  */
 const postcss = require('postcss');
 const path = require('path');
-const fs = require('fs');
-const resolve = require('../resolve');
-const { rewriteOutput } = require('../util');
-const { rewriteNpm } = require('../util');
 
 module.exports = class HandleWXSSDep {
     constructor() {
@@ -29,33 +25,20 @@ module.exports = class HandleWXSSDep {
                     try {
                         await Promise.all(
                             deps.map((src) => {
-                                const filePath = resolve(
-                                    src,
+                                const res = mpb.hooks.resolve.call({
+                                    lib: src,
+                                    resolveLib: '',
                                     asset,
-                                    mpb.exts.wxml,
-                                    mpb.src,
-                                    mpb.config.alias
-                                );
-                                // if (src[0] === '/') {
-                                //     filePath = path.resolve(mpb.src, `.${src}`);
-                                // } else if (src[0] === '.') {
-                                //     filePath = path.resolve(asset.dir, src);
-                                // } else {
-                                //     filePath = path.resolve(asset.dir, `./${src}`);
-                                //
-                                //     if (!fs.existsSync(filePath)) {
-                                //         filePath = resolve.sync(src, {
-                                //             basedir: mpb.cwd,
-                                //             extensions: ['.wxss']
-                                //         });
-                                //     }
-                                // }
+                                    resolveType: 'wxss',
+                                    exts: mpb.exts.wxss,
+                                });
+                                const filePath = res.resolveLib;
 
                                 const root = asset.getMeta('root');
                                 const { outputPath } = mpb.hooks.rewriteOutputPath.call({
                                     filePath,
                                     asset,
-                                    depType: 'wxml',
+                                    depType: 'wxss',
                                 });
                                 distDeps.push(outputPath);
                                 return mpb.assetManager.addAsset(filePath, outputPath, {

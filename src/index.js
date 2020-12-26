@@ -33,6 +33,7 @@ const CopyPlugin = require('./plugin/copyPlugin');
 const CleanMbpPlugin = require('./plugin/cleanMbpPlugin.js');
 const TsTypeCheckPlugin = require('./plugin/tsTypeCheckPlugin');
 const PolymorphismPlugin = require('./plugin/polymorphismPlugin');
+const ResolvePlugin = require('./plugin/resolvePlugin');
 const RewriteOutputPathPlugin = require('./plugin/rewriteOutputPathPlugin');
 const NodeEnvironmentPlugin = require('./node/NodeEnvironmentPlugin');
 
@@ -55,7 +56,8 @@ class Mpbuilder {
             resolveJS: new SyncBailHook(['libName']),
             resolveAppEntryJS: new SyncBailHook(['entryPath']),
             extension: new SyncWaterfallHook(['ext']),
-            rewriteOutputPath: new SyncWaterfallHook(['ext']),
+            rewriteOutputPath: new SyncWaterfallHook(['opt']),
+            resolve: new SyncWaterfallHook(['opt']),
         };
         this.optimization = {
             minimize: true,
@@ -89,6 +91,7 @@ class Mpbuilder {
             [
                 new NodeEnvironmentPlugin(),
                 new PolymorphismPlugin(),
+                new ResolvePlugin(),
                 new RewriteOutputPathPlugin(),
                 new HandleJSDep(),
                 new HandleJSONComponentDep(),

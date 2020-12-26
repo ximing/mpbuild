@@ -10,10 +10,6 @@ const generate = require('@babel/generator').default;
 const template = require('@babel/template').default;
 const fs = require('fs');
 
-const resolve = require('../resolve');
-const { rewriteOutput } = require('../util');
-const { rewriteNpm } = require('../util');
-
 module.exports = class HandleJSDep {
     constructor() {
         this.mainPkgPathMap = {};
@@ -43,18 +39,18 @@ module.exports = class HandleJSDep {
                                         t.isStringLiteral(node.arguments[0])
                                     ) {
                                         const lib = node.arguments[0].value;
-                                        let libPath;
                                         const resolveRes = mpb.hooks.resolveJS.call({ lib, asset });
                                         if (!resolveRes) {
                                             return;
                                         }
-                                        libPath = resolve(
-                                            resolveRes.lib,
+                                        const res = mpb.hooks.resolve.call({
+                                            lib: resolveRes.lib,
+                                            resolveLib: '',
                                             asset,
-                                            this.exts,
-                                            mpb.src,
-                                            mpb.config.alias
-                                        );
+                                            resolveType: 'js',
+                                            exts: this.exts,
+                                        });
+                                        const libPath = res.resolveLib;
                                         let {
                                             outputPath: libOutputPath,
                                         } = mpb.hooks.rewriteOutputPath.call({
