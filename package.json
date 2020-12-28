@@ -9,7 +9,9 @@
         "release:minor": "npm run release -- --release-as minor",
         "release:major": "npm run release -- --release-as major",
         "lint": "lint-staged",
-        "pretty": "prettier --write \"src/**/*.js\""
+        "pretty": "prettier --write \"src/**/*.js\"",
+        "install:website": "cd website && npm i --registry=https://registry.npmjs.com",
+        "build:website": "cd website && rm -rf .umi dist && npm run build"
     },
     "repository": {
         "type": "git",

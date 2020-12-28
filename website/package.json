@@ -1,0 +1,24 @@
+{
+  "private": true,
+  "name": "website",
+  "version": "0.0.1",
+  "scripts": {
+    "clean": "rm -rf .umi dist",
+    "start": "dumi dev",
+    "build": "dumi build",
+    "postbuild-old": "echo ximing.github.io > dist/CNAME",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
+  },
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "typings": "dist/index.d.ts",
+  "dependencies": {
+    "dumi": "^1.0.7",
+    "gh-pages": "^2.2.0",
+    "glob": "^7.1.6",
+    "mime": "^2.4.5",
+    "mos-mss": "^1.1.4",
+    "p-limit": "^2.3.0"
+  }
+}
