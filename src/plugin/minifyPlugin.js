@@ -22,11 +22,11 @@ function clearPool() {
 
 function minifyJS(contents, options) {
     const UglifyJS = require('uglify-js');
-    if(options && options.output && options.output.comments) {
-      const comments = options.output.comments
-      if (comments !== 'all' && comments !== 'some' && typeof comments !== 'boolean') {
-        options.output.comments = /javascript-obfuscator:disable|javascript-obfuscator:enable/
-      }
+    if (options && options.output && options.output.comments) {
+        const {comments} = options.output;
+        if (comments !== 'all' && comments !== 'some' && typeof comments !== 'boolean') {
+            options.output.comments = /javascript-obfuscator:disable|javascript-obfuscator:enable/;
+        }
     }
     const result = UglifyJS.minify(contents, typeof options === 'undefined' ? undefined : options);
     if (result.error) {
@@ -47,20 +47,32 @@ function minifyWXML(contents) {
     });
 }
 
+function minifyWXS(contents) {
+    const babylon = require('@babel/parser');
+    const generate = require('@babel/generator').default;
+    const code = contents;
+    const ast = babylon.parse(code, { sourceType: 'module' });
+    return generate(ast, {
+        quotes: 'single',
+        minified: true,
+        comments: false
+    }).code;
+}
+
 function minifyJSON(contents) {
     const jsonminify = require('jsonminify');
     return jsonminify(contents).toString();
 }
 
 function sholdRunMiniFunc(asset, rule) {
-    if(!rule) {
+    if (!rule) {
         return false;
     }
-    if(typeof rule === "boolean" && rule) {
+    if (typeof rule === 'boolean' && rule) {
         return true;
     }
-    if(Object.prototype.toString.call(rule) === '[object Object]') {
-        const {include, exclude} = rule || {};
+    if (Object.prototype.toString.call(rule) === '[object Object]') {
+        const { include, exclude } = rule || {};
         let sholdRunMini = true;
         if (Array.isArray(exclude)) {
             sholdRunMini = !mm.any(asset.path, exclude);
@@ -70,7 +82,7 @@ function sholdRunMiniFunc(asset, rule) {
         }
         return sholdRunMini;
     }
-    return false
+    return false;
 }
 
 module.exports = class MinifyPlugin {
@@ -78,6 +90,7 @@ module.exports = class MinifyPlugin {
         this.js = true;
         this.wxml = true;
         this.json = true;
+        this.wxs = true;
     }
 
     apply(mpb) {
@@ -86,10 +99,12 @@ module.exports = class MinifyPlugin {
                 this.js = mpb.optimization.minimize.js;
                 this.wxml = mpb.optimization.minimize.wxml;
                 this.json = mpb.optimization.minimize.json;
+                this.wxs = mpb.optimization.minimize.wxs;
             } else if (mpb.optimization.minimize === false) {
                 this.js = false;
                 this.wxml = false;
                 this.json = false;
+                this.wxs = false;
             }
             mpb.hooks.beforeEmitFile.tapPromise('MinifyPlugin', async (asset) => {
                 if (asset.contents) {
@@ -98,14 +113,17 @@ module.exports = class MinifyPlugin {
                         // if (result.error) console.error('[MinifyPlugin]', result.error);
                         // if (result.warnings) console.warn('[MinifyPlugin]', result.warnings);
                         // asset.contents = result.code;
-                        asset.contents = await pool.exec(minifyJS, [
-                            asset.contents,
-                            this.js
-                        ]);
-                    } else if (/\.json$/.test(asset.outputFilePath) && sholdRunMiniFunc(asset, this.json)) {
+                        asset.contents = await pool.exec(minifyJS, [asset.contents, this.js]);
+                    } else if (
+                        /\.json$/.test(asset.outputFilePath) &&
+                        sholdRunMiniFunc(asset, this.json)
+                    ) {
                         // asset.contents = jsonminify(asset.contents).toString();
                         asset.contents = await pool.exec(minifyJSON, [asset.contents]);
-                    } else if (/\.wxml$/.test(asset.outputFilePath) && sholdRunMiniFunc(asset, this.wxml)) {
+                    } else if (
+                        /\.wxml$/.test(asset.outputFilePath) &&
+                        sholdRunMiniFunc(asset, this.wxml)
+                    ) {
                         // asset.contents = asset.contents = htmlmin.minify(asset.contents, {
                         //     removeComments: true,
                         //     keepClosingSlash: true,
@@ -113,6 +131,11 @@ module.exports = class MinifyPlugin {
                         //     caseSensitive: true
                         // });
                         asset.contents = await pool.exec(minifyWXML, [asset.contents]);
+                    } else if (
+                        /\.wxs$/.test(asset.outputFilePath) &&
+                        sholdRunMiniFunc(asset, this.wxs)
+                    ) {
+                        asset.contents = await pool.exec(minifyWXS, [asset.contents]);
                     }
                 }
                 return Promise.resolve();
