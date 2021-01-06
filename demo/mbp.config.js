@@ -4,6 +4,7 @@
 const path = require('path');
 
 const MPB = require('../src');
+const TestPlugin = require('./plugins/testPlugin');
 
 module.exports = (entry) => {
     return {
@@ -15,11 +16,11 @@ module.exports = (entry) => {
             '@one': path.join(__dirname, '../projects/one'),
             '@two': path.join(__dirname, '../projects/two'),
             '@utils': path.join(__dirname, 'src/utils'),
-            '@components': path.join(__dirname, 'src/components')
+            '@components': path.join(__dirname, 'src/components'),
         },
         output: {
             path: path.join(__dirname, 'dist'),
-            npm: 'npm'
+            npm: 'npm',
         },
         platform: 'wx',
         optimization: {
@@ -28,14 +29,14 @@ module.exports = (entry) => {
                 // js: needUglify ? { output: { comments: /javascript-obfuscator:disable|javascript-obfuscator:enable/} } : false,
                 js: true,
                 wxml: true,
-                json: true
-            }
+                json: true,
+            },
         },
         module: {
             rules: [
                 {
                     test: /\.wxss$/,
-                    use: []
+                    use: [],
                 },
                 {
                     test: /\.js$/,
@@ -44,31 +45,31 @@ module.exports = (entry) => {
                     use: [
                         {
                             loader: 'babel-loader',
-                            options: { comments: true }
-                        }
-                    ]
+                            options: { comments: true },
+                        },
+                    ],
                 },
                 {
                     test: /\.json$/,
                     use: [
                         {
-                            loader: 'json-loader'
-                        }
-                    ]
+                            loader: 'json-loader',
+                        },
+                    ],
                 },
                 {
                     test: /\.wxs$/,
-                    use: []
+                    use: [],
                 },
                 {
                     test: /\.wxml$/,
-                    use: []
-                }
-            ]
+                    use: [],
+                },
+            ],
         },
         plugins: [
             new MPB.CleanMbpPlugin({
-                path: ['dist/**/*', '!dist/project.config.json']
+                path: ['dist/**/*', '!dist/project.config.json'],
             }),
             // new MPB.TsTypeCheckPlugin({
             //     project: __dirname
@@ -77,9 +78,10 @@ module.exports = (entry) => {
                 projectname: 'test',
                 appId: 'test',
                 setting: {
-                    minified: true
-                }
-            })
-        ]
+                    minified: true,
+                },
+            }),
+            new TestPlugin(),
+        ],
     };
 };

@@ -68,7 +68,6 @@ module.exports = class ScanDep {
     }
 
     async pages() {
-        await this.findEntry();
         const { router } = this.mpb.appEntry;
         for (let i = 0, l = router.length; i < l; i++) {
             let { root, pages } = router[i];
@@ -129,6 +128,7 @@ module.exports = class ScanDep {
 
     async init() {
         perf.start('init');
+        await this.findEntry();
         // find App
         await this.addAssetByEXT('app', path.join(this.mpb.dest, 'app'), assetType.app);
         // find Pages
