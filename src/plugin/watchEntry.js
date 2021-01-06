@@ -46,6 +46,7 @@ module.exports = class WatchEntry {
 
     async rebuild() {
         delete require.cache[this.mpb.entryPath];
+        await this.mpb.scan.findEntry();
         await this.mpb.scan.pages();
         console.log('差量编译完成');
     }
