@@ -11,10 +11,9 @@ const chalk = require('chalk');
 module.exports = class ProjectConfigPlugin {
     constructor(options) {
         this.options = {
-            
             projectname: '',
-                appId: '',
-            ...options
+            appId: '',
+            ...options,
         };
     }
 
@@ -36,11 +35,11 @@ module.exports = class ProjectConfigPlugin {
                     },
                     setting: {
                         urlCheck: false,
-                            es6: false,
-                            postcss: true,
-                            minified: false,
-                            newFeature: true,
-                        ...this.options.setting
+                        es6: false,
+                        postcss: true,
+                        minified: false,
+                        newFeature: true,
+                        ...this.options.setting,
                     },
                     compileType: 'miniprogram',
                     libVersion: this.options.libVersion || '2.10.4',

@@ -23,7 +23,7 @@ function clearPool() {
 function minifyJS(contents, options) {
     const UglifyJS = require('uglify-js');
     if (options && options.output && options.output.comments) {
-        const {comments} = options.output;
+        const { comments } = options.output;
         if (comments !== 'all' && comments !== 'some' && typeof comments !== 'boolean') {
             options.output.comments = /javascript-obfuscator:disable|javascript-obfuscator:enable/;
         }
@@ -43,7 +43,7 @@ function minifyWXML(contents) {
         removeComments: true,
         keepClosingSlash: true,
         collapseWhitespace: true,
-        caseSensitive: true
+        caseSensitive: true,
     });
 }
 

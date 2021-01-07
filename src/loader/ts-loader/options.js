@@ -1,12 +1,12 @@
 const path = require('path');
 const { existsSync, readFileSync } = require('fs');
 
-module.exports.getDefaultOptions = function() {
+module.exports.getDefaultOptions = function () {
     return {
         noEmitHelpers: true,
         module: 'ESNext',
         sourceMap: true,
-        importHelpers: true
+        importHelpers: true,
     };
 };
 
@@ -34,7 +34,7 @@ function findFile(cwd, filename) {
     return null;
 }
 
-module.exports.getCompilerOptionsFromTsConfig = function(typescript, tsconfigPath) {
+module.exports.getCompilerOptionsFromTsConfig = function (typescript, tsconfigPath) {
     if (tsconfigPath && !existsSync(tsconfigPath)) {
         throw new Error(`Could not find specified tsconfig.json at ${tsconfigPath}`);
     }
@@ -50,7 +50,7 @@ module.exports.getCompilerOptionsFromTsConfig = function(typescript, tsconfigPat
     return tsconfig.config.compilerOptions;
 };
 
-module.exports.adjustCompilerOptions = function(typescript, options) {
+module.exports.adjustCompilerOptions = function (typescript, options) {
     // Set `sourceMap` to `inlineSourceMap` if it's a boolean
     // under the assumption that both are never specified simultaneously.
     if (typeof options.inlineSourceMap === 'boolean') {

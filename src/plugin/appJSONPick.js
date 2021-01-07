@@ -8,14 +8,12 @@ const Asset = require('../asset');
 module.exports = class AppJSON {
     constructor(options) {
         this.appEntry = '';
-        this.options = Object.assign(
-            {},
-            {
-                output: 'appJson.js',
-                picks: ['tabBar']
-            },
-            options
-        );
+        this.options = {
+            
+            output: 'appJson.js',
+                picks: ['tabBar'],
+            ...options
+        };
     }
 
     apply(mpb) {
