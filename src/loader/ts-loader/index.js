@@ -3,14 +3,14 @@ const chalk = require('chalk');
 const {
     getDefaultOptions,
     getCompilerOptionsFromTsConfig,
-    adjustCompilerOptions
+    adjustCompilerOptions,
 } = require('./options.js');
 const { createFilter } = require('../../util');
 const { groupByFile } = require('./util');
 const codeframe = require('./codeFrame');
 
-module.exports = function(options = {}) {
-    options = Object.assign({}, options);
+module.exports = function (options = {}) {
+    options = { ...options};
 
     const filter = createFilter(
         options.include || ['*.ts+(|x)', '**/*.ts+(|x)'],
@@ -49,9 +49,7 @@ module.exports = function(options = {}) {
         moduleType !== 'COMMONJS'
     ) {
         throw new Error(
-            `typescript-loader: The module kind should be 'ES2015' or 'ESNext, found: '${
-                options.module
-            }'`
+            `typescript-loader: The module kind should be 'ES2015' or 'ESNext, found: '${options.module}'`
         );
     }
 
@@ -66,7 +64,7 @@ module.exports = function(options = {}) {
     }
     const compilerOptions = parsed.options;
 
-    return function(asset) {
+    return function (asset) {
         const [outputPrefix] = this.helper.splitExtension(asset.outputFilePath);
         asset.outputFilePath = `${outputPrefix}.js`;
         if (!filter(asset.name)) {
@@ -76,7 +74,7 @@ module.exports = function(options = {}) {
         const transformed = typescript.transpileModule(asset.contents, {
             fileName: asset.name,
             reportDiagnostics: true,
-            compilerOptions
+            compilerOptions,
         });
 
         // All errors except `Cannot compile modules into 'es6' when targeting 'ES5' or lower.`

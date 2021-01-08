@@ -1,0 +1,10 @@
+{
+  "navigationBarTitleText": "one test wx",
+  "navigationBarBackgroundColor": "#FFFFFF",
+  "usingComponents": {
+    "comp3": "../components/comp3/index",
+    "comp4": "@components/comp2/index"
+  },
+  "enablePullDownRefresh": false,
+  "disableScroll": true
+}

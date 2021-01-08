@@ -1,9 +1,8 @@
-const path = require('path');
-
 function fixNPM(code) {
-    code = code.replace(/([\w\[\]a-d\.]+)\s*instanceof Function/g, (matchs, word) => {
-        return ` typeof ${word} ==='function' `;
-    });
+    code = code.replace(
+        /([\w\[\]a-d\.]+)\s*instanceof Function/g,
+        (matchs, word) => ` typeof ${word} ==='function' `
+    );
     code = code.replace(/'use strict';\n?/g, '');
 
     // if (/[^\w_]process\.\w/.test(code) && !/typeof process/.test(code)) {

@@ -26,7 +26,7 @@ module.exports = class Watching {
         } else {
             this.watcher = new Watchpack({
                 aggregateTimeout: 1000,
-                poll: true
+                poll: true,
             });
             this.listenWatcherEvent();
             this.watcher.watch(files, [], this.watchTimer);
@@ -64,7 +64,7 @@ module.exports = class Watching {
                 ignored: missing,
                 persistent: true,
                 usePolling: true,
-                ignoreInitial: true
+                ignoreInitial: true,
                 // awaitWriteFinish: {
                 //     stabilityThreshold: 2000,
                 //     pollInterval: 100
@@ -97,10 +97,14 @@ module.exports = class Watching {
         perf.start(perfId);
         const assets = this.mpb.assetManager.getAssets(path);
         if (assets) {
-            for(let asset of assets) {
+            for (const asset of assets) {
                 if (type === 'change') {
                     console.log('[watching-add-asset]', path);
-                    await this.mpb.assetManager.addAsset(path, asset.outputFilePath, asset.getMeta());
+                    await this.mpb.assetManager.addAsset(
+                        path,
+                        asset.outputFilePath,
+                        asset.getMeta()
+                    );
                 } else if (type === 'unlink') {
                     await this.mpb.assetManager.delAsset(asset);
                 } else {
@@ -131,7 +135,7 @@ module.exports = class Watching {
         } else {
             this.pendingPaths.push({
                 path,
-                type
+                type,
             });
         }
         this.watch();
@@ -140,7 +144,7 @@ module.exports = class Watching {
     watchEntry(entry) {
         this.watcher = chokidar.watch(entry, {
             persistent: true,
-            ignoreInitial: true
+            ignoreInitial: true,
         });
         this.watcher.on('add', () => {
             this.mpb.scan.init();

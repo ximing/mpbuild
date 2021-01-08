@@ -1,12 +1,15 @@
 /**
  * Created by ximing on 2019-03-14.
  */
-module.exports = function(opts) {
+const obj = {};
+
+module.exports = function (opts) {
     let { search, replacement } = opts;
     return function replaceLoader(asset) {
         if (typeof replacement === 'function') {
             // Pass the vinyl file object as this.file
-            replacement = replacement.bind({ asset });
+            obj.asset = asset;
+            replacement = replacement.bind(obj);
         }
         if (search instanceof RegExp) {
             asset.contents = asset.contents.replace(search, replacement);
