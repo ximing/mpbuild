@@ -32,7 +32,7 @@ module.exports = class WatchEntry {
 
                 chokidar
                     .watch(`${mpb.src}/**/*`, {
-                        ignoreInitial: true
+                        ignoreInitial: true,
                     })
                     .on('add', async (p) => {
                         if (pagesMap[path.dirname(p)]) {
@@ -46,6 +46,7 @@ module.exports = class WatchEntry {
 
     async rebuild() {
         delete require.cache[this.mpb.entryPath];
+        await this.mpb.scan.findEntry();
         await this.mpb.scan.pages();
         console.log('差量编译完成');
     }

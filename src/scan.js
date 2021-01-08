@@ -2,19 +2,17 @@
  * Created by ximing on 2019-03-14.
  */
 const path = require('path');
+const chalk = require('chalk');
 const perf = require('execution-time')();
 const log = require('./log');
 const { formatBuildTime } = require('./util');
 const AppJSON = require('./plugin/appJSON');
 const { assetType } = require('./consts');
+const resolve = require('./resolve');
 
 module.exports = class ScanDep {
     constructor(mpb) {
         this.mpb = mpb;
-        this.exts = this.mpb.config.resolve.extensions;
-        if (!this.exts) {
-            throw new Error('exts required');
-        }
         this.modules = {};
     }
 
@@ -27,22 +25,49 @@ module.exports = class ScanDep {
         source = ''
     ) {
         return Promise.all(
-            this.exts.map((ext) => {
+            Object.keys(this.mpb.exts).map((key) => {
+                const ext = this.mpb.exts[key];
                 const meta = { type, root, source };
-                if (ext === '.json') {
+                if (key === 'json') {
                     meta['mbp-scan-json-dep'] = 'usingComponents';
                 }
-                return this.mpb.assetManager.addAsset(
-                    this.mpb.helper.getFilePath(base, `${prefixPath}${ext}`),
-                    `${prefixOutputPath}${ext}`,
-                    meta
-                );
+                try {
+                    const path = resolve(
+                        prefixPath,
+                        { dir: base, filename: base },
+                        ext,
+                        this.mpb.src,
+                        this.mpb.config.alias,
+                        true
+                    );
+                    // 这里认为 页面必须要有一个js文件，其他可以忽略
+                    if (key === 'js' && !path) {
+                        console.log(
+                            chalk.red('[scan addAssetByEXT error]'),
+                            '页面类型文件',
+                            key,
+                            '页面路径',
+                            prefixPath,
+                            'root: ',
+                            root
+                        );
+                        return Promise.reject('没找到对应文件');
+                    }
+                    if (!path) {
+                        return Promise.resolve(null);
+                    }
+                    return this.mpb.assetManager.addAsset(path, `${prefixOutputPath}.${key}`, meta);
+                } catch (err) {
+                    if (key !== 'js') {
+                        return Promise.resolve(null);
+                    }
+                    return Promise.reject(err);
+                }
             })
         );
     }
 
     async pages() {
-        await this.findEntry();
         const { router } = this.mpb.appEntry;
         for (let i = 0, l = router.length; i < l; i++) {
             let { root, pages } = router[i];
@@ -78,7 +103,7 @@ module.exports = class ScanDep {
                 });
                 this.mpb.appEntry.router.push({
                     root: '',
-                    pages
+                    pages,
                 });
                 delete this.mpb.appEntry.pages;
             }
@@ -90,7 +115,7 @@ module.exports = class ScanDep {
                     });
                     this.mpb.appEntry.router.push({
                         root: subPack.root,
-                        pages
+                        pages,
                     });
                 });
                 delete this.mpb.appEntry.subPackages;
@@ -103,6 +128,7 @@ module.exports = class ScanDep {
 
     async init() {
         perf.start('init');
+        await this.findEntry();
         // find App
         await this.addAssetByEXT('app', path.join(this.mpb.dest, 'app'), assetType.app);
         // find Pages

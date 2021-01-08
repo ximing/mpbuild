@@ -43,9 +43,7 @@ module.exports.replaceAbsolutePaths = (message, context) => {
     return message.replace(new RegExp(contextPath, 'g'), '.');
 };
 
-module.exports.formatDiagnosticMessage = (diagnostic, delimiter, context) => {
-    return module.exports.replaceAbsolutePaths(
+module.exports.formatDiagnosticMessage = (diagnostic, delimiter, context) => module.exports.replaceAbsolutePaths(
         flattenDiagnosticMessageText(diagnostic.messageText, delimiter),
         context
     );
-};

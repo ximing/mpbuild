@@ -3,7 +3,7 @@ const Watchpack = require('watchpack');
 class NodeWatchFileSystem {
     constructor() {
         this.watcherOptions = {
-            aggregateTimeout: 0
+            aggregateTimeout: 0,
         };
         this.watcher = new Watchpack(this.watcherOptions);
     }
@@ -52,7 +52,7 @@ class NodeWatchFileSystem {
                 if (this.watcher) {
                     this.watcher.pause();
                 }
-            }
+            },
         };
     }
 }

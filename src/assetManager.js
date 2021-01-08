@@ -12,9 +12,7 @@ module.exports = class AssetManager {
     constructor(mpb) {
         this.mpb = mpb;
         this.map = {};
-        this.mpb.hooks.addAsset.tapPromise('LoaderManager', (asset) => {
-            return Promise.resolve(asset);
-        });
+        this.mpb.hooks.addAsset.tapPromise('LoaderManager', (asset) => Promise.resolve(asset));
     }
 
     getAssets(path) {
@@ -22,24 +20,23 @@ module.exports = class AssetManager {
     }
 
     findExistAsset(asset) {
-        if(this.map[asset.path]) {
+        if (this.map[asset.path]) {
             let index = -1;
             const existAssets = this.map[asset.path];
-            for(let i = 0; i < existAssets.length; i++) {
-                if(existAssets[i].outputFilePath === asset.outputFilePath) {
+            for (let i = 0; i < existAssets.length; i++) {
+                if (existAssets[i].outputFilePath === asset.outputFilePath) {
                     index = i;
                 }
             }
             return index;
-        } else {
-            throw new Error(`This.map[${asset.path}] is undefined`);
         }
+        throw new Error(`This.map[${asset.path}] is undefined`);
     }
 
     setAsset(asset) {
-        if(this.map[asset.path]) {
-            let index = this.findExistAsset(asset);
-            if(index === -1) {
+        if (this.map[asset.path]) {
+            const index = this.findExistAsset(asset);
+            if (index === -1) {
                 this.map[asset.path].push(asset);
             } else {
                 this.map[asset.path][index] = asset;
@@ -53,8 +50,8 @@ module.exports = class AssetManager {
     }
 
     removeAsset(asset) {
-        if(!this.map[asset.path]) return;
-        let index = this.findExistAsset(asset);
+        if (!this.map[asset.path]) return;
+        const index = this.findExistAsset(asset);
         this.map[asset.path].splice(index, 1);
     }
 
@@ -68,9 +65,12 @@ module.exports = class AssetManager {
         }
         if (asset.exists()) {
             const existAssets = this.getAssets(asset.path);
-            if(existAssets) {
-                for(let existAsset of existAssets) {
-                    if (!existAsset.beChanged(asset) && existAsset.outputFilePath === asset.outputFilePath) {
+            if (existAssets) {
+                for (const existAsset of existAssets) {
+                    if (
+                        !existAsset.beChanged(asset) &&
+                        existAsset.outputFilePath === asset.outputFilePath
+                    ) {
                         // 终止接下来处理asset的流程
                         // console.log(chalk.yellow('[addAsset] 文件没有更改'), asset.path);
                         return existAsset;
@@ -91,7 +91,7 @@ module.exports = class AssetManager {
                                 if (this.mpb.isWatch) {
                                     notifier.notify({
                                         title: 'beforeEmitFile hooks error',
-                                        message: '输出文件失败，具体错误请查看命令行'
+                                        message: '输出文件失败，具体错误请查看命令行',
                                     });
                                     console.log(
                                         chalk.red('[beforeEmitFile hooks error]'),
@@ -119,7 +119,7 @@ module.exports = class AssetManager {
                 }
             );
         }
-        // console.log(`[assetManager] not found: ${path}`);
+        console.log(chalk.red('[assetManager] asset not found'), `: ${path}`);
         return Promise.resolve();
         // throw new Error(`not found${path}`);
     }

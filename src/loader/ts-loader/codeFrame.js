@@ -23,14 +23,15 @@ module.exports = (diagnostics, context) => {
                     const source = diagnostic.file.text || diagnostic.source;
 
                     const messages = [
-                        chalk.dim(` ${lineChar.line + 1}:${lineChar.character + 1}  `) + messageText
+                        chalk.dim(` ${lineChar.line + 1}:${lineChar.character + 1}  `) +
+                            messageText,
                     ];
 
                     if (source != null) {
                         const frame = codeFrame(source, lineChar.line + 1, lineChar.character, {
                             linesAbove: 1,
                             linesBelow: 1,
-                            highlightCode: true
+                            highlightCode: true,
                         })
                             .split('\n')
                             .map((str) => `  ${str}`)
