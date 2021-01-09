@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [4.0.8](https://github.com/ximing/mpbuild/compare/v1.4.13...v4.0.8) (2021-01-09)
+
+
+### Features
+
+* remove use strict ([76c9e93](https://github.com/ximing/mpbuild/commit/76c9e93c4c11620e87eb4bcc2c681c3008410162))
+* v4 ([809865d](https://github.com/ximing/mpbuild/commit/809865d7ea881a251a2362a87e562da798050519))
+* 修复wxs解析依赖的问题 ([2beda78](https://github.com/ximing/mpbuild/commit/2beda78f99f7c706de5b515c1b352d2a589ac551))
+* 前置 entry获取 ([9fcb798](https://github.com/ximing/mpbuild/commit/9fcb798b29572d77ad9eb2e3dff1881563e04930))
+* 升级 ([abea7d6](https://github.com/ximing/mpbuild/commit/abea7d64d0c9056833aadbc0b30a47440bc15686))
+* 升级最低nodejs版本 ([6ace6f5](https://github.com/ximing/mpbuild/commit/6ace6f57fb26b53bec5f398988fba2f23eb9912f))
+* 压缩wxs ([6da23ed](https://github.com/ximing/mpbuild/commit/6da23ed5030f3c3dbb65abc1c723ac5a7af18a8e))
+* 新增resolve 模块 ([d07bef4](https://github.com/ximing/mpbuild/commit/d07bef41ed60a8c790b91a94dd1acba0e9c202f8))
+* 添加website ([554987d](https://github.com/ximing/mpbuild/commit/554987d47a61ba2a4a07b3264123ef8cbef88101))
+
+
+### Bug Fixes
+
+* loader asset不变的bug ([337f5ae](https://github.com/ximing/mpbuild/commit/337f5ae8ec9cd33e124548a53d78719f1e71f8fe))
+* loader asset不变的bug ([0af8b2f](https://github.com/ximing/mpbuild/commit/0af8b2f1e779ffa71a58e71e49a92edb263e5d7d))
+
 ### [1.4.13](https://github.com/ximing/mpbuild/compare/v1.4.12...v1.4.13) (2020-12-17)
 
 
