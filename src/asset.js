@@ -17,6 +17,8 @@ module.exports = class Asset {
         this.path = filePath;
         this.filePath = filePath;
         this.__content = null;
+        this.changeContentProp = false;
+        this.__packContent = null;
         this.__meta = meta || {
             type: assetType.normal,
         };
@@ -57,7 +59,7 @@ module.exports = class Asset {
     }
 
     get contents() {
-        if (!this.__content) {
+        if (!this.__content && !this.changeContentProp && !this.getMeta('virtual_file')) {
             try {
                 if (
                     /\.(ts|tsx|js|jsx|wxml|wxss|css|less|scss|text|txt|json|wxs)$/.test(this.name)
@@ -79,6 +81,15 @@ module.exports = class Asset {
 
     set contents(__content) {
         this.__content = __content;
+    }
+
+    get packContents() {
+        return this.__packContent;
+    }
+
+    set packContents(__packContent) {
+        this.changeContentProp = true;
+        this.__packContent = __packContent;
     }
 
     get size() {

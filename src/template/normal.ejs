@@ -1,0 +1,4 @@
+<%_ if (needRequireBundle) { _%>
+require('<%- bundlePath %>');
+<%_ } _%>
+require('<%- globalPath %>')._require('<%- moduleId %>', true);

@@ -53,6 +53,8 @@ module.exports = class HandleJSDep {
                                         const libPath = res.resolveLib;
                                         let {
                                             outputPath: libOutputPath,
+                                            // eslint-disable-next-line prefer-const
+                                            root,
                                         } = mpb.hooks.rewriteOutputPath.call({
                                             filePath: libPath,
                                             asset,
@@ -78,17 +80,28 @@ module.exports = class HandleJSDep {
                                             parent.init = template.ast(
                                                 `(${fs.readFileSync(libPath, 'utf-8')})`
                                             );
-                                        } else {
-                                            node.arguments[0].value = path.relative(
-                                                path.parse(asset.outputFilePath).dir,
-                                                libOutputPath
-                                            );
-                                            if (node.arguments[0].value[0] !== '.') {
-                                                node.arguments[0].value = `./${node.arguments[0].value}`;
-                                            }
+                                        }
+
+                                        // TODO How to handle renamed files more gracefully
+                                        if (libOutputPath.endsWith('.js')) {
+                                            const {
+                                                outputFileName,
+                                                outputFileNum,
+                                                name,
+                                                noNum,
+                                            } = mpb.hooks.resolveOutputJsPack.call({
+                                                libOutputPath,
+                                                root,
+                                                asset,
+                                            });
+                                            node.arguments[0].value = outputFileName;
+                                            node.callee.name = name;
                                             deps.push({
                                                 libPath,
                                                 libOutputPath,
+                                                outputFileName,
+                                                outputFileNum,
+                                                noNum,
                                             });
                                         }
                                     }
@@ -110,11 +123,20 @@ module.exports = class HandleJSDep {
                 try {
                     await Promise.all(
                         deps.map((dep) => {
-                            const { libPath, libOutputPath } = dep;
+                            const {
+                                libPath,
+                                libOutputPath,
+                                outputFileName,
+                                outputFileNum,
+                                noNum,
+                            } = dep;
                             const root = asset.getMeta('root');
                             return mpb.assetManager.addAsset(libPath, libOutputPath, {
                                 root,
                                 source: asset.filePath,
+                                outputFileName,
+                                outputFileNum,
+                                noNum,
                             });
                         })
                     );

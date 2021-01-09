@@ -35,7 +35,9 @@ const TsTypeCheckPlugin = require('./plugin/tsTypeCheckPlugin');
 const PolymorphismPlugin = require('./plugin/polymorphismPlugin');
 const ResolvePlugin = require('./plugin/resolvePlugin');
 const RewriteOutputPathPlugin = require('./plugin/rewriteOutputPathPlugin');
+const ResolveOutputJsPack = require('./plugin/resolveOutputJsPack');
 const NodeEnvironmentPlugin = require('./node/NodeEnvironmentPlugin');
+const JsPackageManager = require('./jsPackageManager');
 
 class Mpbuilder {
     constructor(config) {
@@ -57,6 +59,7 @@ class Mpbuilder {
             resolveAppEntryJS: new SyncBailHook(['entryPath']),
             extension: new SyncWaterfallHook(['ext']),
             rewriteOutputPath: new SyncWaterfallHook(['opt']),
+            resolveOutputJsPack: new SyncWaterfallHook(['mpb']),
             resolve: new SyncWaterfallHook(['opt']),
         };
         this.optimization = {
@@ -78,6 +81,7 @@ class Mpbuilder {
             json: ['.json', '.config.js'],
         };
         this.initPlugin();
+        this.jsPackageManager = new JsPackageManager(this);
         this.assetManager = new AssetManager(this);
         this.hasInit = false;
         this.isWatch = false;
@@ -94,6 +98,7 @@ class Mpbuilder {
                 new ResolvePlugin(),
                 new RewriteOutputPathPlugin(),
                 new HandleJSDep(),
+                new ResolveOutputJsPack(),
                 new HandleJSONComponentDep(),
                 new HandleWXMLDep(),
                 new HandleWXSSDep(),

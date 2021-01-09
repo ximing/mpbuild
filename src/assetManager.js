@@ -62,6 +62,28 @@ module.exports = class AssetManager {
             asset = path;
         } else {
             asset = new Asset(path, outputPath, meta);
+            const existAssets = this.getAssets(path);
+            if (existAssets) {
+                for (const existAsset of existAssets) {
+                    if (
+                        existAsset.outputFilePath === outputPath &&
+                        existAsset.beChanged(asset) &&
+                        existAsset.getMeta('virtual_file')
+                    ) {
+                        return existAsset;
+                    }
+                    if (path === '/Users/liujin/work/mall-wxapp/src/pages/login/bundle.js') {
+                        console.log(
+                            chalk.yellow('[addAsset] 有问题'),
+                            existAsset.outputFilePath,
+                            outputPath,
+                            existAsset.outputFilePath === outputPath,
+                            existAsset.beChanged(asset),
+                            existAsset.getMeta('virtual_file')
+                        );
+                    }
+                }
+            }
         }
         if (asset.exists()) {
             const existAssets = this.getAssets(asset.path);
@@ -83,7 +105,7 @@ module.exports = class AssetManager {
                 (asset) => {
                     if (asset.shouldOutput) {
                         return this.mpb.hooks.beforeEmitFile.promise(asset).then(
-                            () => {
+                            async () => {
                                 this.emitFile(asset);
                                 return asset;
                             },
@@ -119,12 +141,15 @@ module.exports = class AssetManager {
                 }
             );
         }
-        console.log(chalk.red('[assetManager] asset not found'), `: ${path}`);
+        console.error(chalk.red('[assetManager] asset not found'), `: ${path}`, outputPath, meta);
+        if (path === '/Users/liujin/work/mall-wxapp/src/pages/login/bundle.js') {
+            process.exit(1);
+        }
         return Promise.resolve();
         // throw new Error(`not found${path}`);
     }
 
-    emitFile(asset) {
+    async emitFile(asset) {
         // if(asset.filePath.includes('node_modules') && asset.getMeta('mbp-scan-json-dep')) {
         //     console.log(asset.getMeta('source'), asset.getMeta('root'));
         // }

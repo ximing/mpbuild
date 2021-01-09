@@ -1,0 +1,15 @@
+var mpb_global = require("<%= globalPath %>");
+var loaded = false;
+if(!loaded) {
+mpb_global.push("<%= rootName %>", {
+    <% for (let moduleId in modules) { %>
+        <%_ if (Object.prototype.hasOwnProperty.call(modules, moduleId)) { _%>
+// <%- modules[moduleId].path %>
+"<%- moduleId %>": function (module, exports, _req) {
+    <%- modules[moduleId].content %>
+},
+        <%_ } _%>
+    <% } %>
+});
+}
+loaded = true;

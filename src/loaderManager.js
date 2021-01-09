@@ -3,6 +3,7 @@
  */
 const mm = require('micromatch');
 
+const chalk = require('chalk');
 const babelLoader = require('./loader/babel-loader');
 const fileLoader = require('./loader/file-loader');
 const replaceLoader = require('./loader/replace-loader');
@@ -28,6 +29,9 @@ module.exports = class LoaderManager {
         this.mpb = mpb;
         // 通过loader处理文件
         this.mpb.hooks.addAsset.tapPromise('LoaderManager', async (asset) => {
+            if (asset.path === mpb.jsPackageManager.bundlePath[asset.getMeta('root')]) {
+                return Promise.resolve();
+            }
             for (let i = this.rules.length - 1; i >= 0; i--) {
                 const rule = this.rules[i];
                 const { use, test, exclude, include } = rule;

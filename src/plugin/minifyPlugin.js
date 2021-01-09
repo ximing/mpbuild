@@ -47,6 +47,18 @@ function minifyWXML(contents) {
     });
 }
 
+function minifyWXS(contents) {
+    const babylon = require('@babel/parser');
+    const generate = require('@babel/generator').default;
+    const code = contents;
+    const ast = babylon.parse(code, { sourceType: 'module' });
+    return generate(ast, {
+        quotes: 'single',
+        minified: true,
+        comments: false,
+    }).code;
+}
+
 function minifyJSON(contents) {
     const jsonminify = require('jsonminify');
     return jsonminify(contents).toString();
@@ -78,6 +90,7 @@ module.exports = class MinifyPlugin {
         this.js = true;
         this.wxml = true;
         this.json = true;
+        this.wxs = true;
     }
 
     apply(mpb) {
@@ -86,10 +99,12 @@ module.exports = class MinifyPlugin {
                 this.js = mpb.optimization.minimize.js;
                 this.wxml = mpb.optimization.minimize.wxml;
                 this.json = mpb.optimization.minimize.json;
+                this.wxs = mpb.optimization.minimize.wxs;
             } else if (mpb.optimization.minimize === false) {
                 this.js = false;
                 this.wxml = false;
                 this.json = false;
+                this.wxs = false;
             }
             mpb.hooks.beforeEmitFile.tapPromise('MinifyPlugin', async (asset) => {
                 if (asset.contents) {
@@ -116,6 +131,11 @@ module.exports = class MinifyPlugin {
                         //     caseSensitive: true
                         // });
                         asset.contents = await pool.exec(minifyWXML, [asset.contents]);
+                    } else if (
+                        /\.wxs$/.test(asset.outputFilePath) &&
+                        sholdRunMiniFunc(asset, this.wxs)
+                    ) {
+                        asset.contents = await pool.exec(minifyWXS, [asset.contents]);
                     }
                 }
                 return Promise.resolve();

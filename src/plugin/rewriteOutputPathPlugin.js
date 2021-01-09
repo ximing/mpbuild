@@ -40,6 +40,11 @@ module.exports = class RewriteOutputPathPlugin {
                         alias
                     );
                 }
+                const bundleSrc = mpb.jsPackageManager.bundlePath[root];
+                const bundleDist = mpb.jsPackageManager.bundleDistPath[root];
+                if (bundleSrc === filePath) {
+                    outputPath = bundleDist;
+                }
                 if (!root) {
                     this.mainPkgPathMap[depType][filePath] = outputPath;
                 }
