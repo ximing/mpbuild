@@ -55,7 +55,10 @@ function minifyWXS(contents) {
     return generate(ast, {
         quotes: 'single',
         minified: true,
-        comments: false
+        comments: false,
+        jsescOption: {
+            minimal: true,
+        },
     }).code;
 }
 
