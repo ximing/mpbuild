@@ -14,14 +14,14 @@ const pool = {
 };
 
 function clearPool() {
-    const timmer = setInterval(() => {
-        const poolStats = pool.stats();
-        console.log(poolStats);
-        if (poolStats.busyWorkers === 0) {
-            pool.terminate(true);
-            clearInterval(timmer);
-        }
-    }, 1000);
+    // const timmer = setInterval(() => {
+    //     const poolStats = pool.stats();
+    //     console.log(poolStats);
+    //     if (poolStats.busyWorkers === 0) {
+    //         pool.terminate(true);
+    //         clearInterval(timmer);
+    //     }
+    // }, 1000);
 }
 
 function minifyJS(contents, options) {
