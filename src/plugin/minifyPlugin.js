@@ -4,10 +4,14 @@
 // const UglifyJS = require('uglify-js');
 // const jsonminify = require('jsonminify');
 // const htmlmin = require('html-minifier');
-const workerpool = require('workerpool');
+// const workerpool = require('workerpool');
 const mm = require('micromatch');
 
-const pool = workerpool.pool();
+// const pool = workerpool.pool();
+
+const pool = {
+    exec: (func, args) => Promise.resolve(func.apply(this, args)),
+};
 
 function clearPool() {
     const timmer = setInterval(() => {
