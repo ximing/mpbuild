@@ -29,8 +29,14 @@ module.exports = (lib, asset, exts = [], src = '', alias = {}, ignoreNotFound = 
         if (lib.startsWith(aliasArr[i])) {
             const re = lib.replace(aliasArr[i], '');
             for (let j = 0; j < exts.length; j++) {
-                const filePath =
+                let filePath =
                     path.join(alias[aliasArr[i]], re) + (re.endsWith(exts[j]) ? '' : exts[j]);
+                if (exists(filePath)) {
+                    return filePath;
+                }
+                filePath =
+                    path.join(alias[aliasArr[i]], re, 'index') +
+                    (re.endsWith(exts[j]) ? '' : exts[j]);
                 if (exists(filePath)) {
                     return filePath;
                 }

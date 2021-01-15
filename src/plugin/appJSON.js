@@ -6,9 +6,8 @@ module.exports = class AppJSON {
     constructor(options) {
         this.appEntry = '';
         this.options = {
-            
             output: 'app.json',
-            ...options
+            ...options,
         };
     }
 
@@ -29,9 +28,9 @@ module.exports = class AppJSON {
                     pages = Object.keys(router.pages);
                 }
             });
-            const appOutput = { ...appEntry, pages,
-                subPackages,};
+            let appOutput = { ...appEntry, pages, subPackages };
             delete appOutput.router;
+            appOutput = mpb.hooks.beforeOutputAppJSON.call(appOutput);
             const strAppEntry = JSON.stringify(appOutput);
             if (this.appEntry !== strAppEntry) {
                 this.appEntry = strAppEntry;

@@ -57,6 +57,7 @@ class Mpbuilder {
             watchRun: new AsyncSeriesHook(['compiler']),
             resolveJS: new SyncBailHook(['libName']),
             resolveAppEntryJS: new SyncBailHook(['entryPath']),
+            beforeOutputAppJSON: new SyncWaterfallHook(['entryPath']),
             extension: new SyncWaterfallHook(['ext']),
             rewriteOutputPath: new SyncWaterfallHook(['opt']),
             resolveOutputJsPack: new SyncWaterfallHook(['mpb']),

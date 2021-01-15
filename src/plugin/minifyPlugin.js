@@ -60,6 +60,9 @@ function minifyWXS(contents) {
         quotes: 'single',
         minified: true,
         comments: false,
+        jsescOption: {
+            minimal: true,
+        },
     }).code;
 }
 
