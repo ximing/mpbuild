@@ -9,6 +9,7 @@ const { formatBuildTime } = require('./util');
 const AppJSON = require('./plugin/appJSON');
 const { assetType } = require('./consts');
 const resolve = require('./resolve');
+const { setSubPkgPathMap } = require('./util');
 
 module.exports = class ScanDep {
     constructor(mpb) {
@@ -56,6 +57,7 @@ module.exports = class ScanDep {
                     if (!path) {
                         return Promise.resolve(null);
                     }
+                    setSubPkgPathMap(root, path, `${prefixOutputPath}.${key}`);
                     return this.mpb.assetManager.addAsset(path, `${prefixOutputPath}.${key}`, meta);
                 } catch (err) {
                     if (key !== 'js') {
