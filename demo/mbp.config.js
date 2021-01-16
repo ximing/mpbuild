@@ -16,6 +16,7 @@ module.exports = (entry) => {
             '@one': path.join(__dirname, '../projects/one'),
             '@two': path.join(__dirname, '../projects/two'),
             '@utils': path.join(__dirname, 'src/utils'),
+            '@root': path.join(__dirname, 'src'),
             '@components': path.join(__dirname, 'src/components'),
         },
         output: {

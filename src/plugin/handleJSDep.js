@@ -18,7 +18,7 @@ module.exports = class HandleJSDep {
     apply(mpb) {
         const keys = Object.keys(mpb.config.alias || {});
         const alias = { keys, aliasMap: mpb.config.alias };
-        this.exts = [...new Set(mpb.exts.js.concat(['.json']))];
+        this.exts = [...new Set(mpb.exts.js.concat(['.json', '.wxs']))];
         mpb.hooks.beforeEmitFile.tapPromise('HandleJSDep', async (asset) => {
             const deps = [];
             try {

@@ -77,6 +77,13 @@ module.exports.rewriteNpm = (filePath, root, dest, npmDirName = 'npm') => {
 };
 
 const subPkgPathMap = new Map();
+module.exports.subPkgPathMap = subPkgPathMap;
+module.exports.setSubPkgPathMap = (root, libPath, opfp) => {
+    if (!subPkgPathMap.has(root)) {
+        subPkgPathMap.set(root, new Map());
+    }
+    subPkgPathMap.get(root).set(libPath, opfp);
+};
 module.exports.rewriteOutput = (libPath, root, src, dest, filePath, outputFilePath, alias) => {
     if (!subPkgPathMap.has(root)) {
         subPkgPathMap.set(root, new Map());
