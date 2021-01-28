@@ -3,13 +3,13 @@
  */
 const del = require('del');
 const chalk = require('chalk');
+const pRetry = require('p-retry');
 
 module.exports = class CleanMbpPlugin {
     constructor(options) {
         this.options = {
-            
             path: [],
-            ...options
+            ...options,
         };
     }
 
@@ -21,7 +21,10 @@ module.exports = class CleanMbpPlugin {
                     chalk.blue('删除文件:'),
                     this.options.path
                 );
-                await del(this.options.path);
+                await pRetry(() => del(this.options.path), {
+                    retries: 3,
+                    minTimeout: 1000,
+                });
             }
             return Promise.resolve();
         });
