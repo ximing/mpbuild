@@ -5,7 +5,7 @@ export default defineConfig({
   mode: 'site',
   // @ts-ignore
   hash: process.env.NODE_ENV !== 'development',
-  logo: 'https://raw.githubusercontent.com/ximing/static/master/R.svg',
+  logo: 'https://raw.githubusercontent.com/ximing/static/master/M.svg',
   locales: [['zh-CN', '中文']],
   base: '/mpbuild',
   publicPath: '/mpbuild/',
@@ -20,7 +20,7 @@ export default defineConfig({
     includes: ['../docs'],
     previewLangs: [],
   },
-  favicon: 'https://raw.githubusercontent.com/ximing/static/master/R.png',
+  favicon: 'https://raw.githubusercontent.com/ximing/static/master/M.png',
   exportStatic: {},
   styles: [
     `.markdown.markdown blockquote {
