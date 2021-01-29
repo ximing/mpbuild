@@ -36,6 +36,9 @@ const PolymorphismPlugin = require('./plugin/polymorphismPlugin');
 const ResolvePlugin = require('./plugin/resolvePlugin');
 const RewriteOutputPathPlugin = require('./plugin/rewriteOutputPathPlugin');
 const NodeEnvironmentPlugin = require('./node/NodeEnvironmentPlugin');
+const Asset = require('./asset');
+const resolve = require('./resolve');
+const { assetType } = require('./consts');
 
 class Mpbuilder {
     constructor(config) {
@@ -135,6 +138,9 @@ class Mpbuilder {
 }
 
 module.exports = Mpbuilder;
+module.exports = assetType;
+module.exports.resolve = resolve;
+module.exports.Asset = Asset;
 module.exports.AppJSONPick = AppJSONPick;
 module.exports.CopyPlugin = CopyPlugin;
 module.exports.CopyImagePlugin = CopyImagePlugin;

@@ -2,8 +2,8 @@
 title: 简介
 order: 0
 nav:
-  title: 指南
-  order: 0
+  title: 拓展能力
+  order: 1
 ---
 
 # 介绍
