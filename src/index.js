@@ -40,7 +40,7 @@ const Asset = require('./asset');
 const resolve = require('./resolve');
 const { assetType } = require('./consts');
 
-class Mpbuilder {
+class MpBuilder {
     constructor(config) {
         this.dest = path.resolve(process.cwd(), config.output.path);
         this.src = path.resolve(process.cwd(), config.src);
@@ -48,6 +48,7 @@ class Mpbuilder {
         this.appEntry = {};
         this.cwd = process.cwd();
         this.hooks = {
+            configProcess: new SyncWaterfallHook(['opt']),
             addAsset: new AsyncSeriesBailHook(['asset']),
             delAsset: new AsyncSeriesBailHook(['asset']),
             start: new AsyncParallelHook(['mpb']),
@@ -82,6 +83,7 @@ class Mpbuilder {
             json: ['.json', '.config.js'],
         };
         this.initPlugin();
+        this.initHooks();
         this.assetManager = new AssetManager(this);
         this.hasInit = false;
         this.isWatch = false;
@@ -110,6 +112,11 @@ class Mpbuilder {
         this.config.plugins.forEach((p) => {
             p.apply(this);
         });
+    }
+
+    initHooks() {
+        this.hooks.configProcess.tap('config_process', (item) => item);
+        this.config = this.hooks.configProcess.call(this.config);
         this.exts = this.hooks.extension.call(this.exts);
         this.hooks.resolveJS.tap('resolveJS_MP', (item) => item);
         this.hooks.resolveAppEntryJS.tap('resolveAppEntryJS', (item) => item);
@@ -137,8 +144,8 @@ class Mpbuilder {
     }
 }
 
-module.exports = Mpbuilder;
-module.exports = assetType;
+module.exports = MpBuilder;
+module.exports.assetType = assetType;
 module.exports.resolve = resolve;
 module.exports.Asset = Asset;
 module.exports.AppJSONPick = AppJSONPick;
