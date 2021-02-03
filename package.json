@@ -1,6 +1,6 @@
 {
     "name": "mpbuild",
-    "version": "4.1.3",
+    "version": "4.1.4",
     "description": "",
     "main": "src/index.js",
     "scripts": {
@@ -78,7 +78,8 @@
         "uglify-js": "^3.12.5",
         "watchpack": "^1.6.0",
         "webpack-log": "^2.0.0",
-        "workerpool": "6.0.3"
+        "workerpool": "6.0.3",
+        "through2": "^2.0.5"
     },
     "devDependencies": {
         "@babel/plugin-external-helpers": "^7.2.0",
