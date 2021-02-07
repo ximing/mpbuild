@@ -97,7 +97,6 @@ module.exports = function (opts = {}) {
 
         try {
             const result = await postcss(plugins).process(cssSource, options);
-
             let { css, map, root, processor, messages } = result;
 
             result.warnings().forEach((warning) => {

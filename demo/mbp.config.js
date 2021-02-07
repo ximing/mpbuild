@@ -1,3 +1,4 @@
+/* eslint-disable arrow-body-style */
 /**
  * Created by ximing on 2019-03-14.
  */
@@ -5,6 +6,7 @@ const path = require('path');
 
 const MPB = require('../src');
 const TestPlugin = require('./plugins/testPlugin');
+const TestPlugin2 = require('./plugins/testPlugin2');
 
 module.exports = (entry) => {
     return {
@@ -37,7 +39,29 @@ module.exports = (entry) => {
             rules: [
                 {
                     test: /\.wxss$/,
-                    use: [],
+                    use: [
+                        {
+                            loader: 'postcss-loader',
+                            options: {
+                                parser: require('postcss-scss'),
+                                plugins: [
+                                    require('@yeanzhi/postcss-advanced-variables')({
+                                        variables: {},
+                                        // otherVariables: {
+                                        //     // TODO: 不使用索引
+                                        //     [getThemeBySaas(othersR[0].saasName)]: othersR[0].themes,
+                                        //     [getThemeBySaas(othersR[1].saasName)]: othersR[1].themes,
+                                        // },
+                                        disable: '@mixin, @include,@content, @import'
+                                    }),
+                                    require('postcss-nested')({ bubble: ['keyframes'] }),
+                                    require('cssnano')({
+                                        preset: ['default', { calc: false }]
+                                    })
+                                ]
+                            }
+                        },
+                    ],
                 },
                 {
                     test: /\.js$/,
@@ -83,6 +107,7 @@ module.exports = (entry) => {
                 },
             }),
             new TestPlugin(),
+            new TestPlugin2()
         ],
     };
 };
