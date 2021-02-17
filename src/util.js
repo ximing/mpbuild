@@ -2,6 +2,7 @@
  * Created by ximing on 2018/12/7.
  */
 const glob = require('glob');
+const chalk = require('chalk');
 const mm = require('micromatch');
 const { join, sep, relative, dirname } = require('path');
 
@@ -109,13 +110,15 @@ module.exports.rewriteOutput = (libPath, root, src, dest, filePath, outputFilePa
                         dest,
                         `./${root || ''}`,
                         aliasKeys[i],
-                        relative(filePath, libPath).replace(/\.\.\//g, '')
+                        libPath.replace(path, '')
+                        // relative(filePath, libPath).replace(/\.\.\//g, '')
                     );
                     subPkgPathMap.get(root).set(libPath, opfp);
                     return opfp;
                 }
             }
         }
+        console.log(chalk.red('可能存在异常,联系 @ximing 排查'), root, filePath, libPath);
         opfp = join(dest, `./${root || ''}`, relative(filePath, libPath).replace(/\.\.\//g, ''));
     }
     subPkgPathMap.get(root).set(libPath, opfp);
