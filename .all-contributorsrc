@@ -17,6 +17,16 @@
         "example",
         "maintenance"
       ]
+    },
+    {
+      "login": "liujin10",
+      "name": "liujin123456",
+      "avatar_url": "https://avatars.githubusercontent.com/u/18552493?v=4",
+      "profile": "https://github.com/liujin10",
+      "contributions": [
+        "bug",
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
