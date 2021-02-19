@@ -1,0 +1,1 @@
+<wxs src="../../../wxs/b.wxs" module="tools"/><import src="tpl.wxml"/><view>comp1</view>

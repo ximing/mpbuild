@@ -49,6 +49,7 @@ class MpBuilder {
         this.cwd = process.cwd();
         this.hooks = {
             configProcess: new SyncWaterfallHook(['opt']),
+            beforeAddAsset: new AsyncSeriesWaterfallHook(['asset']),
             addAsset: new AsyncSeriesBailHook(['asset']),
             delAsset: new AsyncSeriesBailHook(['asset']),
             start: new AsyncParallelHook(['mpb']),
@@ -96,7 +97,6 @@ class MpBuilder {
         this.config.plugins = [].concat(
             [
                 new NodeEnvironmentPlugin(),
-                new PolymorphismPlugin(),
                 new ResolvePlugin(),
                 new RewriteOutputPathPlugin(),
                 new HandleJSDep(),
@@ -154,3 +154,4 @@ module.exports.CopyImagePlugin = CopyImagePlugin;
 module.exports.ProjectConfigPlugin = ProjectConfigPlugin;
 module.exports.CleanMbpPlugin = CleanMbpPlugin;
 module.exports.TsTypeCheckPlugin = TsTypeCheckPlugin;
+module.exports.PolymorphismPlugin = PolymorphismPlugin;
