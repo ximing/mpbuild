@@ -1,0 +1,19 @@
+{
+    "name": "mpbuild-cli",
+    "version": "0.0.1",
+    "scripts": {},
+    "bin": {
+        "mpb": "./bin/mpb.js"
+    },
+    "main": "src/index.js",
+    "dependencies": {
+        "commander": "^7.1.0",
+        "chalk": "^4.1.0"
+    },
+    "peerDependencies": {
+        "mpbuild": "^4.1.6"
+    },
+    "devDependencies": {
+        "mpbuild": "^4.1.6"
+    }
+}
