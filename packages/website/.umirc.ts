@@ -8,7 +8,7 @@ export default defineConfig({
     logo: 'https://raw.githubusercontent.com/ximing/static/master/M.svg',
     locales: [['zh-CN', '中文']],
     base: '/mpbuild',
-    publicPath: 'https://ximing.github.io/mpbuild/',
+    publicPath: process.env.NODE_ENV !== 'development' ? 'https://ximing.github.io/mpbuild/' : '/',
     navs: [
         null, // null 值代表保留约定式生成的导航，只做增量配置
         {
