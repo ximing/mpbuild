@@ -60,7 +60,7 @@
         "lodash": "^4.17.20",
         "micromatch": "^3.1.10",
         "moment": "^2.18.1",
-        "node-notifier": "5.4.0",
+        "node-notifier": "8.0.1",
         "p-queue": "^6.0.2",
         "p-retry": "^4.1.0",
         "postcss": "^8.2.1",
