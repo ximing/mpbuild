@@ -6,9 +6,9 @@ const path = require('path');
 const MPB = require('mpbuild');
 const TestPlugin = require('./plugins/testPlugin');
 
-module.exports = (entry) => ({
+module.exports = {
     // 入口配置文件
-    entry,
+    entry: './entry.js',
     // 源码对应目录
     src: path.join(__dirname, 'src'),
     alias: {
@@ -83,4 +83,4 @@ module.exports = (entry) => ({
         }),
         new TestPlugin(),
     ],
-});
+};

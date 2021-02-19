@@ -1,6 +1,6 @@
 {
     "name": "mpbuild-cli",
-    "version": "0.0.1",
+    "version": "1.0.0",
     "scripts": {},
     "bin": {
         "mpb": "./bin/mpb.js"
@@ -15,5 +15,8 @@
     },
     "devDependencies": {
         "mpbuild": "^4.1.6"
+    },
+    "publishConfig": {
+        "registry": "https://registry.npmjs.org"
     }
 }

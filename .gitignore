@@ -20,3 +20,4 @@ dist-cdn
 typings/wx/r.d.ts
 demo/dist
 git_ignore
+dist
