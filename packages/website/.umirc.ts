@@ -15,6 +15,10 @@ export default defineConfig({
             title: '代码仓库',
             path: 'https://github.com/ximing/mpbuild',
         },
+        {
+            title: 'example',
+            path: 'https://github.com/ximing/mpbuild/tree/master/example/demo',
+        },
     ],
     resolve: {
         includes: ['./docs'],
