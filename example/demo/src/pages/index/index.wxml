@@ -1,0 +1,6 @@
+<!-- @ifdef wx -->
+<view>wx index</view>
+<!-- @endif -->
+<!-- @ifdef mt -->
+<view>mt index</view>
+<!-- @endif -->

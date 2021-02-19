@@ -1,29 +1,29 @@
 import { defineConfig } from 'dumi';
 
 export default defineConfig({
-  title: 'mpbuild',
-  mode: 'site',
-  // @ts-ignore
-  hash: process.env.NODE_ENV !== 'development',
-  logo: 'https://raw.githubusercontent.com/ximing/static/master/M.svg',
-  locales: [['zh-CN', '中文']],
-  base: '/mpbuild',
-  publicPath: '/mpbuild/',
-  navs: [
-    null, // null 值代表保留约定式生成的导航，只做增量配置
-    {
-      title: '代码仓库',
-      path: 'https://github.com/ximing/mpbuild',
+    title: 'mpbuild',
+    mode: 'site',
+    // @ts-ignore
+    hash: process.env.NODE_ENV !== 'development',
+    logo: 'https://raw.githubusercontent.com/ximing/static/master/M.svg',
+    locales: [['zh-CN', '中文']],
+    base: '/mpbuild',
+    publicPath: '/mpbuild/',
+    navs: [
+        null, // null 值代表保留约定式生成的导航，只做增量配置
+        {
+            title: '代码仓库',
+            path: 'https://github.com/ximing/mpbuild',
+        },
+    ],
+    resolve: {
+        includes: ['./docs'],
+        previewLangs: [],
     },
-  ],
-  resolve: {
-    includes: ['../docs'],
-    previewLangs: [],
-  },
-  favicon: 'https://raw.githubusercontent.com/ximing/static/master/M.png',
-  exportStatic: {},
-  styles: [
-    `.markdown.markdown blockquote {
+    favicon: 'https://raw.githubusercontent.com/ximing/static/master/M.png',
+    exportStatic: {},
+    styles: [
+        `.markdown.markdown blockquote {
       background-color: rgba(255, 229, 100, 0.3);
       color: #454d64;
       border-left-color: #ffe564;
@@ -41,6 +41,6 @@ export default defineConfig({
       margin-top: 0;
       margin-bottom: 0;
     }`,
-  ],
-  scripts: [],
+    ],
+    scripts: [],
 });

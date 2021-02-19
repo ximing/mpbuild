@@ -56,7 +56,7 @@ module.exports = class AssetManager {
     }
 
     // 尝试添加新的资源文件
-    addAsset(path, outputPath, meta) {
+    async addAsset(path, outputPath, meta) {
         let asset;
         if (path instanceof Asset) {
             asset = path;
@@ -77,7 +77,7 @@ module.exports = class AssetManager {
                     }
                 }
             }
-            // 更新asset
+            asset = await this.mpb.hooks.beforeAddAsset.promise(asset);
             this.setAsset(asset);
             return this.mpb.hooks.addAsset.promise(asset).then(
                 (asset) => {

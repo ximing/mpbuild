@@ -8,7 +8,7 @@ const parseOptions = require('./options.js');
 
 module.exports = function (opts = {}) {
     return async function loader(asset) {
-        let options = { ...opts};
+        let options = { ...opts };
         validateOptions(require('./options.json'), options, 'PostCSS Loader');
 
         const file = asset.path;
@@ -75,12 +75,12 @@ module.exports = function (opts = {}) {
 
         options = {
             from: file,
-                map: sourceMap
-                    ? sourceMap === 'inline'
-                        ? { inline: true, annotation: false }
-                        : { inline: false, annotation: false }
-                    : false,
-            ...config.options
+            map: sourceMap
+                ? sourceMap === 'inline'
+                    ? { inline: true, annotation: false }
+                    : { inline: false, annotation: false }
+                : false,
+            ...config.options,
         };
 
         if (typeof options.parser === 'string') {

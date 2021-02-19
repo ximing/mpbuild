@@ -10,7 +10,7 @@ const { groupByFile } = require('./util');
 const codeframe = require('./codeFrame');
 
 module.exports = function (options = {}) {
-    options = { ...options};
+    options = { ...options };
 
     const filter = createFilter(
         options.include || ['*.ts+(|x)', '**/*.ts+(|x)'],

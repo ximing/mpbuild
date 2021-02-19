@@ -1,0 +1,11 @@
+/* @ifdef wx */
+.color {
+    text: red;
+}
+/* @endif */
+
+/* @ifdef mt */
+.color {
+    text: blue;
+}
+/* @endif */

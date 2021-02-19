@@ -9,10 +9,9 @@ module.exports = class AppJSON {
     constructor(options) {
         this.appEntry = '';
         this.options = {
-            
             output: 'appJson.js',
-                picks: ['tabBar'],
-            ...options
+            picks: ['tabBar'],
+            ...options,
         };
     }
 

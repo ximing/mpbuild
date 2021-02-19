@@ -9,10 +9,9 @@ const imageminPngquant = require('@yeanzhi/imagemin-pngquant');
 module.exports = class CopyImagePlugin {
     constructor(options) {
         this.options = {
-            
             srcFiles: {},
-                output: '',
-            ...options
+            output: '',
+            ...options,
         };
         if (!this.options.output) {
             throw new Error('[CopyImagePlugin] output required');
@@ -24,7 +23,8 @@ module.exports = class CopyImagePlugin {
             // TODO 这里需要 看下 watch下怎么监听 images目录的更改
             if (!mpb.hasInit) {
                 await Promise.all(
-                    Object.keys(this.options.srcFiles).map((srcFile) => imagemin(
+                    Object.keys(this.options.srcFiles).map((srcFile) =>
+                        imagemin(
                             [srcFile],
                             path.join(
                                 this.options.output,
@@ -38,7 +38,8 @@ module.exports = class CopyImagePlugin {
                                     }),
                                 ],
                             }
-                        ))
+                        )
+                    )
                 );
             }
         });
