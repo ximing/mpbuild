@@ -1,4 +1,4 @@
 ---
-title: loader
+title: ts-loader
 order: 2
 ---

@@ -3,7 +3,7 @@ title: 基础配置
 order: 0
 group:
   title: 基本概念
-  order: 0
+  order: 1
 ---
 
 ## entry
