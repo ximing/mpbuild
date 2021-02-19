@@ -2,7 +2,7 @@
 title: CLI
 order: 0
 nav:
-    title: 工程工具
+    title: 配套工具
     order: 3
 ---
 
