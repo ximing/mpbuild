@@ -1,4 +1,4 @@
-const MPB = require('../../src');
+const MPB = require('mpbuild');
 const mbpConfig = require('./mbp.config');
 
 const mbp = new MPB(mbpConfig('./entry'));

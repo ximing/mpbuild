@@ -1,16 +1,19 @@
 {
-  "name": "demo",
-  "version": "1.0.0",
-  "description": "",
-  "main": "babel.config.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "querystring": "^0.2.0",
-    "util": "^0.12.3"
-  }
+    "name": "demo",
+    "private": true,
+    "version": "1.0.0",
+    "description": "",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "querystring": "^0.2.0",
+        "util": "^0.12.3"
+    },
+    "devDependencies": {
+        "mpbuild": "^4.1.6"
+    }
 }

@@ -3,7 +3,7 @@
  */
 const path = require('path');
 
-const MPB = require('../../src');
+const MPB = require('mpbuild');
 const TestPlugin = require('./plugins/testPlugin');
 
 module.exports = (entry) => ({
