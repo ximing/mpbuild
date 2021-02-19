@@ -1,0 +1,28 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "ximing",
+      "name": "席铭",
+      "avatar_url": "https://avatars.githubusercontent.com/u/4659887?v=4",
+      "profile": "https://ximing.ren",
+      "contributions": [
+        "code",
+        "blog",
+        "doc",
+        "example",
+        "maintenance"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "mpbuild",
+  "projectOwner": "ximing",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "skipCi": true
+}
