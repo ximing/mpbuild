@@ -7,7 +7,7 @@ order: 1
 
 ## 新建 Web 项目
 
-```bash
+```shell
 npx create-react-app my-app  --typescript
 cd my-app
 npm start
@@ -15,7 +15,7 @@ npm start
 
 ## 添加依赖
 
-```bash
+```shell
 $ npm i --S @rsjs/core inversify reflect-metadata
 ```
 
@@ -27,7 +27,7 @@ import 'reflect-metadata';
 
 ## 创建一个 demo modules
 
-```bash
+```shell
 mkdir src/modules src/modules/demo
 ```
 

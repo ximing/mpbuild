@@ -22,7 +22,7 @@ JS 类型的 NPM 包如果不配置指定输出路径的话，默认输出到 np
 
 首先安装要使用的 npm 包。
 
-```bash
+```shell
 npm install dayjs
 ```
 
