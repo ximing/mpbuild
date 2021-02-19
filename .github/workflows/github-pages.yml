@@ -7,8 +7,7 @@ on:
     tags:
       - v1
     paths:
-      - 'website/**'
-      - 'docs/**'
+      - 'packages/website/**'
       - '.github/**'
   repository_dispatch:
 jobs:
