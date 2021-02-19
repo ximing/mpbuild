@@ -12,10 +12,14 @@ program
     .option('-c, --config <config>', '设置配置文件地址,默认 mpb.config.js')
     .option('-cwd, --cwd <cwd>', '设置 cwd')
     .option('-w, --watch', '开启 watch 模式')
+    .option('-subPackages, --subPackages <subPackages>', '构建指定子包')
     .action((optionValues) => {
         const config = optionValues.config || 'mpb.config.js';
         const cwd = optionValues.cwd || process.cwd();
         const mpb = mpbIns(path.resolve(cwd, config));
+        if (optionValues.subPackages) {
+            mpb.__subPackages = optionValues.subPackages;
+        }
         if (optionValues.watch) {
             mpb.watch();
         } else {

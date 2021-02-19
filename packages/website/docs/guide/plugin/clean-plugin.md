@@ -2,7 +2,7 @@
 title: CleanMbpPlugin
 order: 0
 group:
-    title: 插件
+    title: 内置插件
     order: 3
 ---
 

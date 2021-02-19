@@ -2,7 +2,7 @@
 title: babel-loader
 order: 1
 group:
-    title: loader
+    title: 内置loader
     order: 2
 ---
 
