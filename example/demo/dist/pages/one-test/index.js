@@ -1,1 +1,0 @@
-"use strict";var a={a:"123"},b=require("../../@one/utils/b.js");Page({data:{wx:!0}});
