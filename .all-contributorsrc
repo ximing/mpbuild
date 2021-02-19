@@ -17,6 +17,16 @@
         "example",
         "maintenance"
       ]
+    },
+    {
+      "login": "yozosann",
+      "name": "yozosann",
+      "avatar_url": "https://avatars.githubusercontent.com/u/19776974?v=4",
+      "profile": "https://github.com/yozosann",
+      "contributions": [
+        "bug",
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
