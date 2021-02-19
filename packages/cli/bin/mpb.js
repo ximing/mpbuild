@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 const path = require('path');
+const chalk = require('chalk');
 const { program } = require('commander');
 
 const pkg = require('../package.json');
@@ -26,7 +27,18 @@ program
     .command('analyze <path>')
     .description('使用 https://github.com/ximing/mp-analyzer 分析包体积')
     .action((path, options) => {
-        console.log('暂时还没实现此命令');
+        try {
+            // eslint-disable-next-line
+            const { default: ANA } = require('mp-analyzer');
+            const ana = new ANA(path.join(process.cwd(), path));
+            ana.run();
+        } catch (err) {
+            if (err.message.includes(`Cannot find module 'mp-analyzer'`)) {
+                console.log(chalk.red('请先安装 mp-analyzer:  npm i -D mp-analyzer'));
+            } else {
+                throw err;
+            }
+        }
     });
 
 program.parse(process.argv);
