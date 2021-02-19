@@ -33,6 +33,6 @@ features:
       desc: 编译时拆分多端代码，保障多端可维护性
     - icon: https://ximing.github.io/mpbuild/images/treemap-chart.png
       title: 依赖分析
-      desc: 构建时自动分析依赖精准将文件打包到对应分包，支持生成[bundle-analyzer图](https://github.com/ximing/mp-analyzer)
+      desc: 构建时自动分析依赖精准将文件打包到对应分包，支持生成[bundle-analyzer图](/tools/mp-analyzer)
 footer: Open-source MIT Licensed | Copyright © 2020
 ---
