@@ -1,7 +1,6 @@
 # 小程序构建工具
 
-[![Coverage Status](https://coveralls.io/repos/github/chalk/chalk/badge.svg?branch=main)](https://coveralls.io/github/chalk/chalk?branch=main)
-[![npm dependents](https://badgen.net/npm/dependents/mpbuild)](https://www.npmjs.com/package/mpbuild?activeTab=dependents)
+[comment]: <> ([![npm dependents]&#40;https://badgen.net/npm/dependents/mpbuild&#41;]&#40;https://www.npmjs.com/package/mpbuild?activeTab=dependents&#41;)
 [![NPM Version](http://img.shields.io/npm/v/mpbuild.svg?style=flat)](https://www.npmjs.org/package/mpbuild)
 [![Downloads](https://badgen.net/npm/dt/mpbuild)](https://www.npmjs.com/package/mpbuild)
 [![lerna](https://img.shields.io/badge/maintained%20with-lerna-cc00ff.svg)](https://lerna.js.org/)
