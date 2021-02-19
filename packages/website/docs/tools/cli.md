@@ -1,9 +1,9 @@
 ---
 title: CLI
-order: 2
+order: 0
 nav:
-  title: 指南
-  order: 1
+    title: 工程工具
+    order: 3
 ---
 
 # CLI
@@ -39,8 +39,6 @@ Commands:
 # 普通构建:
 npx mpb
 
-watching状态构建:
+# watching模式构建:
 npx mpb -w
-
-#
 ```
