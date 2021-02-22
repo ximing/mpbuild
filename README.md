@@ -1,4 +1,5 @@
 # 小程序构建工具
+
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
 [![All Contributors](https://img.shields.io/badge/all_contributors-4-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
@@ -12,6 +13,8 @@
 ## 文档
 
 文档已经发布到[https://ximing.github.io/mpbuild/](https://ximing.github.io/mpbuild/)，还在努力完善更多细节内容，欢迎大家贡献
+
+国内镜像地址[https://mpbuild.gitee.io/](https://mpbuild.gitee.io/)
 
 ## License
 
@@ -38,4 +41,5 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
-This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
+This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification.
+Contributions of any kind welcome!
