@@ -1,0 +1,1 @@
+module.exports=function(r,e,t){if(r.filter)return r.filter(e,t);if(null==r)throw new TypeError;if("function"!=typeof e)throw new TypeError;for(var n,o=[],l=0;l<r.length;l++)hasOwn.call(r,l)&&(n=r[l],e.call(t,n,l,r)&&o.push(n));return o};var hasOwn=Object.prototype.hasOwnProperty;
