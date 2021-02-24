@@ -11,8 +11,6 @@ module.exports = class HandleJSONComponentDep {
     }
 
     apply(mpb) {
-        const keys = Object.keys(mpb.config.alias || {});
-        const alias = { keys, aliasMap: mpb.config.alias };
         mpb.hooks.beforeEmitFile.tapPromise('HandleJSONComponentDep', async (asset) => {
             // const key = asset.getMeta('mbp-scan-json-dep');
             // TODO 并不是所有JSON都要进行这个判定的，先通过usingComponents这个key来判定是否是依赖，但是有点硬核，后面想下有没有更好的办法，上面通过 meta的方式也不行，主要是在watch的时候如何对新的asset设置meta

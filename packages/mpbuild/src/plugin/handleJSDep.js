@@ -11,13 +11,8 @@ const template = require('@babel/template').default;
 const fs = require('fs');
 
 module.exports = class HandleJSDep {
-    constructor() {
-        this.mainPkgPathMap = {};
-    }
 
     apply(mpb) {
-        const keys = Object.keys(mpb.config.alias || {});
-        const alias = { keys, aliasMap: mpb.config.alias };
         this.exts = [...new Set(mpb.exts.js.concat(['.json', '.wxs']))];
         mpb.hooks.beforeEmitFile.tapPromise('HandleJSDep', async (asset) => {
             const deps = [];
