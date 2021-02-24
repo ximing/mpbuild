@@ -1,0 +1,1 @@
+var GetIntrinsic=require("../GetIntrinsic.js"),$gOPD=GetIntrinsic("%Object.getOwnPropertyDescriptor%");if($gOPD)try{$gOPD([],"length")}catch(t){$gOPD=null}module.exports=$gOPD;

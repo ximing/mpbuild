@@ -1,0 +1,1 @@
+var GetIntrinsic=require("../get-intrinsic/index.js"),callBind=require("./index.js"),$indexOf=callBind(GetIntrinsic("String.prototype.indexOf"));module.exports=function(i,n){n=GetIntrinsic(i,!!n);return"function"==typeof n&&-1<$indexOf(i,".prototype.")?callBind(n):n};

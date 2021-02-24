@@ -18,6 +18,6 @@ dist-cdn
 !src/utils/r.js
 .mtweapp_cache/
 typings/wx/r.d.ts
-demo/dist
 git_ignore
 dist
+!example/demo/dist
