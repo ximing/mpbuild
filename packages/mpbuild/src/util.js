@@ -23,8 +23,6 @@ module.exports.isNpmPkg = function (name) {
     return true;
 };
 
-module.exports.alias = function () {};
-
 function ensureArray(thing) {
     if (Array.isArray(thing)) return thing;
     // eslint-disable-next-line

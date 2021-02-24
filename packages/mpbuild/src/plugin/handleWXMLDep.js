@@ -36,13 +36,8 @@ const generateCode = function (ast, code = '', distDeps, asset) {
 };
 
 module.exports = class HandleWXMLDep {
-    constructor() {
-        this.mainPkgPathMap = {};
-    }
 
     apply(mpb) {
-        const keys = Object.keys(mpb.config.alias || {});
-        const alias = { keys, aliasMap: mpb.config.alias };
         mpb.hooks.beforeEmitFile.tapPromise('HandleWXMLDep', async (asset) => {
             if (/\.wxml$/.test(asset.name)) {
                 try {

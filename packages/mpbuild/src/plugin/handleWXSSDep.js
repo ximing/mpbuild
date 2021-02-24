@@ -5,13 +5,8 @@ const postcss = require('postcss');
 const path = require('path');
 
 module.exports = class HandleWXSSDep {
-    constructor() {
-        this.mainPkgPathMap = {};
-    }
 
     apply(mpb) {
-        const keys = Object.keys(mpb.config.alias || {});
-        const alias = { keys, aliasMap: mpb.config.alias };
         mpb.hooks.beforeEmitFile.tapPromise('HandleWXSSDep', async (asset) => {
             if (/\.wxss$/.test(asset.name)) {
                 const deps = [];
