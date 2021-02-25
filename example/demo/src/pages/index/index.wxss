@@ -9,3 +9,15 @@
     text: blue;
 }
 /* @endif */
+
+// @ifdef wx
+.other-color {
+    text: red;
+}
+// @endif
+
+// @ifdef mt
+.other-color {
+    text: blue;
+}
+// @endif
