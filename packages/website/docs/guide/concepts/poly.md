@@ -60,7 +60,7 @@ module.exports = {
 
 **注意：**
 
--   条件编译是利用注释实现的，在不同语法里注释写法不一样，js 使用 `// 注释`、css 使用 `/* 注释 */`、wxml 等模板里使用 `<!-- 注释 -->`；
+-   条件编译是利用注释实现的，在不同语法里注释写法不一样，js/ts/wxs/wxss/less/postcss 等建议使用 `// 注释` 也可以使用 `/* 注释 */`。wxml 等模板里必须使用 `<!-- 注释 -->`；
 
 #### JS 类文件 的条件编译
 
@@ -108,10 +108,6 @@ console.log('wx platform');
 
 ### 样式的条件编译
 
-**注意：** 样式的条件编译，无论是 css 还是 sass/scss/less/stylus 等预编译语言中，必须使用 `/*注释*/` 的写法。
-
-正确写法
-
 ```css
 /* @ifdef wx */
 .color {
@@ -119,8 +115,6 @@ console.log('wx platform');
 }
 /* @endif */
 ```
-
-错误写法
 
 ```less
 // @ifdef wx

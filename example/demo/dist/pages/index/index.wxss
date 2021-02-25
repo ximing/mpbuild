@@ -2,3 +2,8 @@
     text: red;
 }
 
+
+.other-color {
+    text: red;
+}
+
