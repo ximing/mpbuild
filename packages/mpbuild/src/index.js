@@ -36,6 +36,7 @@ const PolymorphismPlugin = require('./plugin/polymorphismPlugin');
 const ResolvePlugin = require('./plugin/resolvePlugin');
 const RewriteOutputPathPlugin = require('./plugin/rewriteOutputPathPlugin');
 const SubPackagesPlugin = require('./plugin/subPackagesPlugin');
+const SubProjectPlugin = require('./plugin/subProjectPlugin');
 const NodeEnvironmentPlugin = require('./node/NodeEnvironmentPlugin');
 const Asset = require('./asset');
 const resolve = require('./resolve');
@@ -64,7 +65,9 @@ class MpBuilder {
             beforeOutputAppJSON: new SyncWaterfallHook(['entryPath']),
             extension: new SyncWaterfallHook(['ext']),
             rewriteOutputPath: new SyncWaterfallHook(['opt']),
+            rewriteOutsideOutputPath: new SyncWaterfallHook(['opt']),
             resolve: new SyncWaterfallHook(['opt']),
+            resolveOutside: new SyncWaterfallHook(['opt']),
         };
         this.optimization = {
             minimize: true,
@@ -157,3 +160,4 @@ module.exports.CleanMbpPlugin = CleanMbpPlugin;
 module.exports.TsTypeCheckPlugin = TsTypeCheckPlugin;
 module.exports.PolymorphismPlugin = PolymorphismPlugin;
 module.exports.SubPackagesPlugin = SubPackagesPlugin;
+module.exports.SubProjectPlugin = SubProjectPlugin;

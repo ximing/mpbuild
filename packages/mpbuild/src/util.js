@@ -76,49 +76,12 @@ module.exports.rewriteNpm = (filePath, root, dest, npmDirName = 'npm') => {
 };
 
 const subPkgPathMap = new Map();
+
 module.exports.subPkgPathMap = subPkgPathMap;
+
 module.exports.setSubPkgPathMap = (root, libPath, opfp) => {
     if (!subPkgPathMap.has(root)) {
         subPkgPathMap.set(root, new Map());
     }
     subPkgPathMap.get(root).set(libPath, opfp);
-};
-module.exports.rewriteOutput = (libPath, root, src, dest, filePath, outputFilePath, alias) => {
-    if (!subPkgPathMap.has(root)) {
-        subPkgPathMap.set(root, new Map());
-    }
-    let opfp = subPkgPathMap.get(root).get(libPath);
-    if (opfp) {
-        return opfp;
-    }
-    if (libPath.includes(src)) {
-        // 处理文件在src中的场景
-        opfp = join(dest, `./${root || ''}`, relative(src, libPath));
-    } else if (libPath.includes(dirname(filePath))) {
-        // 如果是相对当前文件的，优先保持文件路径不变
-        opfp = join(outputFilePath, relative(filePath, libPath));
-    } else {
-        if (alias.keys.length) {
-            // 防止两个不同 git 仓库的文件，出现同名的情况，所以用alias做一次隔离
-            const aliasKeys = alias.keys;
-            for (let i = 0; i < aliasKeys.length; i++) {
-                const path = alias.aliasMap[aliasKeys[i]];
-                if (libPath.startsWith(path)) {
-                    opfp = join(
-                        dest,
-                        `./${root || ''}`,
-                        aliasKeys[i],
-                        libPath.replace(path, '')
-                        // relative(filePath, libPath).replace(/\.\.\//g, '')
-                    );
-                    subPkgPathMap.get(root).set(libPath, opfp);
-                    return opfp;
-                }
-            }
-        }
-        console.log(chalk.red('可能存在异常,联系 @ximing 排查'), root, filePath, libPath);
-        opfp = join(dest, `./${root || ''}`, relative(filePath, libPath).replace(/\.\.\//g, ''));
-    }
-    subPkgPathMap.get(root).set(libPath, opfp);
-    return opfp;
 };

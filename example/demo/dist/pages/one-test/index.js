@@ -1,1 +1,1 @@
-"use strict";var a={a:"123"},b=require("../../@one/utils/b.js");Page({data:{wx:!0}});
+"use strict";var twob=require("../../@two/utils/b.js"),a={a:"123"},b=require("../../@one/utils/b.js");Page({data:{wx:!0}});

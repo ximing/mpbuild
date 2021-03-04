@@ -23,7 +23,7 @@ function exists(file) {
     return false;
 }
 
-module.exports = (lib, asset, exts = [], src = '', alias = {}, ignoreNotFound = false) => {
+const resolveAlias = (lib, exts, alias) => {
     const aliasArr = Object.keys(alias);
     for (let i = 0; i < aliasArr.length; i++) {
         if (lib.startsWith(aliasArr[i])) {
@@ -43,7 +43,11 @@ module.exports = (lib, asset, exts = [], src = '', alias = {}, ignoreNotFound = 
             }
         }
     }
-    let libPath;
+};
+
+module.exports = (lib, asset, exts = [], src = '', alias = {}, ignoreNotFound = false) => {
+    let libPath = resolveAlias(lib, exts, alias);
+    if (libPath) return libPath;
     if (lib[0] === '.') {
         libPath = resolveSync(lib, asset.dir, exts);
     } else if (lib[0] === '/') {
@@ -60,6 +64,7 @@ module.exports = (lib, asset, exts = [], src = '', alias = {}, ignoreNotFound = 
             }
         }
     } else {
+        // npm 寻址
         try {
             // libPath = resolveSync(lib, asset.dir, exts);
             // 先找相对路径
@@ -76,13 +81,13 @@ module.exports = (lib, asset, exts = [], src = '', alias = {}, ignoreNotFound = 
             } catch (e) {
             } finally {
                 // 如果不存在就去从当前npm包位置开始向上查找
-                if (!(libPath && libPath.startsWith(process.cwd()))) {
-                    libPath = bresolve.sync(lib, {
-                        basedir: asset.dir,
-                        filename: asset.path,
-                        includeCoreModules: false,
-                    });
-                }
+                // if (!(libPath && libPath.startsWith(process.cwd()))) {
+                //     libPath = bresolve.sync(lib, {
+                //         basedir: asset.dir,
+                //         filename: asset.path,
+                //         includeCoreModules: false,
+                //     });
+                // }
             }
         }
     }
@@ -91,3 +96,4 @@ module.exports = (lib, asset, exts = [], src = '', alias = {}, ignoreNotFound = 
     }
     return libPath;
 };
+module.exports.resolveAlias = resolveAlias;

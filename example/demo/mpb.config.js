@@ -81,6 +81,25 @@ module.exports = {
                 minified: true,
             },
         }),
+        new MPB.SubProjectPlugin({
+            subProjects: [
+                {
+                    name: '@one',
+                    alias: {
+                        '@two-b': path.join(__dirname, '../projects/two/utils/b.js'),
+                        '@one': path.join(__dirname, '../projects/one'),
+                    },
+                    src: path.join(__dirname, '../projects/one'),
+                },
+                {
+                    name: '@two',
+                    alias: {
+                        '@two': path.join(__dirname, '../projects/two'),
+                    },
+                    src: path.join(__dirname, '../projects/two'),
+                },
+            ],
+        }),
         new TestPlugin(),
     ],
 };
