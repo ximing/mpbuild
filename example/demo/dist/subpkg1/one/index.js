@@ -1,1 +1,1 @@
-"use strict";var a={a:"123"},help=require("./lib/help.js"),b=require("../@two/utils/b.js");Page({});
+"use strict";var a={a:"123"},help=require("./lib/help.js"),b=require("../../@two/utils/b.js");Page({});
