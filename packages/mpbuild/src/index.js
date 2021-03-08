@@ -161,3 +161,4 @@ module.exports.TsTypeCheckPlugin = TsTypeCheckPlugin;
 module.exports.PolymorphismPlugin = PolymorphismPlugin;
 module.exports.SubPackagesPlugin = SubPackagesPlugin;
 module.exports.SubProjectPlugin = SubProjectPlugin;
+module.exports.version = require('../package.json').version;
