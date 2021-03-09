@@ -13,6 +13,7 @@ module.exports = class AssetManager {
         this.mpb = mpb;
         this.map = {};
         this.mpb.hooks.addAsset.tapPromise('LoaderManager', (asset) => Promise.resolve(asset));
+        this.pendingMap = {};
     }
 
     getAssets(path) {
@@ -41,7 +42,6 @@ module.exports = class AssetManager {
             } else {
                 this.map[asset.path][index] = asset;
             }
-
             this.map[asset.path].push(asset);
         } else {
             this.map[asset.path] = [asset];
@@ -77,51 +77,59 @@ module.exports = class AssetManager {
                     }
                 }
             }
-            asset = await this.mpb.hooks.beforeAddAsset.promise(asset);
-            this.setAsset(asset);
-            return this.mpb.hooks.addAsset.promise(asset).then(
-                (asset) => {
-                    if (asset.shouldOutput) {
-                        return this.mpb.hooks.beforeEmitFile.promise(asset).then(
-                            () => {
-                                this.emitFile(asset);
-                                return asset;
-                            },
-                            (err) => {
-                                if (this.mpb.isWatch) {
-                                    notifier.notify({
-                                        title: 'beforeEmitFile hooks error',
-                                        message: '输出文件失败，具体错误请查看命令行',
-                                    });
-                                    console.log(
-                                        chalk.red('[beforeEmitFile hooks error]'),
-                                        asset.path
-                                    );
-                                    console.error(err);
-                                } else {
-                                    console.error(err);
-                                    process.exit(1);
-                                }
-                                // throw err;
-                            }
-                        );
-                    }
-                    // 如果不输出，就删除之前的构建文件，这样小程序工具上直观能体现出来有代码有问题了
-                    return fse
-                        .remove(asset.outputFilePat)
-                        .then((_) => asset)
-                        .catch((_) => asset);
-                },
-                (err) => {
-                    console.log('asset', asset.path);
-                    console.error(err);
-                    // throw err;
-                }
-            );
+            const key = `${asset.path}${asset.outputFilePath}`;
+            if (this.pendingMap[key]) {
+                return this.pendingMap[key];
+            }
+            this.pendingMap[key] = this.execAddFileHooks(asset, key);
+            return this.pendingMap[key];
         }
         console.log(chalk.red('[assetManager] asset not found'), `: ${path}`);
         return Promise.resolve();
         // throw new Error(`not found${path}`);
+    }
+
+    async execAddFileHooks(asset, key) {
+        asset = await this.mpb.hooks.beforeAddAsset.promise(asset);
+        this.setAsset(asset);
+        const res = await this.mpb.hooks.addAsset.promise(asset).then(
+            (asset) => {
+                if (asset.shouldOutput) {
+                    return this.mpb.hooks.beforeEmitFile.promise(asset).then(
+                        () => {
+                            this.emitFile(asset);
+                            return asset;
+                        },
+                        (err) => {
+                            if (this.mpb.isWatch) {
+                                notifier.notify({
+                                    title: 'beforeEmitFile hooks error',
+                                    message: '输出文件失败，具体错误请查看命令行',
+                                });
+                                console.log(chalk.red('[beforeEmitFile hooks error]'), asset.path);
+                                console.error(err);
+                            } else {
+                                console.error(err);
+                                process.exit(1);
+                            }
+                            // throw err;
+                        }
+                    );
+                }
+                // 如果不输出，就删除之前的构建文件，这样小程序工具上直观能体现出来有代码有问题了
+                return fse
+                    .remove(asset.outputFilePat)
+                    .then((_) => asset)
+                    .catch((_) => asset);
+            },
+            (err) => {
+                console.log('asset', asset.path);
+                console.error(err);
+                // throw err;
+            }
+        );
+        delete this.pendingMap[key];
+        return res;
     }
 
     emitFile(asset) {
