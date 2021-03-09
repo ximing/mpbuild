@@ -20,7 +20,7 @@ const map = {
     'json-loader': jsonLoader,
     'ts-loader-next': tsLoaderNext,
     'postcss-loader': postcssLoader,
-    'rename-loader': renameLoader,
+    'rename-loader': renameLoader
 };
 
 module.exports = class LoaderManager {
