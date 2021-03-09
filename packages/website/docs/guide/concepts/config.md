@@ -34,10 +34,6 @@ module.exports = {
 };
 ```
 
-[comment]: <> (## platform)
-
-[comment]: <> (mpbuild 支持[多态协议]&#40;./poly&#41; platform 字段指定当前构建的是哪个平台的字段)
-
 ## optimization
 
 压缩指令

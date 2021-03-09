@@ -47,7 +47,7 @@ module.exports = {
 | @ifndef **wx** 需条件编译的代码 @endif            | 除了 微信小程序，其它平台均存在的代码                                     |
 | @ifdef **wx** \|\| **h5** 需条件编译的代码 @endif | 在 微信小程序或 h5 存在的代码（这里只有\|\|，不可能出现&&，因为没有交集） |
 
-<b style="color:#268BD2"> %PLATFORM%</b> 取值为 `mpb.conf.js` 配置文件中 [platform](./config#platform) 字段
+<b style="color:#268BD2"> %PLATFORM%</b> 取值为插件参数中的中 platform 字段
 
 **支持的文件**
 
@@ -126,16 +126,19 @@ console.log('wx platform');
 
 ### 配置文件 的条件编译
 
-小程序的配置文件为 `.json` 文件，json 文件按照规范是不能有注释的，因此，建议配置文件使用 `.config.js` 来描述，这样可以使用[JS 类文件 的条件编译](#js-类文件-的条件编译) 来进行描述
+小程序的配置文件为 `.json` 文件，json 文件按照规范是不能有注释的，因此，建议配置文件使用 `.config.js` 来描述，这样可以使用[JS 类文件](#js-类文件-的条件编译)的条件编译 来进行描述
 
 ## 文件级别
 
 所有类型文件均可以使用可以使用后缀的形式进行文件级别的条件编译, `*.platform.js`,`*.platform.wxml`等，比如：
 
 ```
-┌─static
-│  ├─a.mt.png
-│  └─a.wx.png
+┌─component
+│  ├─a.ts
+│  ├─a.config.js
+│  ├─a.wx.config.js
+│  ├─a.mt.wxml
+│  └─a.wx.wxml
 ├─app.wx.js
 ├─app.js
 ├─app.mt.json

@@ -12,8 +12,10 @@ const fs = require('fs');
 
 module.exports = class HandleJSDep {
     apply(mpb) {
-        this.exts = [...new Set(mpb.exts.js.concat(['.json', '.wxs']))];
         mpb.hooks.beforeEmitFile.tapPromise('HandleJSDep', async (asset) => {
+            if (!this.exts) {
+                this.exts = [...new Set(mpb.exts.js.concat(['.json', '.wxs']))];
+            }
             const deps = [];
             try {
                 if (/\.(js|wxs)$/.test(asset.outputFilePath) && asset.contents) {
