@@ -6,6 +6,8 @@
 // const htmlmin = require('html-minifier');
 const workerpool = require('workerpool');
 const mm = require('micromatch');
+const crypto = require('crypto');
+const path = require('path');
 
 const pool = workerpool.pool();
 
@@ -94,6 +96,9 @@ module.exports = class MinifyPlugin {
         this.wxml = true;
         this.json = true;
         this.wxs = true;
+        this.hashDigestLength = 4;
+        this.usedIds = new Set();
+        this.dirIdMap = new Map();
     }
 
     apply(mpb) {
@@ -103,11 +108,45 @@ module.exports = class MinifyPlugin {
                 this.wxml = mpb.optimization.minimize.wxml;
                 this.json = mpb.optimization.minimize.json;
                 this.wxs = mpb.optimization.minimize.wxs;
+                this.path = mpb.optimization.minimize.path;
             } else if (mpb.optimization.minimize === false) {
                 this.js = false;
                 this.wxml = false;
                 this.json = false;
                 this.wxs = false;
+                this.path = false;
+            }
+            if (this.path) {
+                mpb.hooks.rewriteOutputPath.tap('rewriteOutputPath', (opt) => {
+                    const { asset, outputPath } = opt;
+                    if (outputPath) {
+                        if (typeof this.path === 'function') {
+                            this.path(opt);
+                        } else {
+                            const { base, dir } = path.parse(outputPath);
+                            const targetPath = dir.replace(mpb.dest, '');
+                            if (!this.dirIdMap.get(targetPath)) {
+                                const hashId = crypto
+                                    .createHash('sha256')
+                                    .update(targetPath)
+                                    .digest('hex');
+                                let len = this.hashDigestLength;
+                                while (this.usedIds.has(hashId.substr(0, len))) len++;
+                                const hashValue = hashId.substr(0, len);
+                                this.usedIds.add(hashValue);
+                                this.dirIdMap.set(targetPath, hashValue);
+                            }
+                            const root = asset.getMeta('root');
+                            opt.outputPath = path.join(
+                                mpb.dest,
+                                `./${root || ''}`,
+                                this.dirIdMap.get(targetPath),
+                                base
+                            );
+                        }
+                    }
+                    return opt;
+                });
             }
             mpb.hooks.beforeEmitFile.tapPromise('MinifyPlugin', async (asset) => {
                 if (asset.contents) {

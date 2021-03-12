@@ -6,6 +6,8 @@ const path = require('path');
 const MPB = require('mpbuild');
 const TestPlugin = require('./plugins/testPlugin');
 
+const minimize_path = !!process.env.minimize_path;
+const dist = minimize_path ? 'minimize_path_dist' : 'dist';
 module.exports = {
     // 入口配置文件
     entry: './entry.js',
@@ -19,7 +21,7 @@ module.exports = {
         '@components': path.join(__dirname, 'src/components'),
     },
     output: {
-        path: path.join(__dirname, 'dist'),
+        path: path.join(__dirname, dist),
         npm: 'npm',
     },
     optimization: {
@@ -29,6 +31,7 @@ module.exports = {
             js: true,
             wxml: true,
             json: true,
+            path: minimize_path,
         },
     },
     module: {
@@ -69,7 +72,7 @@ module.exports = {
     plugins: [
         new MPB.PolymorphismPlugin({ platform: 'wx', blockcode: true }),
         new MPB.CleanMbpPlugin({
-            path: ['dist/**/*', '!dist/project.config.json'],
+            path: [`${dist}/**/*`, `!${dist}/project.config.json`],
         }),
         // new MPB.TsTypeCheckPlugin({
         //     project: __dirname
