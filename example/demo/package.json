@@ -5,6 +5,7 @@
     "description": "",
     "scripts": {
         "build": "mpb",
+        "build:mini": "minimize_path=1 mpb",
         "watch": "mpb -w"
     },
     "keywords": [],
