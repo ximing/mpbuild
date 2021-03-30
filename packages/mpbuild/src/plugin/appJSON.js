@@ -1,6 +1,5 @@
 // 生成AppJSON.js 文件，方便业务方 查看代码里面使用 app.tabs 的值
 const path = require('path')
-const _ = require('lodash');
 const Asset = require('../asset');
 
 module.exports = class AppJSON {
