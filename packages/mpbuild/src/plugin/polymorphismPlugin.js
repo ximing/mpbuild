@@ -12,7 +12,7 @@ module.exports = class PolymorphismPlugin {
         if (this.platform) {
             originContext[this.platform] = this.platform;
         }
-        this.context = Object.assign(originContext, this.conf.context);
+        this.context = Object.assign(originContext, this.conf.blockContext || {});
     }
 
     apply(mpb) {
