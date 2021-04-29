@@ -8,7 +8,9 @@ module.exports = class PolymorphismPlugin {
         this.conf = conf;
         this.blockcode = typeof this.conf.blockcode === 'boolean' ? this.conf.blockcode : true;
         this.platform = this.conf.platform;
-        const originContext = {};
+        const originContext = {
+            p: this.platform,
+        };
         if (this.platform) {
             originContext[this.platform] = this.platform;
         }
