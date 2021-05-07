@@ -43,15 +43,19 @@ module.exports = class ScanDep {
                     );
                     // 这里认为 页面必须要有一个js文件，其他可以忽略
                     if (key === 'js' && !path) {
+                        console.error(chalk.red('没找到对应页面或组件'));
                         console.log(
                             chalk.red('[scan addAssetByEXT error]'),
-                            '页面类型文件',
+                            '页面类型文件: ',
                             key,
-                            '页面路径',
+                            '页面路径: ',
                             prefixPath,
-                            'root: ',
+                            '所属子包: ',
                             root
                         );
+                        if (!this.mpb.isWatch) {
+                            process.exit(10);
+                        }
                         return Promise.reject('没找到对应文件');
                     }
                     if (!path) {
