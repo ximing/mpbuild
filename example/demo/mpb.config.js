@@ -38,7 +38,32 @@ module.exports = {
         rules: [
             {
                 test: /\.wxss$/,
-                use: [],
+                use: [
+                    {
+                        loader: 'postcss-loader',
+                        options: {
+                            parser: require('postcss-scss'),
+                            plugins: [
+                                require('@yeanzhi/postcss-advanced-variables')({
+                                    variables: {},
+                                    importResolve: async (id, cwd, opts) => {
+                                        const file = require('path').resolve(cwd, id);
+                                        if (file.includes('mixin')) {
+                                            return {
+                                                file,
+                                                contents: require('fs').readFileSync(file, 'UTF-8'),
+                                            };
+                                        }
+                                    },
+                                    importFilter: (id) => {
+                                        return id.includes('mixin');
+                                    },
+                                }),
+                                require('postcss-nested')({ bubble: ['keyframes'] }),
+                            ],
+                        },
+                    },
+                ],
             },
             {
                 test: /\.js$/,
