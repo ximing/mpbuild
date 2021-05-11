@@ -1,5 +1,8 @@
+@import '../../wxss/mixin.wxss';
+
 /* @ifdef wx */
 .color {
+    @include reset-border;
     text: red;
 }
 /* @endif */
