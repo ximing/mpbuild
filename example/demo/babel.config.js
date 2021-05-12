@@ -1,4 +1,4 @@
-module.exports = function(api) {
+module.exports = function (api) {
     api.cache(false);
     return {
         presets: [
@@ -9,9 +9,19 @@ module.exports = function(api) {
                         browsers: ['safari >= 10', 'android >= 5.0']
                     },
                     modules: 'commonjs',
-                    loose: true
-                }
-            ]
+                    loose: true,
+                },
+            ],
+            // [
+            //     '@babel/preset-env',
+            //     {
+            //         targets: {
+            //             esmodules:true
+            //         },
+            //         modules: false,
+            //         loose: true,
+            //     },
+            // ],
         ],
         ignore: [],
         comments: false,
@@ -22,15 +32,15 @@ module.exports = function(api) {
                     corejs: false,
                     helpers: true,
                     regenerator: true,
-                    useESModules: false
-                }
+                    useESModules: false,
+                },
             ],
             [
                 'transform-define',
                 {
-                    'process.env.NODE_ENV': 'production'
-                }
-            ]
-        ]
+                    'process.env.NODE_ENV': 'production',
+                },
+            ],
+        ],
     };
 };

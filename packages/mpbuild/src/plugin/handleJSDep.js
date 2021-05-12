@@ -91,6 +91,56 @@ module.exports = class HandleJSDep {
                                 }
                             },
                         },
+                        ImportDeclaration: {
+                            enter: (astPath) => {
+                                const { node, parent } = astPath;
+                                const lib = node.source.value;
+                                const resolveRes = mpb.hooks.resolveJS.call({
+                                    lib,
+                                    asset,
+                                });
+                                if (!resolveRes) {
+                                    return;
+                                }
+                                const res = mpb.hooks.resolve.call({
+                                    lib: resolveRes.lib,
+                                    resolveLib: '',
+                                    asset,
+                                    resolveType: 'js',
+                                    exts: this.exts,
+                                });
+                                const libPath = res.resolveLib;
+                                let {
+                                    outputPath: libOutputPath,
+                                } = mpb.hooks.rewriteOutputPath.call({
+                                    filePath: libPath,
+                                    asset,
+                                    depType: 'js',
+                                });
+                                // TODO How to handle renamed files more gracefully
+                                if (
+                                    libOutputPath.endsWith('.ts') ||
+                                    libOutputPath.endsWith('.jsx') ||
+                                    libOutputPath.endsWith('.tsx')
+                                ) {
+                                    const [libOutputPathPrefix] = mpb.helper.splitExtension(
+                                        libOutputPath
+                                    );
+                                    libOutputPath = `${libOutputPathPrefix}.js`;
+                                }
+                                node.source.value = path.relative(
+                                    path.parse(asset.outputFilePath).dir,
+                                    libOutputPath
+                                );
+                                if (node.source.value[0] !== '.') {
+                                    node.source.value = `./${node.source.value}`;
+                                }
+                                deps.push({
+                                    libPath,
+                                    libOutputPath,
+                                });
+                            },
+                        },
                     });
                     asset.contents = generate(ast, {
                         quotes: 'single',
