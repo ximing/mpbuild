@@ -41,11 +41,17 @@ module.exports = class HandleJSONComponentDep {
                                 });
                                 filePath = res.resolveLib;
 
-                                const { outputPath } = mpb.hooks.rewriteOutputPath.call({
+                                let { outputPath } = mpb.hooks.rewriteOutputPath.call({
                                     filePath,
                                     asset,
                                     depType: 'json',
                                 });
+                                if (outputPath.endsWith('.config.js')) {
+                                    outputPath = outputPath.replace('.config.js', '.json');
+                                }
+                                if (filePath.endsWith('.config.js')) {
+                                    filePath = filePath.replace('.config.js', '.json');
+                                }
                                 if (!this.mainPkgPathMap[outputPath]) {
                                     const root = asset.getMeta('root');
                                     const filePathRes = path.parse(filePath);
