@@ -1,1 +1,21 @@
-var hasOwn=Object.prototype.hasOwnProperty,toString=Object.prototype.toString;module.exports=function(t,r,o){if("[object Function]"!==toString.call(r))throw new TypeError("iterator must be a function");var e=t.length;if(e===+e)for(var n=0;n<e;n++)r.call(o,t[n],n,t);else for(var a in t)hasOwn.call(t,a)&&r.call(o,t[a],a,t)};
+
+var hasOwn = Object.prototype.hasOwnProperty;
+var toString = Object.prototype.toString;
+
+module.exports = function forEach(obj, fn, ctx) {
+  if (toString.call(fn) !== '[object Function]') {
+    throw new TypeError('iterator must be a function');
+  }
+  var l = obj.length;
+  if (l === +l) {
+    for (var i = 0; i < l; i++) {
+      fn.call(ctx, obj[i], i, obj);
+    }
+  } else {
+    for (var k in obj) {
+      if (hasOwn.call(obj, k)) {
+        fn.call(ctx, obj[k], k, obj);
+      }
+    }
+  }
+};

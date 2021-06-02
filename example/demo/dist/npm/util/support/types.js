@@ -1,1 +1,331 @@
-var isArgumentsObject=require("../../is-arguments/index.js"),isGeneratorFunction=require("../../is-generator-function/index.js"),whichTypedArray=require("../../which-typed-array/index.js"),isTypedArray=require("../../is-typed-array/index.js");function uncurryThis(r){return r.call.bind(r)}var bigIntValue,symbolValue,BigIntSupported="undefined"!=typeof BigInt,SymbolSupported="undefined"!=typeof Symbol,ObjectToString=uncurryThis(Object.prototype.toString),numberValue=uncurryThis(Number.prototype.valueOf),stringValue=uncurryThis(String.prototype.valueOf),booleanValue=uncurryThis(Boolean.prototype.valueOf);function checkBoxedPrimitive(r,e){if("object"!=typeof r)return!1;try{return e(r),!0}catch(r){return!1}}function isPromise(r){return"undefined"!=typeof Promise&&r instanceof Promise||null!==r&&"object"==typeof r&&"function"==typeof r.then&&"function"==typeof r.catch}function isArrayBufferView(r){return"undefined"!=typeof ArrayBuffer&&ArrayBuffer.isView?ArrayBuffer.isView(r):isTypedArray(r)||isDataView(r)}function isUint8Array(r){return"Uint8Array"===whichTypedArray(r)}function isUint8ClampedArray(r){return"Uint8ClampedArray"===whichTypedArray(r)}function isUint16Array(r){return"Uint16Array"===whichTypedArray(r)}function isUint32Array(r){return"Uint32Array"===whichTypedArray(r)}function isInt8Array(r){return"Int8Array"===whichTypedArray(r)}function isInt16Array(r){return"Int16Array"===whichTypedArray(r)}function isInt32Array(r){return"Int32Array"===whichTypedArray(r)}function isFloat32Array(r){return"Float32Array"===whichTypedArray(r)}function isFloat64Array(r){return"Float64Array"===whichTypedArray(r)}function isBigInt64Array(r){return"BigInt64Array"===whichTypedArray(r)}function isBigUint64Array(r){return"BigUint64Array"===whichTypedArray(r)}function isMapToString(r){return"[object Map]"===ObjectToString(r)}function isMap(r){return"undefined"!=typeof Map&&(isMapToString.working?isMapToString(r):r instanceof Map)}function isSetToString(r){return"[object Set]"===ObjectToString(r)}function isSet(r){return"undefined"!=typeof Set&&(isSetToString.working?isSetToString(r):r instanceof Set)}function isWeakMapToString(r){return"[object WeakMap]"===ObjectToString(r)}function isWeakMap(r){return"undefined"!=typeof WeakMap&&(isWeakMapToString.working?isWeakMapToString(r):r instanceof WeakMap)}function isWeakSetToString(r){return"[object WeakSet]"===ObjectToString(r)}function isWeakSet(r){return isWeakSetToString(r)}function isArrayBufferToString(r){return"[object ArrayBuffer]"===ObjectToString(r)}function isArrayBuffer(r){return"undefined"!=typeof ArrayBuffer&&(isArrayBufferToString.working?isArrayBufferToString(r):r instanceof ArrayBuffer)}function isDataViewToString(r){return"[object DataView]"===ObjectToString(r)}function isDataView(r){return"undefined"!=typeof DataView&&(isDataViewToString.working?isDataViewToString(r):r instanceof DataView)}BigIntSupported&&(bigIntValue=uncurryThis(BigInt.prototype.valueOf)),SymbolSupported&&(symbolValue=uncurryThis(Symbol.prototype.valueOf)),exports.isArgumentsObject=isArgumentsObject,exports.isGeneratorFunction=isGeneratorFunction,exports.isTypedArray=isTypedArray,exports.isPromise=isPromise,exports.isArrayBufferView=isArrayBufferView,exports.isUint8Array=isUint8Array,exports.isUint8ClampedArray=isUint8ClampedArray,exports.isUint16Array=isUint16Array,exports.isUint32Array=isUint32Array,exports.isInt8Array=isInt8Array,exports.isInt16Array=isInt16Array,exports.isInt32Array=isInt32Array,exports.isFloat32Array=isFloat32Array,exports.isFloat64Array=isFloat64Array,exports.isBigInt64Array=isBigInt64Array,exports.isBigUint64Array=isBigUint64Array,isMapToString.working="undefined"!=typeof Map&&isMapToString(new Map),exports.isMap=isMap,isSetToString.working="undefined"!=typeof Set&&isSetToString(new Set),exports.isSet=isSet,isWeakMapToString.working="undefined"!=typeof WeakMap&&isWeakMapToString(new WeakMap),exports.isWeakMap=isWeakMap,isWeakSetToString.working="undefined"!=typeof WeakSet&&isWeakSetToString(new WeakSet),exports.isWeakSet=isWeakSet,isArrayBufferToString.working="undefined"!=typeof ArrayBuffer&&isArrayBufferToString(new ArrayBuffer),exports.isArrayBuffer=isArrayBuffer,isDataViewToString.working="undefined"!=typeof ArrayBuffer&&"undefined"!=typeof DataView&&isDataViewToString(new DataView(new ArrayBuffer(1),0,1)),exports.isDataView=isDataView;var SharedArrayBufferCopy="undefined"!=typeof SharedArrayBuffer?SharedArrayBuffer:void 0;function isSharedArrayBufferToString(r){return"[object SharedArrayBuffer]"===ObjectToString(r)}function isSharedArrayBuffer(r){return void 0!==SharedArrayBufferCopy&&(void 0===isSharedArrayBufferToString.working&&(isSharedArrayBufferToString.working=isSharedArrayBufferToString(new SharedArrayBufferCopy)),isSharedArrayBufferToString.working?isSharedArrayBufferToString(r):r instanceof SharedArrayBufferCopy)}function isAsyncFunction(r){return"[object AsyncFunction]"===ObjectToString(r)}function isMapIterator(r){return"[object Map Iterator]"===ObjectToString(r)}function isSetIterator(r){return"[object Set Iterator]"===ObjectToString(r)}function isGeneratorObject(r){return"[object Generator]"===ObjectToString(r)}function isWebAssemblyCompiledModule(r){return"[object WebAssembly.Module]"===ObjectToString(r)}function isNumberObject(r){return checkBoxedPrimitive(r,numberValue)}function isStringObject(r){return checkBoxedPrimitive(r,stringValue)}function isBooleanObject(r){return checkBoxedPrimitive(r,booleanValue)}function isBigIntObject(r){return BigIntSupported&&checkBoxedPrimitive(r,bigIntValue)}function isSymbolObject(r){return SymbolSupported&&checkBoxedPrimitive(r,symbolValue)}function isBoxedPrimitive(r){return isNumberObject(r)||isStringObject(r)||isBooleanObject(r)||isBigIntObject(r)||isSymbolObject(r)}function isAnyArrayBuffer(r){return"undefined"!=typeof Uint8Array&&(isArrayBuffer(r)||isSharedArrayBuffer(r))}exports.isSharedArrayBuffer=isSharedArrayBuffer,exports.isAsyncFunction=isAsyncFunction,exports.isMapIterator=isMapIterator,exports.isSetIterator=isSetIterator,exports.isGeneratorObject=isGeneratorObject,exports.isWebAssemblyCompiledModule=isWebAssemblyCompiledModule,exports.isNumberObject=isNumberObject,exports.isStringObject=isStringObject,exports.isBooleanObject=isBooleanObject,exports.isBigIntObject=isBigIntObject,exports.isSymbolObject=isSymbolObject,exports.isBoxedPrimitive=isBoxedPrimitive,exports.isAnyArrayBuffer=isAnyArrayBuffer,["isProxy","isExternal","isModuleNamespaceObject"].forEach(function(r){Object.defineProperty(exports,r,{enumerable:!1,value:function(){throw new Error(r+" is not supported in userland")}})});
+// Currently in sync with Node.js lib/internal/util/types.js
+// https://github.com/nodejs/node/commit/112cc7c27551254aa2b17098fb774867f05ed0d9
+
+
+var isArgumentsObject = require("../../is-arguments/index.js");
+var isGeneratorFunction = require("../../is-generator-function/index.js");
+var whichTypedArray = require("../../which-typed-array/index.js");
+var isTypedArray = require("../../is-typed-array/index.js");
+
+function uncurryThis(f) {
+  return f.call.bind(f);
+}
+
+var BigIntSupported = typeof BigInt !== 'undefined';
+var SymbolSupported = typeof Symbol !== 'undefined';
+
+var ObjectToString = uncurryThis(Object.prototype.toString);
+
+var numberValue = uncurryThis(Number.prototype.valueOf);
+var stringValue = uncurryThis(String.prototype.valueOf);
+var booleanValue = uncurryThis(Boolean.prototype.valueOf);
+
+if (BigIntSupported) {
+  var bigIntValue = uncurryThis(BigInt.prototype.valueOf);
+}
+
+if (SymbolSupported) {
+  var symbolValue = uncurryThis(Symbol.prototype.valueOf);
+}
+
+function checkBoxedPrimitive(value, prototypeValueOf) {
+  if (typeof value !== 'object') {
+    return false;
+  }
+  try {
+    prototypeValueOf(value);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+exports.isArgumentsObject = isArgumentsObject;
+exports.isGeneratorFunction = isGeneratorFunction;
+exports.isTypedArray = isTypedArray;
+
+// Taken from here and modified for better browser support
+// https://github.com/sindresorhus/p-is-promise/blob/cda35a513bda03f977ad5cde3a079d237e82d7ef/index.js
+function isPromise(input) {
+  return (
+
+    typeof Promise !== 'undefined' &&
+    input instanceof Promise ||
+
+
+    input !== null &&
+    typeof input === 'object' &&
+    typeof input.then === 'function' &&
+    typeof input.catch === 'function');
+
+
+}
+exports.isPromise = isPromise;
+
+function isArrayBufferView(value) {
+  if (typeof ArrayBuffer !== 'undefined' && ArrayBuffer.isView) {
+    return ArrayBuffer.isView(value);
+  }
+
+  return (
+    isTypedArray(value) ||
+    isDataView(value));
+
+}
+exports.isArrayBufferView = isArrayBufferView;
+
+
+function isUint8Array(value) {
+  return whichTypedArray(value) === 'Uint8Array';
+}
+exports.isUint8Array = isUint8Array;
+
+function isUint8ClampedArray(value) {
+  return whichTypedArray(value) === 'Uint8ClampedArray';
+}
+exports.isUint8ClampedArray = isUint8ClampedArray;
+
+function isUint16Array(value) {
+  return whichTypedArray(value) === 'Uint16Array';
+}
+exports.isUint16Array = isUint16Array;
+
+function isUint32Array(value) {
+  return whichTypedArray(value) === 'Uint32Array';
+}
+exports.isUint32Array = isUint32Array;
+
+function isInt8Array(value) {
+  return whichTypedArray(value) === 'Int8Array';
+}
+exports.isInt8Array = isInt8Array;
+
+function isInt16Array(value) {
+  return whichTypedArray(value) === 'Int16Array';
+}
+exports.isInt16Array = isInt16Array;
+
+function isInt32Array(value) {
+  return whichTypedArray(value) === 'Int32Array';
+}
+exports.isInt32Array = isInt32Array;
+
+function isFloat32Array(value) {
+  return whichTypedArray(value) === 'Float32Array';
+}
+exports.isFloat32Array = isFloat32Array;
+
+function isFloat64Array(value) {
+  return whichTypedArray(value) === 'Float64Array';
+}
+exports.isFloat64Array = isFloat64Array;
+
+function isBigInt64Array(value) {
+  return whichTypedArray(value) === 'BigInt64Array';
+}
+exports.isBigInt64Array = isBigInt64Array;
+
+function isBigUint64Array(value) {
+  return whichTypedArray(value) === 'BigUint64Array';
+}
+exports.isBigUint64Array = isBigUint64Array;
+
+function isMapToString(value) {
+  return ObjectToString(value) === '[object Map]';
+}
+isMapToString.working =
+typeof Map !== 'undefined' &&
+isMapToString(new Map());
+
+
+function isMap(value) {
+  if (typeof Map === 'undefined') {
+    return false;
+  }
+
+  return isMapToString.working ?
+  isMapToString(value) :
+  value instanceof Map;
+}
+exports.isMap = isMap;
+
+function isSetToString(value) {
+  return ObjectToString(value) === '[object Set]';
+}
+isSetToString.working =
+typeof Set !== 'undefined' &&
+isSetToString(new Set());
+
+function isSet(value) {
+  if (typeof Set === 'undefined') {
+    return false;
+  }
+
+  return isSetToString.working ?
+  isSetToString(value) :
+  value instanceof Set;
+}
+exports.isSet = isSet;
+
+function isWeakMapToString(value) {
+  return ObjectToString(value) === '[object WeakMap]';
+}
+isWeakMapToString.working =
+typeof WeakMap !== 'undefined' &&
+isWeakMapToString(new WeakMap());
+
+function isWeakMap(value) {
+  if (typeof WeakMap === 'undefined') {
+    return false;
+  }
+
+  return isWeakMapToString.working ?
+  isWeakMapToString(value) :
+  value instanceof WeakMap;
+}
+exports.isWeakMap = isWeakMap;
+
+function isWeakSetToString(value) {
+  return ObjectToString(value) === '[object WeakSet]';
+}
+isWeakSetToString.working =
+typeof WeakSet !== 'undefined' &&
+isWeakSetToString(new WeakSet());
+
+function isWeakSet(value) {
+  return isWeakSetToString(value);
+}
+exports.isWeakSet = isWeakSet;
+
+function isArrayBufferToString(value) {
+  return ObjectToString(value) === '[object ArrayBuffer]';
+}
+isArrayBufferToString.working =
+typeof ArrayBuffer !== 'undefined' &&
+isArrayBufferToString(new ArrayBuffer());
+
+function isArrayBuffer(value) {
+  if (typeof ArrayBuffer === 'undefined') {
+    return false;
+  }
+
+  return isArrayBufferToString.working ?
+  isArrayBufferToString(value) :
+  value instanceof ArrayBuffer;
+}
+exports.isArrayBuffer = isArrayBuffer;
+
+function isDataViewToString(value) {
+  return ObjectToString(value) === '[object DataView]';
+}
+isDataViewToString.working =
+typeof ArrayBuffer !== 'undefined' &&
+typeof DataView !== 'undefined' &&
+isDataViewToString(new DataView(new ArrayBuffer(1), 0, 1));
+
+function isDataView(value) {
+  if (typeof DataView === 'undefined') {
+    return false;
+  }
+
+  return isDataViewToString.working ?
+  isDataViewToString(value) :
+  value instanceof DataView;
+}
+exports.isDataView = isDataView;
+
+function isSharedArrayBufferToString(value) {
+  return ObjectToString(value) === '[object SharedArrayBuffer]';
+}
+isSharedArrayBufferToString.working =
+typeof SharedArrayBuffer !== 'undefined' &&
+isSharedArrayBufferToString(new SharedArrayBuffer());
+
+function isSharedArrayBuffer(value) {
+  if (typeof SharedArrayBuffer === 'undefined') {
+    return false;
+  }
+
+  return isSharedArrayBufferToString.working ?
+  isSharedArrayBufferToString(value) :
+  value instanceof SharedArrayBuffer;
+}
+exports.isSharedArrayBuffer = isSharedArrayBuffer;
+
+function isAsyncFunction(value) {
+  return ObjectToString(value) === '[object AsyncFunction]';
+}
+exports.isAsyncFunction = isAsyncFunction;
+
+function isMapIterator(value) {
+  return ObjectToString(value) === '[object Map Iterator]';
+}
+exports.isMapIterator = isMapIterator;
+
+function isSetIterator(value) {
+  return ObjectToString(value) === '[object Set Iterator]';
+}
+exports.isSetIterator = isSetIterator;
+
+function isGeneratorObject(value) {
+  return ObjectToString(value) === '[object Generator]';
+}
+exports.isGeneratorObject = isGeneratorObject;
+
+function isWebAssemblyCompiledModule(value) {
+  return ObjectToString(value) === '[object WebAssembly.Module]';
+}
+exports.isWebAssemblyCompiledModule = isWebAssemblyCompiledModule;
+
+function isNumberObject(value) {
+  return checkBoxedPrimitive(value, numberValue);
+}
+exports.isNumberObject = isNumberObject;
+
+function isStringObject(value) {
+  return checkBoxedPrimitive(value, stringValue);
+}
+exports.isStringObject = isStringObject;
+
+function isBooleanObject(value) {
+  return checkBoxedPrimitive(value, booleanValue);
+}
+exports.isBooleanObject = isBooleanObject;
+
+function isBigIntObject(value) {
+  return BigIntSupported && checkBoxedPrimitive(value, bigIntValue);
+}
+exports.isBigIntObject = isBigIntObject;
+
+function isSymbolObject(value) {
+  return SymbolSupported && checkBoxedPrimitive(value, symbolValue);
+}
+exports.isSymbolObject = isSymbolObject;
+
+function isBoxedPrimitive(value) {
+  return (
+    isNumberObject(value) ||
+    isStringObject(value) ||
+    isBooleanObject(value) ||
+    isBigIntObject(value) ||
+    isSymbolObject(value));
+
+}
+exports.isBoxedPrimitive = isBoxedPrimitive;
+
+function isAnyArrayBuffer(value) {
+  return typeof Uint8Array !== 'undefined' && (
+  isArrayBuffer(value) ||
+  isSharedArrayBuffer(value));
+
+}
+exports.isAnyArrayBuffer = isAnyArrayBuffer;
+
+['isProxy', 'isExternal', 'isModuleNamespaceObject'].forEach(function (method) {
+  Object.defineProperty(exports, method, {
+    enumerable: false,
+    value: function () {
+      throw new Error(method + ' is not supported in userland');
+    } });
+
+});

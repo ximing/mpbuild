@@ -1,1 +1,3 @@
-"use strict";App({});
+"use strict";
+
+App({});

@@ -1,1 +1,31 @@
-var GeneratorFunction,toStr=Object.prototype.toString,fnToStr=Function.prototype.toString,isFnRegex=/^\s*(?:function)?\*/,hasToStringTag="function"==typeof Symbol&&"symbol"==typeof Symbol.toStringTag,getProto=Object.getPrototypeOf,getGeneratorFunc=function(){if(!hasToStringTag)return!1;try{return Function("return function*() {}")()}catch(t){}};module.exports=function(t){return"function"==typeof t&&(!!isFnRegex.test(fnToStr.call(t))||(hasToStringTag?!!getProto&&(void 0===GeneratorFunction&&(o=getGeneratorFunc(),GeneratorFunction=!!o&&getProto(o)),getProto(t)===GeneratorFunction):"[object GeneratorFunction]"===toStr.call(t)));var o};
+
+var toStr = Object.prototype.toString;
+var fnToStr = Function.prototype.toString;
+var isFnRegex = /^\s*(?:function)?\*/;
+var hasToStringTag = typeof Symbol === 'function' && typeof Symbol.toStringTag === 'symbol';
+var getProto = Object.getPrototypeOf;
+var getGeneratorFunc = function () {// eslint-disable-line consistent-return
+  if (!hasToStringTag) {
+    return false;
+  }
+  try {
+    return Function('return function*() {}')();
+  } catch (e) {
+  }
+};
+var generatorFunc = getGeneratorFunc();
+var GeneratorFunction = getProto && generatorFunc ? getProto(generatorFunc) : false;
+
+module.exports = function isGeneratorFunction(fn) {
+  if (typeof fn !== 'function') {
+    return false;
+  }
+  if (isFnRegex.test(fnToStr.call(fn))) {
+    return true;
+  }
+  if (!hasToStringTag) {
+    var str = toStr.call(fn);
+    return str === '[object GeneratorFunction]';
+  }
+  return getProto && getProto(fn) === GeneratorFunction;
+};

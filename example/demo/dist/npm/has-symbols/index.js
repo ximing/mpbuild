@@ -1,1 +1,12 @@
-var origSymbol="undefined"!=typeof Symbol&&Symbol,hasSymbolSham=require("./shams.js");module.exports=function(){return"function"==typeof origSymbol&&("function"==typeof Symbol&&("symbol"==typeof origSymbol("foo")&&("symbol"==typeof Symbol("bar")&&hasSymbolSham())))};
+
+var origSymbol = global.Symbol;
+var hasSymbolSham = require("./shams.js");
+
+module.exports = function hasNativeSymbols() {
+  if (typeof origSymbol !== 'function') {return false;}
+  if (typeof Symbol !== 'function') {return false;}
+  if (typeof origSymbol('foo') !== 'symbol') {return false;}
+  if (typeof Symbol('bar') !== 'symbol') {return false;}
+
+  return hasSymbolSham();
+};

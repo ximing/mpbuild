@@ -1,1 +1,3 @@
-module.exports=function(e){return e instanceof Buffer};
+module.exports = function isBuffer(arg) {
+  return arg instanceof Buffer;
+};
