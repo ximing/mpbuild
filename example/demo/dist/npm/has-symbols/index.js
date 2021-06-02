@@ -1,1 +1,1 @@
-var origSymbol=global.Symbol,hasSymbolSham=require("./shams.js");module.exports=function(){return"function"==typeof origSymbol&&("function"==typeof Symbol&&("symbol"==typeof origSymbol("foo")&&("symbol"==typeof Symbol("bar")&&hasSymbolSham())))};
+var origSymbol="undefined"!=typeof Symbol&&Symbol,hasSymbolSham=require("./shams.js");module.exports=function(){return"function"==typeof origSymbol&&("function"==typeof Symbol&&("symbol"==typeof origSymbol("foo")&&("symbol"==typeof Symbol("bar")&&hasSymbolSham())))};
