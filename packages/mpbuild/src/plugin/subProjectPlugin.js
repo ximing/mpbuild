@@ -37,7 +37,7 @@ module.exports = class SubProjectPlugin {
                 // 没有解析到resolveLib 就需要进一步的去看 子仓库alias是否能寻找到文件
                 for (let i = 0, l = this.subProjects.length; i < l; i++) {
                     const { alias } = this.subProjects[i];
-                    const outSideResolveLib = resolveAlias(lib, exts, alias);
+                    const outSideResolveLib = resolveAlias(lib, exts, alias, opt);
                     opt.resolveLib = outSideResolveLib;
                     return opt;
                 }

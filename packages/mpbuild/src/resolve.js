@@ -23,19 +23,25 @@ function exists(file) {
     return false;
 }
 
-const resolveAlias = (lib, exts, alias) => {
+const resolveAlias = (lib, exts, alias, asset) => {
     const aliasArr = Object.keys(alias);
     for (let i = 0; i < aliasArr.length; i++) {
         if (lib.startsWith(aliasArr[i])) {
             const re = lib.replace(aliasArr[i], '');
             for (let j = 0; j < exts.length; j++) {
-                let filePath = path.join(alias[aliasArr[i]], re);
+                let aliasTarget = alias[aliasArr[i]];
+                if(typeof aliasTarget === 'function') {
+                    aliasTarget = aliasTarget(asset, lib);
+                    // eslint-disable-next-line no-continue
+                    if(!aliasTarget) continue;
+                }
+                let filePath = path.join(aliasTarget, re);
                 filePath += filePath.endsWith(exts[j]) ? '' : exts[j];
                 if (exists(filePath)) {
                     return filePath;
                 }
                 filePath =
-                    path.join(alias[aliasArr[i]], re, 'index') +
+                    path.join(aliasTarget, re, 'index') +
                     (re.endsWith(exts[j]) ? '' : exts[j]);
                 if (exists(filePath)) {
                     return filePath;
@@ -46,7 +52,7 @@ const resolveAlias = (lib, exts, alias) => {
 };
 
 module.exports = (lib, asset, exts = [], src = '', alias = {}, ignoreNotFound = false) => {
-    let libPath = resolveAlias(lib, exts, alias);
+    let libPath = resolveAlias(lib, exts, alias, asset);
     if (libPath) return libPath;
     if (lib[0] === '.') {
         libPath = resolveSync(lib, asset.dir, exts);
