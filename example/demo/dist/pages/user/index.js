@@ -1,1 +1,3 @@
-"use strict";Page({});
+"use strict";
+
+Page({});

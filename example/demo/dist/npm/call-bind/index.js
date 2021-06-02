@@ -1,1 +1,32 @@
-var bind=require("../function-bind/index.js"),GetIntrinsic=require("../get-intrinsic/index.js"),$apply=GetIntrinsic("%Function.prototype.apply%"),$call=GetIntrinsic("%Function.prototype.call%"),$reflectApply=GetIntrinsic("%Reflect.apply%",!0)||bind.call($call,$apply),$gOPD=GetIntrinsic("%Object.getOwnPropertyDescriptor%",!0),$defineProperty=GetIntrinsic("%Object.defineProperty%",!0),$max=GetIntrinsic("%Math.max%");if($defineProperty)try{$defineProperty({},"a",{value:1})}catch(e){$defineProperty=null}module.exports=function(e){var t=$reflectApply(bind,$call,arguments);return $gOPD&&$defineProperty&&$gOPD(t,"length").configurable&&$defineProperty(t,"length",{value:1+$max(0,e.length-(arguments.length-1))}),t};var applyBind=function(){return $reflectApply(bind,$apply,arguments)};$defineProperty?$defineProperty(module.exports,"apply",{value:applyBind}):module.exports.apply=applyBind;
+
+var bind = require("../function-bind/index.js");
+var GetIntrinsic = require("../get-intrinsic/index.js");
+
+var $apply = GetIntrinsic('%Function.prototype.apply%');
+var $call = GetIntrinsic('%Function.prototype.call%');
+var $reflectApply = GetIntrinsic('%Reflect.apply%', true) || bind.call($call, $apply);
+
+var $defineProperty = GetIntrinsic('%Object.defineProperty%', true);
+
+if ($defineProperty) {
+  try {
+    $defineProperty({}, 'a', { value: 1 });
+  } catch (e) {
+    // IE 8 has a broken defineProperty
+    $defineProperty = null;
+  }
+}
+
+module.exports = function callBind() {
+  return $reflectApply(bind, $call, arguments);
+};
+
+var applyBind = function applyBind() {
+  return $reflectApply(bind, $apply, arguments);
+};
+
+if ($defineProperty) {
+  $defineProperty(module.exports, 'apply', { value: applyBind });
+} else {
+  module.exports.apply = applyBind;
+}

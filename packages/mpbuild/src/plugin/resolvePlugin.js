@@ -23,7 +23,7 @@ module.exports = class ResolvePlugin {
                 }
             }
             if (!resolveLib) {
-                console.error(chalk.red('[mpbuild resolve]'), asset, lib, exts);
+                console.error(chalk.red('[mpbuild resolve plugin]'), asset, lib, exts);
             }
             opt.resolveLib = resolveLib;
             return opt;

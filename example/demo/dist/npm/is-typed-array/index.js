@@ -1,1 +1,60 @@
-var forEach=require("../foreach/index.js"),availableTypedArrays=require("../available-typed-arrays/index.js"),callBound=require("../call-bind/callBound.js"),$toString=callBound("Object.prototype.toString"),hasSymbols=require("../has-symbols/index.js")(),hasToStringTag=hasSymbols&&"symbol"==typeof Symbol.toStringTag,typedArrays=availableTypedArrays(),$indexOf=callBound("Array.prototype.indexOf",!0)||function(r,t){for(var e=0;e<r.length;e+=1)if(r[e]===t)return e;return-1},$slice=callBound("String.prototype.slice"),toStrTags={},gOPD=require("../es-abstract/helpers/getOwnPropertyDescriptor.js"),getPrototypeOf=Object.getPrototypeOf;hasToStringTag&&gOPD&&getPrototypeOf&&forEach(typedArrays,function(r){var t=new global[r];if(!(Symbol.toStringTag in t))throw new EvalError("this engine has support for Symbol.toStringTag, but "+r+" does not have the property! Please report this.");var e=getPrototypeOf(t),t=gOPD(e,Symbol.toStringTag);t||(e=getPrototypeOf(e),t=gOPD(e,Symbol.toStringTag)),toStrTags[r]=t.get});var tryTypedArrays=function(e){var o=!1;return forEach(toStrTags,function(r,t){if(!o)try{o=r.call(e)===t}catch(r){}}),o};module.exports=function(r){if(!r||"object"!=typeof r)return!1;if(hasToStringTag)return!!gOPD&&tryTypedArrays(r);r=$slice($toString(r),8,-1);return-1<$indexOf(typedArrays,r)};
+
+var forEach = require("../foreach/index.js");
+var availableTypedArrays = require("../available-typed-arrays/index.js");
+var callBound = require("../call-bind/callBound.js");
+
+var $toString = callBound('Object.prototype.toString');
+var hasSymbols = require("../has-symbols/index.js")();
+var hasToStringTag = hasSymbols && typeof Symbol.toStringTag === 'symbol';
+
+var typedArrays = availableTypedArrays();
+
+var $indexOf = callBound('Array.prototype.indexOf', true) || function indexOf(array, value) {
+  for (var i = 0; i < array.length; i += 1) {
+    if (array[i] === value) {
+      return i;
+    }
+  }
+  return -1;
+};
+var $slice = callBound('String.prototype.slice');
+var toStrTags = {};
+var gOPD = require("../es-abstract/helpers/getOwnPropertyDescriptor.js");
+var getPrototypeOf = Object.getPrototypeOf; // require('getprototypeof');
+if (hasToStringTag && gOPD && getPrototypeOf) {
+  forEach(typedArrays, function (typedArray) {
+    var arr = new global[typedArray]();
+    if (!(Symbol.toStringTag in arr)) {
+      throw new EvalError('this engine has support for Symbol.toStringTag, but ' + typedArray + ' does not have the property! Please report this.');
+    }
+    var proto = getPrototypeOf(arr);
+    var descriptor = gOPD(proto, Symbol.toStringTag);
+    if (!descriptor) {
+      var superProto = getPrototypeOf(proto);
+      descriptor = gOPD(superProto, Symbol.toStringTag);
+    }
+    toStrTags[typedArray] = descriptor.get;
+  });
+}
+
+var tryTypedArrays = function tryAllTypedArrays(value) {
+  var anyTrue = false;
+  forEach(toStrTags, function (getter, typedArray) {
+    if (!anyTrue) {
+      try {
+        anyTrue = getter.call(value) === typedArray;
+      } catch (e) {/**/}
+    }
+  });
+  return anyTrue;
+};
+
+module.exports = function isTypedArray(value) {
+  if (!value || typeof value !== 'object') {return false;}
+  if (!hasToStringTag) {
+    var tag = $slice($toString(value), 8, -1);
+    return $indexOf(typedArrays, tag) > -1;
+  }
+  if (!gOPD) {return false;}
+  return tryTypedArrays(value);
+};

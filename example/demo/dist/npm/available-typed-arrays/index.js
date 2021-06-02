@@ -1,1 +1,20 @@
-var possibleNames=["BigInt64Array","BigUint64Array","Float32Array","Float64Array","Int16Array","Int32Array","Int8Array","Uint16Array","Uint32Array","Uint8Array","Uint8ClampedArray"];module.exports=function(){for(var r=[],a=0;a<possibleNames.length;a++)"function"==typeof global[possibleNames[a]]&&(r[r.length]=possibleNames[a]);return r};
+
+var filter = require("../array-filter/index.js");
+
+module.exports = function availableTypedArrays() {
+  return filter([
+  'BigInt64Array',
+  'BigUint64Array',
+  'Float32Array',
+  'Float64Array',
+  'Int16Array',
+  'Int32Array',
+  'Int8Array',
+  'Uint16Array',
+  'Uint32Array',
+  'Uint8Array',
+  'Uint8ClampedArray'],
+  function (typedArray) {
+    return typeof global[typedArray] === 'function';
+  });
+};

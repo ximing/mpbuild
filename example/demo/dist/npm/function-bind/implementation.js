@@ -1,1 +1,51 @@
-var ERROR_MESSAGE="Function.prototype.bind called on incompatible ",slice=Array.prototype.slice,toStr=Object.prototype.toString,funcType="[object Function]";module.exports=function(n){var o=this;if("function"!=typeof o||toStr.call(o)!==funcType)throw new TypeError(ERROR_MESSAGE+o);for(var e,t,r=slice.call(arguments,1),c=Math.max(0,o.length-r.length),p=[],i=0;i<c;i++)p.push("$"+i);return e=Function("binder","return function ("+p.join(",")+"){ return binder.apply(this,arguments); }")(function(){if(this instanceof e){var t=o.apply(this,r.concat(slice.call(arguments)));return Object(t)===t?t:this}return o.apply(n,r.concat(slice.call(arguments)))}),o.prototype&&((t=function(){}).prototype=o.prototype,e.prototype=new t,t.prototype=null),e};
+
+/* eslint no-invalid-this: 1 */
+
+var ERROR_MESSAGE = 'Function.prototype.bind called on incompatible ';
+var slice = Array.prototype.slice;
+var toStr = Object.prototype.toString;
+var funcType = '[object Function]';
+
+module.exports = function bind(that) {
+  var target = this;
+  if (typeof target !== 'function' || toStr.call(target) !== funcType) {
+    throw new TypeError(ERROR_MESSAGE + target);
+  }
+  var args = slice.call(arguments, 1);
+
+  var bound;
+  var binder = function () {
+    if (this instanceof bound) {
+      var result = target.apply(
+      this,
+      args.concat(slice.call(arguments)));
+
+      if (Object(result) === result) {
+        return result;
+      }
+      return this;
+    } else {
+      return target.apply(
+      that,
+      args.concat(slice.call(arguments)));
+
+    }
+  };
+
+  var boundLength = Math.max(0, target.length - args.length);
+  var boundArgs = [];
+  for (var i = 0; i < boundLength; i++) {
+    boundArgs.push('$' + i);
+  }
+
+  bound = Function('binder', 'return function (' + boundArgs.join(',') + '){ return binder.apply(this,arguments); }')(binder);
+
+  if (target.prototype) {
+    var Empty = function Empty() {};
+    Empty.prototype = target.prototype;
+    bound.prototype = new Empty();
+    Empty.prototype = null;
+  }
+
+  return bound;
+};

@@ -8,7 +8,10 @@ const TestPlugin = require('./plugins/testPlugin');
 
 const minimize_path = !!process.env.minimize_path;
 const dist = minimize_path ? 'minimize_path_dist' : 'dist';
-const projectNames = ['/Users/mtdp/workplace/mpbuild/example/projects/one', '/Users/mtdp/workplace/mpbuild/example/projects/two'];
+const projectNames = [
+    path.join(__dirname, '../projects/one'),
+    path.join(__dirname, '../projects/two'),
+];
 module.exports = {
     // 入口配置文件
     entry: './entry.js',
@@ -20,12 +23,12 @@ module.exports = {
         '@utils': path.join(__dirname, 'src/utils'),
         '@root': path.join(__dirname, 'src'),
         '@components': path.join(__dirname, 'src/components'),
-        '@/': function(asset) {
+        '@/': function (asset, opt) {
             const { filePath } = asset;
             return projectNames.reduce((projectPath) => {
-                if(filePath.includes(projectPath)) return projectPath;
+                if (filePath.includes(projectPath)) return projectPath;
             });
-        }
+        },
     },
     output: {
         path: path.join(__dirname, dist),
@@ -35,9 +38,9 @@ module.exports = {
         // 如果需要压缩，配置 JS 固话需要过滤的 comment
         minimize: {
             // js: needUglify ? { output: { comments: /javascript-obfuscator:disable|javascript-obfuscator:enable/} } : false,
-            js: true,
-            wxml: true,
-            json: true,
+            js: false,
+            wxml: false,
+            json: false,
             path: minimize_path,
         },
     },

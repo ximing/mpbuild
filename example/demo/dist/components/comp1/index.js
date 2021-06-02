@@ -1,1 +1,5 @@
-"use strict";Component({data:{wx:1}});
+"use strict";
+
+Component({
+  data: {
+    wx: 1 } });
