@@ -1,5 +1,5 @@
 
-var origSymbol = global.Symbol;
+var origSymbol = typeof Symbol !== 'undefined' && Symbol;
 var hasSymbolSham = require("./shams.js");
 
 module.exports = function hasNativeSymbols() {
