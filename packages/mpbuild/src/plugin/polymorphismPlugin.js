@@ -18,6 +18,7 @@ module.exports = class PolymorphismPlugin {
     }
 
     apply(mpb) {
+        mpb.platform = this.platform;
         mpb.hooks.extension.tap('extension', (exts) => {
             if (this.platform) {
                 Object.keys(exts).forEach((item) => {
