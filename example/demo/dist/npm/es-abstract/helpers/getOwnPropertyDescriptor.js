@@ -1,5 +1,5 @@
 
-var GetIntrinsic = require("../GetIntrinsic.js");
+var GetIntrinsic = require("../../get-intrinsic/index.js");
 
 var $gOPD = GetIntrinsic('%Object.getOwnPropertyDescriptor%');
 if ($gOPD) {

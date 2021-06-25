@@ -5,6 +5,13 @@ const path = require('path');
 
 const { assetType } = require('../consts');
 
+function requireFromString(src, filename) {
+    var Module = module.constructor;
+    var m = new Module();
+    m._compile(src, filename);
+    return m.exports;
+}
+
 module.exports = class HandleJSONComponentDep {
     constructor() {
         this.mainPkgPathMap = {};
@@ -15,7 +22,8 @@ module.exports = class HandleJSONComponentDep {
             // const key = asset.getMeta('mbp-scan-json-dep');
             // TODO 并不是所有JSON都要进行这个判定的，先通过usingComponents这个key来判定是否是依赖，但是有点硬核，后面想下有没有更好的办法，上面通过 meta的方式也不行，主要是在watch的时候如何对新的asset设置meta
             if (/\.config\.js$/.test(asset.path) && asset.contents) {
-                const code = require(asset.path);
+                // const code = require(asset.path);
+                const code = requireFromString(asset.contents, asset.path);
                 if (code.usingComponents) {
                     asset.contents = JSON.stringify(code);
                     asset.outputFilePath = asset.outputFilePath.replace('.config.js', '.json');
