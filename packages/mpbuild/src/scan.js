@@ -48,8 +48,10 @@ module.exports = class ScanDep {
                             chalk.red('[scan addAssetByEXT error]'),
                             '页面类型文件: ',
                             key,
-                            '页面路径: ',
+                            '源码路径: ',
                             prefixPath,
+                            '输出路径: ',
+                            prefixOutputPath,
                             '所属子包: ',
                             root
                         );

@@ -66,9 +66,12 @@ module.exports = class HandleJSONComponentDep {
                                     const outputPathRes = path.parse(outputPath);
                                     const componentPath = path
                                         .join(outputPathRes.dir, outputPathRes.name)
-                                        .replace('.json', '');
+                                        .replace('.json', '')
+                                        .replace(`.${mpb.platform}`, '');
                                     mpb.scan.addAssetByEXT(
-                                        path.join(filePathRes.dir, filePathRes.name),
+                                        path
+                                            .join(filePathRes.dir, filePathRes.name)
+                                            .replace(`.${mpb.platform}`, ''),
                                         componentPath,
                                         assetType.component,
                                         undefined,
