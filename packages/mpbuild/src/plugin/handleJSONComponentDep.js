@@ -78,7 +78,16 @@ module.exports = class HandleJSONComponentDep {
                                         root,
                                         asset.filePath
                                     );
-                                    const compPath = componentPath.replace(mpb.dest, '');
+                                    let compPath = componentPath.replace(mpb.dest, '');
+                                    if (
+                                        mpb.config.output.component &&
+                                        mpb.config.output.component.relative
+                                    ) {
+                                        compPath = path.relative(
+                                            path.parse(asset.outputFilePath).dir,
+                                            componentPath
+                                        );
+                                    }
                                     if (!root) {
                                         this.mainPkgPathMap[filePath] = compPath;
                                     }
