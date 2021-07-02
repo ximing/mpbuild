@@ -4,3 +4,4 @@
 <!-- @ifdef mt -->
 <view>mt index</view>
 <!-- @endif -->
+<c1></c1>
