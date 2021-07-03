@@ -5,7 +5,6 @@ const postcss = require('postcss');
 const path = require('path');
 
 module.exports = class HandleWXSSDep {
-
     apply(mpb) {
         mpb.hooks.beforeEmitFile.tapPromise('HandleWXSSDep', async (asset) => {
             if (/\.wxss$/.test(asset.name)) {
@@ -44,9 +43,19 @@ module.exports = class HandleWXSSDep {
                         );
                         let index = 0;
                         root.walkAtRules('import', (rule) => {
-                            rule.params = JSON.stringify(
-                                path.relative(path.dirname(asset.outputFilePath), distDeps[index])
+                            let depPath = path.relative(
+                                path.dirname(asset.outputFilePath),
+                                distDeps[index]
                             );
+                            if (
+                                mpb.config.output.component &&
+                                mpb.config.output.component.relative
+                            ) {
+                                if (depPath[0] !== '.' && depPath[0] !== '/') {
+                                    depPath = `./${depPath}`;
+                                }
+                            }
+                            rule.params = JSON.stringify(depPath);
                             index++;
                         });
                         asset.contents = root.toString();

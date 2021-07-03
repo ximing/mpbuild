@@ -1,2 +1,4 @@
-<view>user</view>
+<import  src="./user.wxml"/>
+<wxs  src="./user.wxs" module="user"/>
+<view >user</view>
 
