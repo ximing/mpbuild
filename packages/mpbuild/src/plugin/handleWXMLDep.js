@@ -78,7 +78,7 @@ module.exports = class HandleWXMLDep {
                                 resolveLib: '',
                                 asset,
                                 resolveType: 'wxml',
-                                exts: ['.wxs'].concat(mpb.exts.wxml),
+                                exts: mpb.exts.wxml.concat(mpb.exts.wxs),
                             });
                             const filePath = res.resolveLib;
 
