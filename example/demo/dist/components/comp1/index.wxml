@@ -1,2 +1,1 @@
-<import  src="tpl.wx.wxml"/>
-<view >comp1</view>
+<import src="tpl.wx.wxml"/><view>comp1</view>

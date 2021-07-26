@@ -1,2 +1,16 @@
-<view>user</view>
+user
+<includex src="@root/template/template1">
+    <view slot="slot1">
+        1111
+    </view>
+    <view> default </view>
+    <view> defalt2 </view>
+    others
+    <view slot="slot2">
+        222111111
+    </view>
+</includex>
 
+<includex src="@root/template/template1" />
+
+<include src="@root/template/template4" />

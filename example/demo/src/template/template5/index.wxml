@@ -1,0 +1,19 @@
+---------------template5-------------
+<comp5></comp5>
+<view>
+    slot1:
+    <slot name="slot1">
+
+    </slot>
+    slot2:
+    <includex src="@root/template/template2">
+        <slot name="slot2">
+
+        </slot>
+    </includex>
+    default:
+    <slot></slot>
+</view>
+
+<includex src="@root/template/template2" />
+---------------template5-------------
