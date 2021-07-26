@@ -1,0 +1,10 @@
+---------------template2-------------
+<view>
+1111111
+  default2:
+  <slot></slot>
+</view>
+---------------template2-------------
+<!-- <includex src="@root/template/template3">
+    root/template/template3
+</includex> -->

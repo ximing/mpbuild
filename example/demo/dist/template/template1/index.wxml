@@ -1,0 +1,1 @@
+---------------template1-------------<comp4/><view>slot1:slot2:---------------template2-------------<view>1 default2:</view>---------------template2-------------default:</view><include src="../template2/index.wxml"/>---------------template1-------------

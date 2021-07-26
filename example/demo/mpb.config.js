@@ -5,6 +5,7 @@ const path = require('path');
 
 const MPB = require('mpbuild');
 const TestPlugin = require('./plugins/testPlugin');
+const IncludeExtension = require('./plugins/includeExtension');
 
 const minimize_path = !!process.env.minimize_path;
 const dist = minimize_path ? 'minimize_path_dist' : 'dist';
@@ -39,7 +40,7 @@ module.exports = {
         minimize: {
             // js: needUglify ? { output: { comments: /javascript-obfuscator:disable|javascript-obfuscator:enable/} } : false,
             js: false,
-            wxml: false,
+            wxml: true,
             json: false,
             path: minimize_path,
         },
@@ -105,6 +106,7 @@ module.exports = {
         ],
     },
     plugins: [
+        new IncludeExtension(),
         new MPB.PolymorphismPlugin({ platform: 'wx', blockcode: true }),
         new MPB.CleanMbpPlugin({
             path: [`${dist}/**/*`, `!${dist}/project.config.json`],
