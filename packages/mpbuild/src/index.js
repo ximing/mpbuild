@@ -19,6 +19,7 @@ const log = require('./log');
 const Scan = require('./scan');
 const Watching = require('./watching');
 const Helper = require('./helper');
+const Groups = require('./groups');
 const HandleJSDep = require('./plugin/handleJSDep');
 const WatchEntry = require('./plugin/watchEntry');
 const HandleJSONComponentDep = require('./plugin/handleJSONComponentDep');
@@ -68,6 +69,10 @@ class MpBuilder {
             rewriteOutsideOutputPath: new SyncWaterfallHook(['opt']),
             resolve: new SyncWaterfallHook(['opt']),
             resolveOutside: new SyncWaterfallHook(['opt']),
+            actionBeforeHandleOnWatching: new AsyncSeriesBailHook(['asset', 'type']),
+            beforeRenderFile: new AsyncSeriesWaterfallHook(['asset']),
+            beforeRenderGroup: new AsyncSeriesWaterfallHook(['group']),
+            // beforeAssetRender: new AsyncSeriesWaterfallHook(['asset']),
         };
         this.optimization = {
             minimize: true,
@@ -77,6 +82,7 @@ class MpBuilder {
             await this.hooks.afterCompile.promise(this);
         });
         // 保证顺序
+        this.groups = new Groups(this);
         this.helper = new Helper(this);
         this.loaderManager = new LoaderManager(this);
         this.scan = new Scan(this);
