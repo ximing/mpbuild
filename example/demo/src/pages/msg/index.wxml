@@ -10,3 +10,11 @@ user
         222111111
     </view>
 </includex>
+
+<includex src="@root/template/template2">
+    11111111
+</includex>
+
+<includex src="@root/template/template2">
+    22222222
+</includex>

@@ -4,6 +4,7 @@
   default2:
   <slot></slot>
 </view>
+<includex src="@root/template/template4" />
 ---------------template2-------------
 <!-- <includex src="@root/template/template3">
     root/template/template3
