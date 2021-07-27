@@ -1,1 +1,7 @@
-{"navigationBarTitleText":"用户中心","navigationBarBackgroundColor":"#FFFFFF","usingComponents":{"comp4":"../../../../../../../../../../dist/components/comp4/index"},"enablePullDownRefresh":false,"disableScroll":true}
+{
+    "navigationBarTitleText": "用户中心",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "usingComponents": {},
+    "enablePullDownRefresh": false,
+    "disableScroll": true
+}

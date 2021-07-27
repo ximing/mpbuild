@@ -24,7 +24,6 @@ const generateCode = function (ast, code = '', distDeps, asset, relative) {
                     if (attribs.src[0] !== '.' && attribs.src[0] !== '/') {
                         attribs.src = `./${attribs.src}`;
                     }
-                    console.error(999, ori, attribs.src);
                 }
             }
             code += `<${name} ${Object.keys(attribs).reduce(
