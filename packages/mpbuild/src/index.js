@@ -61,7 +61,6 @@ class MpBuilder {
             afterCompile: new AsyncParallelHook(['mpb']),
             afterGenerateEntry: new AsyncSeriesBailHook(['afterGenerateEntry']),
             beforeEmitFile: new AsyncSeriesWaterfallHook(['asset']),
-            beforeRender: new SyncWaterfallHook(['opt']),
             watchRun: new AsyncSeriesHook(['compiler']),
             resolveJS: new SyncBailHook(['libName']),
             resolveAppEntryJS: new SyncBailHook(['entryPath']),
