@@ -1,8 +1,1 @@
-{
-  "navigationBarTitleText": "two test wx",
-  "navigationBarBackgroundColor": "#FFFFFF",
-  "usingComponents": {
-  },
-  "enablePullDownRefresh": false,
-  "disableScroll": true
-}
+{"navigationBarTitleText":"two test wx","navigationBarBackgroundColor":"#FFFFFF","usingComponents":{},"enablePullDownRefresh":false,"disableScroll":true}
