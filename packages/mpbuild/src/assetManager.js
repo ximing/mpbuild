@@ -101,10 +101,7 @@ module.exports = class AssetManager {
             (asset) => {
                 if (asset.shouldOutput) {
                     return this.mpb.hooks.beforeEmitFile.promise(asset).then(
-                        () => {
-                            this.emitFile(asset);
-                            return asset;
-                        },
+                        () => this.emitFile(asset).then(() => asset),
                         (err) => {
                             if (this.mpb.isWatch) {
                                 notifier.notify({
@@ -143,8 +140,8 @@ module.exports = class AssetManager {
         // }
         const group = asset.getMeta('group');
         // console.error(asset.filePath, group && group.type);
-        if(group) group.setAssetShouldEmit(asset);
-        else asset.render(this.mpb).catch((err) => {
+        if(group && !this.mpb.hasInit) return group.setAssetShouldEmit(asset);
+        return asset.render(this.mpb).catch((err) => {
             console.error(err);
         });
     }
