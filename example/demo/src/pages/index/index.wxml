@@ -21,3 +21,4 @@
 <includex src="@root/template/template1" />
 
 <include src="@root/template/template4" />
+<c1></c1>
