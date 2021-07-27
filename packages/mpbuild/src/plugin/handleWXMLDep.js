@@ -19,7 +19,6 @@ const generateCode = function (ast, code = '', distDeps, asset, relative) {
                     path.dirname(asset.outputFilePath),
                     distDeps[attribs.src]
                 );
-                const ori = attribs.src;
                 if (relative) {
                     if (attribs.src[0] !== '.' && attribs.src[0] !== '/') {
                         attribs.src = `./${attribs.src}`;
