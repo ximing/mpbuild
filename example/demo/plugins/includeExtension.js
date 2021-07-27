@@ -19,6 +19,7 @@ const debrisType = 'debris';
 const ixChildType = 'ixChild';
 const debrisContentCache = {};
 const rootJsonMap = {};
+const mainPkgPathMap = {};
 
 const TYPE = 'ix_type';
 const PARENT = 'ix_parent';
@@ -212,10 +213,46 @@ const mergeComponents = async (origin, item, jsonAsset, mpb) => {
     return origin;
 }
 
+const addIncludexJson = async (jsonAsset, filePaths, mpb) => {
+    const originJson = JSON.parse(jsonAsset.contents);
+    const originComps = originJson.usingComponents;
+    const root = jsonAsset.getMeta('root');
+
+    const res = await Promise.all(filePaths.map(async filePath => {
+        let { outputPath } = mpb.hooks.rewriteOutputPath.call({
+            filePath,
+            asset: jsonAsset,
+            depType: 'json',
+        });
+
+        if (outputPath.endsWith('.config.js')) {
+            outputPath = outputPath.replace('.config.js', '.json');
+        }
+
+        let comps = mainPkgPathMap[outputPath];
+        if(!comps || mpb.hasInit) {
+            const newAsset = genDebrisAsset(filePath, jsonAsset, 'json', { root });
+            await mpb.assetManager.addAsset(newAsset);
+            comps = JSON.parse(newAsset.contents).usingComponents;
+            if(!root) {
+                mainPkgPathMap[outputPath] = comps;
+            }
+        }
+
+        return {
+            filePath,
+            comps
+        }
+    }));
+
+    for(const item of res) mergeComponents(originComps, item, jsonAsset, mpb);
+    jsonAsset.contents = JSON.stringify(originJson);
+}
+
 module.exports = class IncludeExtension {
-    constructor() {
-        this.mainPkgPathMap = {};
-    }
+    // constructor() {
+    //     this.mainPkgPathMap = {};
+    // }
 
     apply(mpb) {
         mpb.hooks.actionBeforeHandleOnWatching.tapPromise('IncludeExtension', async (asset, type) => {
@@ -262,6 +299,15 @@ module.exports = class IncludeExtension {
                     asset.contents = minifyHtml($.html());
                 }
             }
+
+            const group = asset.getMeta('group');
+            if (/\.json$/.test(asset.name) && mpb.hasInit && group) {
+                const wxmlAsset = group.getTypeAsset('wxml');
+                const { outputFilePath } = wxmlAsset || {};
+                if(!rootJsonMap[outputFilePath]) return;
+                const filePaths = Array.from(new Set(rootJsonMap[outputFilePath].values()));
+                await addIncludexJson(asset, filePaths, mpb);
+            }
             return asset;
         });
 
@@ -271,41 +317,7 @@ module.exports = class IncludeExtension {
             if(!rootJsonMap[outputFilePath]) return;
             const jsonAsset = group.getTypeAsset('json');
             const filePaths = Array.from(new Set(rootJsonMap[outputFilePath].values()));
-            
-            const originJson = JSON.parse(jsonAsset.contents);
-            const originComps = originJson.usingComponents;
-            const root = jsonAsset.getMeta('root');
-
-            const res = await Promise.all(filePaths.map(async filePath => {
-                let { outputPath } = mpb.hooks.rewriteOutputPath.call({
-                    filePath,
-                    asset: jsonAsset,
-                    depType: 'json',
-                });
-
-                if (outputPath.endsWith('.config.js')) {
-                    outputPath = outputPath.replace('.config.js', '.json');
-                }
-
-                let comps = this.mainPkgPathMap[outputPath];
-                if(!comps) {
-                    const newAsset = genDebrisAsset(filePath, asset, 'json', { root });
-                    await mpb.assetManager.addAsset(newAsset);
-                    comps = JSON.parse(newAsset.contents).usingComponents;
-                    if(!root) {
-                        this.mainPkgPathMap[outputPath] = comps;
-                    }
-                }
-
-                return {
-                    filePath,
-                    comps
-                }
-            }));
-
-            for(const item of res) mergeComponents(originComps, item, jsonAsset, mpb);
-            jsonAsset.contents = JSON.stringify(originJson);
-            
+            await addIncludexJson(jsonAsset, filePaths, mpb);
             return group;
         })
     }
