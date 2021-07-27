@@ -94,6 +94,7 @@ const replaceIncludex = async (asset, mpb) => {
         decodeEntities: false
     });
 
+    const root = asset.getMeta('root');
     const nodes = Array.from($('includex'));
 
     for(let index = 0; index < nodes.length; index++) {
@@ -128,7 +129,8 @@ const replaceIncludex = async (asset, mpb) => {
             const newAsset = new Asset(filePath, outputPath, {
                 [ROOT]: asset.getMeta(ROOT) || asset,
                 source: asset.filePath,
-                [TYPE]: ixChildType
+                [TYPE]: ixChildType,
+                root
             });
             newAsset.mtime = Date.now();
 
@@ -149,7 +151,7 @@ const replaceIncludex = async (asset, mpb) => {
                 }
             };
 
-            const newAsset = genDebrisAsset(filePath, asset);
+            const newAsset = genDebrisAsset(filePath, asset, 'wxml', { root });
             newAsset.contents = includeContent;
             await mpb.assetManager.addAsset(newAsset);
             recordTemplateJson(newAsset, mpb);
@@ -251,11 +253,9 @@ const addIncludexJson = async (jsonAsset, filePaths, mpb) => {
 }
 
 module.exports = class IncludeExtension {
-    // constructor() {
-    //     this.mainPkgPathMap = {};
-    // }
-
     apply(mpb) {
+        if(mpb.config.output.component && mpb.config.output.component.relative) throw new Error('includex不支持相对路径模式，如需支持联系yozosann');
+        
         mpb.hooks.actionBeforeHandleOnWatching.tapPromise('IncludeExtension', async (asset, type) => {
             const assetType = asset.getMeta(TYPE);
             if(!assetType) return false;

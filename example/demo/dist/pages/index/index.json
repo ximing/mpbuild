@@ -1,1 +1,1 @@
-{"navigationBarTitleText":"wx 首页","navigationBarBackgroundColor":"#FFFFFF","usingComponents":{"comp1":"/components/comp1/index","comp2":"/components/comp2/index","comp4":"/components/comp4/index"},"enablePullDownRefresh":false,"disableScroll":true}
+{"navigationBarTitleText":"wx 首页","navigationBarBackgroundColor":"#FFFFFF","usingComponents":{"comp1":"../../components/comp1/index","comp2":"../../components/comp2/index","c1":"./components/comp1/index","comp4":"../../../../../../../../../../dist/components/comp4/index"},"enablePullDownRefresh":false,"disableScroll":true}

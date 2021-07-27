@@ -4,7 +4,7 @@
 const htmlparser = require('htmlparser2');
 const path = require('path');
 
-const generateCode = function (ast, code = '', distDeps, asset) {
+const generateCode = function (ast, code = '', distDeps, asset, relative) {
     const { length } = ast;
     for (let i = 0; i < length; i++) {
         const node = ast[i];
@@ -19,6 +19,13 @@ const generateCode = function (ast, code = '', distDeps, asset) {
                     path.dirname(asset.outputFilePath),
                     distDeps[attribs.src]
                 );
+                const ori = attribs.src;
+                if (relative) {
+                    if (attribs.src[0] !== '.' && attribs.src[0] !== '/') {
+                        attribs.src = `./${attribs.src}`;
+                    }
+                    console.error(999, ori, attribs.src);
+                }
             }
             code += `<${name} ${Object.keys(attribs).reduce(
                 (total, next) =>
@@ -26,7 +33,7 @@ const generateCode = function (ast, code = '', distDeps, asset) {
                 ''
             )}`;
             if (Array.isArray(children) && children.length) {
-                code += `>${generateCode(children, '', distDeps, asset)}</${name}>`;
+                code += `>${generateCode(children, '', distDeps, asset, relative)}</${name}>`;
             } else {
                 code += '/>';
             }
@@ -36,7 +43,6 @@ const generateCode = function (ast, code = '', distDeps, asset) {
 };
 
 module.exports = class HandleWXMLDep {
-
     apply(mpb) {
         mpb.hooks.beforeEmitFile.tapPromise('HandleWXMLDep', async (asset) => {
             if (/\.wxml$/.test(asset.name)) {
@@ -74,7 +80,7 @@ module.exports = class HandleWXMLDep {
                                 resolveLib: '',
                                 asset,
                                 resolveType: 'wxml',
-                                exts: ['.wxs'].concat(mpb.exts.wxml),
+                                exts: mpb.exts.wxml.concat(mpb.exts.wxs),
                             });
                             const filePath = res.resolveLib;
 
@@ -109,7 +115,13 @@ module.exports = class HandleWXMLDep {
 
                     if (Object.keys(distDeps).length) {
                         const ast = htmlparser.parseDOM(asset.contents, { xmlMode: true });
-                        asset.contents = generateCode(ast, '', distDeps, asset);
+                        asset.contents = generateCode(
+                            ast,
+                            '',
+                            distDeps,
+                            asset,
+                            mpb.config.output.component && mpb.config.output.component.relative
+                        );
                     }
                 } catch (e) {
                     console.error(e);

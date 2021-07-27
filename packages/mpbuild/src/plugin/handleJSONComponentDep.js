@@ -14,7 +14,7 @@ function requireFromString(src, filename) {
 
 module.exports = class HandleJSONComponentDep {
     constructor() {
-        this.mainPkgPathMap = {};
+        this.readyHandlePathMap = {};
     }
 
     apply(mpb) {
@@ -60,7 +60,7 @@ module.exports = class HandleJSONComponentDep {
                                 if (filePath.endsWith('.config.js')) {
                                     filePath = filePath.replace('.config.js', '.json');
                                 }
-                                if (!this.mainPkgPathMap[outputPath]) {
+                                if (!this.readyHandlePathMap[outputPath]) {
                                     const root = asset.getMeta('root');
                                     const filePathRes = path.parse(filePath);
                                     const outputPathRes = path.parse(outputPath);
@@ -68,6 +68,11 @@ module.exports = class HandleJSONComponentDep {
                                         .join(outputPathRes.dir, outputPathRes.name)
                                         .replace('.json', '')
                                         .replace(`.${mpb.platform}`, '');
+                                    let compPath = componentPath.replace(mpb.dest, '');
+                                    this.readyHandlePathMap[outputPath] = {
+                                        compPath,
+                                        componentPath,
+                                    };
                                     mpb.scan.addAssetByEXT(
                                         path
                                             .join(filePathRes.dir, filePathRes.name)
@@ -78,14 +83,23 @@ module.exports = class HandleJSONComponentDep {
                                         root,
                                         asset.filePath
                                     );
-                                    const compPath = componentPath.replace(mpb.dest, '');
-                                    if (!root) {
-                                        this.mainPkgPathMap[filePath] = compPath;
-                                    }
-                                    componets[componentName] = compPath;
-                                } else {
-                                    componets[componentName] = outputPath;
                                 }
+                                let { compPath, componentPath } = this.readyHandlePathMap[
+                                    outputPath
+                                ];
+                                if (
+                                    mpb.config.output.component &&
+                                    mpb.config.output.component.relative
+                                ) {
+                                    compPath = path.relative(
+                                        path.parse(asset.outputFilePath).dir,
+                                        componentPath
+                                    );
+                                    if (compPath[0] !== '.' && compPath[0] !== '/') {
+                                        compPath = `./${compPath}`;
+                                    }
+                                }
+                                componets[componentName] = compPath;
                                 asset.contents = JSON.stringify(code);
                             })
                         );

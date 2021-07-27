@@ -4,6 +4,7 @@ module.exports = {
     usingComponents: {
         comp1: '../../components/comp1/index',
         comp2: '/components/comp2/index',
+        c1:'./components/comp1/index',
         // @ifdef mt
         comp3: '/components/comp3/index'
         // @endif
