@@ -53,9 +53,20 @@ const checkCycleDep = (asset, filePath, depStr = '') => {
     }
 }
 
+// 比如A依赖了B，但是B是碎片，他最终不会输出而是复制进入A中，这个时候B的depAsset就是A
+// 比如A依赖了B，B依赖了C，但是B、C是碎片，他们最终不会输出而是复制进入A中，这个时候C的depAsset也是A，但是C的parentAsset是B
+// 如果A依赖了B，B依赖了C，但是A依赖B的时候 B的wxml里没有children，这个时候我们就不采取复制粘贴，而是直接把B替换为原生的include，这个时候就会输出B，这个时候C的depAsset就还是B不是A
+const getDepAsset = parentAsset => {
+    let depAsset = parentAsset;
+    while(depAsset.getMeta(PARENT)) {
+        depAsset = depAsset.getMeta(PARENT);
+    }
+    return depAsset;
+}
+
 const genDebrisAsset = (filePath, parentAsset, ext = 'wxml', meta = {}) => {
     const rootAsset = parentAsset.getMeta(ROOT) || parentAsset;
-    const { dir, name } = path.parse(parentAsset.outputFilePath);
+    const { dir, name } = path.parse(rootAsset.outputFilePath);
     const newAsset = new VirtualAsset(filePath, `virtual-${path.join(dir, name)}.${ext}`, meta);
     newAsset.setMeta(TYPE, debrisType);
     newAsset.setMeta(PARENT, parentAsset);
@@ -96,6 +107,7 @@ const replaceIncludex = async (asset, mpb) => {
 
     const root = asset.getMeta('root');
     const nodes = Array.from($('includex'));
+    const depAsset = getDepAsset(asset);
 
     for(let index = 0; index < nodes.length; index++) {
         const node = nodes[index];
@@ -106,7 +118,7 @@ const replaceIncludex = async (asset, mpb) => {
         const res = mpb.hooks.resolve.call({
             lib: attribs.src,
             resolveLib: '',
-            asset,
+            asset: depAsset,
             resolveType: 'wxml',
             exts: ['.wxs'].concat(mpb.exts.wxml),
         });
@@ -114,7 +126,7 @@ const replaceIncludex = async (asset, mpb) => {
 
         const { outputPath } = mpb.hooks.rewriteOutputPath.call({
             filePath,
-            asset,
+            asset: depAsset,
             depType: 'wxml',
         });
 
@@ -122,9 +134,18 @@ const replaceIncludex = async (asset, mpb) => {
             // 如果没有children 代表可以用原生的include能力节约包大小
             node.name = 'include';
             attribs.src = path.relative(
-                path.dirname(asset.outputFilePath),
+                path.dirname(depAsset.outputFilePath),
                 outputPath
             );
+
+            // if(asset.filePath.includes('template2') && filePath.includes('template4') && asset.getMeta(TYPE) === 'debris') {
+            //     console.error('\n------------------');
+            //     console.error(1, attribs.src);
+            //     console.error(2, 'parent',  asset.filePath, asset.getMeta(TYPE));
+            //     console.error(3, 'root', asset.getMeta(ROOT).filePath);
+            //     // console.error(3, asset.outputFilePath);
+            //     console.error('------------------\n');
+            // }
             
             const newAsset = new Asset(filePath, outputPath, {
                 [ROOT]: asset.getMeta(ROOT) || asset,

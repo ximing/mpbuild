@@ -4,6 +4,7 @@
   default2:
   
 </view>
+<include src="../template4/index.wxml"/>
 ---------------template2-------------
 <!-- <includex src="@root/template/template3">
     root/template/template3

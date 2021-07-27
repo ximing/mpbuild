@@ -17,6 +17,7 @@ user
     </view>
     
 </view>
+<include src="../../template/template4/index.wxml"/>
 ---------------template2-------------
 <!-- <includex src="@root/template/template3">
     root/template/template3
@@ -31,7 +32,7 @@ user
 
 </view>
 
-<include src="../../../../../../../../../../dist/template/template2/index.wxml"/>
+<include src="../../template/template2/index.wxml"/>
 ---------------template1-------------
 <import src="user.wx.wxml"/>
 <wxs src="user.wxs" module="user"/>
