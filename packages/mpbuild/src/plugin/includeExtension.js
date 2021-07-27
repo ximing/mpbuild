@@ -27,12 +27,12 @@ const PARENT = 'ix_parent';
 const ROOT = 'ix_root';
 const EXT = 'ix_ext';
 
-const minifyHtml = content => htmlmin.minify(content, {
+const minifyHtml = (content, mbp) => (mbp.optimization.minimize && mbp.optimization.minimize.wxml) ? htmlmin.minify(content, {
     removeComments: true,
     keepClosingSlash: true,
     collapseWhitespace: true,
     caseSensitive: true,
-});
+}) : content;
 
 const replaceNode = (oldNode, newNodes = []) => {
     const nodeIndex = oldNode.parent.children.findIndex(item => item === oldNode);
@@ -194,7 +194,7 @@ const replaceIncludex = async (asset, mpb) => {
         }
     }
 
-    asset.contents = minifyHtml($.html());
+    asset.contents = minifyHtml($.html(), mpb);
 }
 
 const mergeComponents = async (origin, item, jsonAsset, mpb) => {
@@ -255,7 +255,7 @@ const addIncludexJson = async (jsonAsset, filePaths, mpb) => {
 module.exports = class IncludeExtension {
     apply(mpb) {
         if(mpb.config.output.component && mpb.config.output.component.relative) throw new Error('includex不支持相对路径模式，如需支持联系yozosann');
-        
+
         mpb.hooks.actionBeforeHandleOnWatching.tapPromise('IncludeExtension', async (asset, type) => {
             const assetType = asset.getMeta(TYPE);
             if(!assetType) return false;
@@ -297,7 +297,7 @@ module.exports = class IncludeExtension {
                         replaceNode(node, node.children);
                     });
 
-                    asset.contents = minifyHtml($.html());
+                    asset.contents = minifyHtml($.html(), mpb);
                 }
             }
 

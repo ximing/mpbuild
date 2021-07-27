@@ -42,7 +42,7 @@ module.exports = {
         minimize: {
             // js: needUglify ? { output: { comments: /javascript-obfuscator:disable|javascript-obfuscator:enable/} } : false,
             js: false,
-            wxml: true,
+            wxml: false,
             json: false,
             path: minimize_path,
         },
