@@ -19,6 +19,7 @@ const log = require('./log');
 const Scan = require('./scan');
 const Watching = require('./watching');
 const Helper = require('./helper');
+const Groups = require('./groups');
 const HandleJSDep = require('./plugin/handleJSDep');
 const WatchEntry = require('./plugin/watchEntry');
 const HandleJSONComponentDep = require('./plugin/handleJSONComponentDep');
@@ -37,6 +38,7 @@ const ResolvePlugin = require('./plugin/resolvePlugin');
 const RewriteOutputPathPlugin = require('./plugin/rewriteOutputPathPlugin');
 const SubPackagesPlugin = require('./plugin/subPackagesPlugin');
 const SubProjectPlugin = require('./plugin/subProjectPlugin');
+const IncludeExtension = require('./plugin/includeExtension');
 const NodeEnvironmentPlugin = require('./node/NodeEnvironmentPlugin');
 const Asset = require('./asset');
 const resolve = require('./resolve');
@@ -59,7 +61,6 @@ class MpBuilder {
             afterCompile: new AsyncParallelHook(['mpb']),
             afterGenerateEntry: new AsyncSeriesBailHook(['afterGenerateEntry']),
             beforeEmitFile: new AsyncSeriesWaterfallHook(['asset']),
-            beforeRender: new SyncWaterfallHook(['opt']),
             watchRun: new AsyncSeriesHook(['compiler']),
             resolveJS: new SyncBailHook(['libName']),
             resolveAppEntryJS: new SyncBailHook(['entryPath']),
@@ -69,6 +70,10 @@ class MpBuilder {
             rewriteOutsideOutputPath: new SyncWaterfallHook(['opt']),
             resolve: new SyncWaterfallHook(['opt']),
             resolveOutside: new SyncWaterfallHook(['opt']),
+            actionBeforeHandleOnWatching: new AsyncSeriesBailHook(['asset', 'type']),
+            beforeRenderFile: new AsyncSeriesWaterfallHook(['asset']),
+            beforeRenderGroup: new AsyncSeriesWaterfallHook(['group']),
+            // beforeAssetRender: new AsyncSeriesWaterfallHook(['asset']),
         };
         this.optimization = {
             minimize: true,
@@ -78,6 +83,7 @@ class MpBuilder {
             await this.hooks.afterCompile.promise(this);
         });
         // 保证顺序
+        this.groups = new Groups(this);
         this.helper = new Helper(this);
         this.loaderManager = new LoaderManager(this);
         this.scan = new Scan(this);
@@ -162,4 +168,5 @@ module.exports.TsTypeCheckPlugin = TsTypeCheckPlugin;
 module.exports.PolymorphismPlugin = PolymorphismPlugin;
 module.exports.SubPackagesPlugin = SubPackagesPlugin;
 module.exports.SubProjectPlugin = SubProjectPlugin;
+module.exports.IncludeExtension = IncludeExtension;
 module.exports.version = require('../package.json').version;
