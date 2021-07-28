@@ -103,3 +103,4 @@ module.exports = (lib, asset, exts = [], src = '', alias = {}, ignoreNotFound = 
     return libPath;
 };
 module.exports.resolveAlias = resolveAlias;
+module.exports.resolveSync = resolveSync;

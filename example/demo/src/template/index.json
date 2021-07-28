@@ -1,0 +1,5 @@
+{
+    "usingComponents": {
+        "comp5": "@components/comp5/index"
+    }
+}
