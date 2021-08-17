@@ -96,6 +96,7 @@ module.exports = class MinifyPlugin {
         this.wxml = true;
         this.json = true;
         this.wxs = true;
+        this.pool = true;
         this.hashDigestLength = 4;
         this.usedIds = new Set();
         this.dirIdMap = new Map();
@@ -109,6 +110,8 @@ module.exports = class MinifyPlugin {
                 this.json = mpb.optimization.minimize.json;
                 this.wxs = mpb.optimization.minimize.wxs;
                 this.path = mpb.optimization.minimize.path;
+                this.pool =
+                    mpb.optimization.minimize.pool == null ? true : mpb.optimization.minimize.pool;
             } else if (mpb.optimization.minimize === false) {
                 this.js = false;
                 this.wxml = false;
@@ -151,40 +154,47 @@ module.exports = class MinifyPlugin {
             mpb.hooks.beforeEmitFile.tapPromise('MinifyPlugin', async (asset) => {
                 if (asset.contents) {
                     if (/\.js$/.test(asset.outputFilePath) && this.js) {
-                        // const result = UglifyJS.minify(asset.contents);
-                        // if (result.error) console.error('[MinifyPlugin]', result.error);
-                        // if (result.warnings) console.warn('[MinifyPlugin]', result.warnings);
-                        // asset.contents = result.code;
-                        asset.contents = await pool.exec(minifyJS, [asset.contents, this.js]);
+                        if (this.pool) {
+                            asset.contents = await pool.exec(minifyJS, [asset.contents, this.js]);
+                        } else {
+                            asset.contents = await minifyJS(asset.contents, this.js);
+                        }
                     } else if (
                         /\.json$/.test(asset.outputFilePath) &&
                         sholdRunMiniFunc(asset, this.json)
                     ) {
-                        // asset.contents = jsonminify(asset.contents).toString();
-                        asset.contents = await pool.exec(minifyJSON, [asset.contents]);
+                        if (this.pool) {
+                            asset.contents = await pool.exec(minifyJSON, [asset.contents]);
+                        } else {
+                            asset.contents = await minifyJSON(asset.contents);
+                        }
                     } else if (
                         /\.wxml$/.test(asset.outputFilePath) &&
                         sholdRunMiniFunc(asset, this.wxml)
                     ) {
-                        // asset.contents = asset.contents = htmlmin.minify(asset.contents, {
-                        //     removeComments: true,
-                        //     keepClosingSlash: true,
-                        //     collapseWhitespace: true,
-                        //     caseSensitive: true
-                        // });
-                        asset.contents = await pool.exec(minifyWXML, [asset.contents]);
+                        if (this.pool) {
+                            asset.contents = await pool.exec(minifyWXML, [asset.contents]);
+                        } else {
+                            asset.contents = await minifyWXML(asset.contents);
+                        }
                     } else if (
                         /\.wxs$/.test(asset.outputFilePath) &&
                         sholdRunMiniFunc(asset, this.wxs)
                     ) {
-                        asset.contents = await pool.exec(minifyWXS, [asset.contents]);
+                        if (this.pool) {
+                            asset.contents = await pool.exec(minifyWXS, [asset.contents]);
+                        } else {
+                            asset.contents = await minifyWXS(asset.contents);
+                        }
                     }
                 }
                 return Promise.resolve();
             });
             mpb.hooks.afterCompile.tapPromise('MinifyPlugin', async () => {
                 if (!mpb.isWatch) {
-                    clearPool();
+                    if (this.pool) {
+                        clearPool();
+                    }
                 }
             });
         }
