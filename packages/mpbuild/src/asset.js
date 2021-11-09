@@ -5,7 +5,6 @@ const path = require('path');
 const fs = require('fs');
 const chalk = require('chalk');
 const fse = require('fs-extra');
-const notifier = require('node-notifier');
 const { assetType } = require('./consts');
 
 module.exports = class Asset {
@@ -100,25 +99,12 @@ module.exports = class Asset {
                 if (mpb.hasInit && mpb.isWatch) {
                     console.log(chalk.cyan('[watching-output]'), this.outputFilePath);
                 }
-                
-                return mpb.hooks.beforeRenderFile.promise(this).then(() => fse.outputFile(this.outputFilePath, this.contents)).catch(err => {
-                    if (mpb.isWatch) {
-                        notifier.notify({
-                            title: 'beforeRenderFile hooks error',
-                            message: '输出文件失败，具体错误请查看命令行',
-                        });
-                        console.log(chalk.red('[beforeRenderFile hooks error]'), this.path);
-                        console.error(err);
-                    } else {
-                        console.error(err);
-                        process.exit(1);
-                    }
-                })
                 // TODO 做一个
                 // if (this.outputFilePath.includes('/mnt/d/project/mall-wxapp/dist')) {
                 //     return fse.outputFile(this.outputFilePath, this.contents);
                 // }
                 // return Promise.reject(new Error('dist not in project: ' + this.outputFilePath));
+                return fse.outputFile(this.outputFilePath, this.contents);
             }
             if (mpb.hasInit && mpb.isWatch) {
                 console.log('[watch]:文件内容为空，不输出', this.outputFilePath);

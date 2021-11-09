@@ -25,16 +25,13 @@ module.exports = class ScanDep {
         root = '',
         source = ''
     ) {
-        const group = this.mpb.groups.createGroup(prefixPath, prefixOutputPath, type);
-
         return Promise.all(
             Object.keys(this.mpb.exts).map((key) => {
                 const ext = this.mpb.exts[key];
-                const meta = { type, root, source, group };
+                const meta = { type, root, source };
                 if (key === 'json') {
                     meta['mbp-scan-json-dep'] = 'usingComponents';
                 }
-                
                 try {
                     const path = resolve(
                         prefixPath,

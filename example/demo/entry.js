@@ -18,19 +18,12 @@ module.exports = {
                 'one/index': '@two/pages/test/index',
                 'two/index': '@two/pages/test2/index'
             }
-        },
-        {
-            root: 'pages/msg',
-            pages: {
-                'index': '/pages/msg/index',
-            }
         }
     ],
     networkTimeout: {
         request: 30000,
         connectSocket: 30000
     },
-    enableGetSystemInfoReturnBluetoothState: false,
     debug: false,
     navigateToMiniProgramAppIdList: [
         'wx8fe51119579ed91b',

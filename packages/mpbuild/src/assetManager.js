@@ -42,6 +42,7 @@ module.exports = class AssetManager {
             } else {
                 this.map[asset.path][index] = asset;
             }
+            this.map[asset.path].push(asset);
         } else {
             this.map[asset.path] = [asset];
         }
@@ -62,13 +63,8 @@ module.exports = class AssetManager {
         } else {
             asset = new Asset(path, outputPath, meta);
         }
-
-        const { group } = meta || {};
-        if(group) group.addExecingAsset(asset);
-
         if (asset.exists()) {
             const existAssets = this.getAssets(asset.path);
-        
             if (existAssets) {
                 for (const existAsset of existAssets) {
                     if (
@@ -85,7 +81,6 @@ module.exports = class AssetManager {
             if (this.pendingMap[key]) {
                 return this.pendingMap[key];
             }
-
             this.pendingMap[key] = this.execAddFileHooks(asset, key);
             return this.pendingMap[key];
         }
@@ -101,7 +96,10 @@ module.exports = class AssetManager {
             (asset) => {
                 if (asset.shouldOutput) {
                     return this.mpb.hooks.beforeEmitFile.promise(asset).then(
-                        () => this.emitFile(asset).then(() => asset),
+                        () => {
+                            this.emitFile(asset);
+                            return asset;
+                        },
                         (err) => {
                             if (this.mpb.isWatch) {
                                 notifier.notify({
@@ -138,10 +136,7 @@ module.exports = class AssetManager {
         // if(asset.filePath.includes('node_modules') && asset.getMeta('mbp-scan-json-dep')) {
         //     console.log(asset.getMeta('source'), asset.getMeta('root'));
         // }
-        const group = asset.getMeta('group');
-        // console.error(asset.filePath, group && group.type);
-        if(group && !this.mpb.hasInit) return group.setAssetShouldEmit(asset);
-        return asset.render(this.mpb).catch((err) => {
+        asset.render(this.mpb).catch((err) => {
             console.error(err);
         });
     }

@@ -1,5 +1,3 @@
-/* eslint-disable no-continue */
-/* eslint-disable no-restricted-syntax */
 const chokidar = require('chokidar');
 const _ = require('lodash');
 const chalk = require('chalk');
@@ -100,10 +98,6 @@ module.exports = class Watching {
         const assets = this.mpb.assetManager.getAssets(path);
         if (assets) {
             for (const asset of assets) {
-                if(await this.mpb.hooks.actionBeforeHandleOnWatching.promise(asset, type)) {
-                    continue;
-                }
-                
                 if (type === 'change') {
                     console.log('[watching-add-asset]', path);
                     await this.mpb.assetManager.addAsset(

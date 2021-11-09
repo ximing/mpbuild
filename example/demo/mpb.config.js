@@ -33,9 +33,9 @@ module.exports = {
     output: {
         path: path.join(__dirname, dist),
         npm: 'npm',
-        // component: {
-        //     relative: true,
-        // },
+        component: {
+            relative: true,
+        },
     },
     optimization: {
         // 如果需要压缩，配置 JS 固话需要过滤的 comment
@@ -109,7 +109,6 @@ module.exports = {
         ],
     },
     plugins: [
-        new MPB.IncludeExtension(),
         new MPB.PolymorphismPlugin({ platform: 'wx', blockcode: true }),
         new MPB.CleanMbpPlugin({
             path: [`${dist}/**/*`, `!${dist}/project.config.json`],

@@ -1,43 +1,4 @@
-user
----------------template1-------------
-<comp4/>
-<view>
-    slot1:
-    <view>
-        1111
-    </view>
-    slot2:
-    ---------------template2-------------
-<view>
-1
-  default2:
-  
-        <view>
-        222111111
-    </view>
-    
-</view>
-<include src="../../template/template4/index.wxml"/>
----------------template2-------------
-<!-- <includex src="@root/template/template3">
-    root/template/template3
-</includex> -->
-    default:
-    
-    
-    <view> default </view>
-    <view> defalt2 </view>
-    others
-    
+<import  src="./user.wx.wxml"/>
+<wxs  src="./user.wxs" module="user"/>
+<view >user</view>
 
-</view>
-
-<include src="../../template/template2/index.wxml"/>
----------------template1-------------
-<import src="user.wx.wxml"/>
-<wxs src="user.wxs" module="user"/>
-<view>user</view>
-
-<include src="../../template/template1/index.wxml"/>
-
-<include src="../../template/template4/index.wxml"/>
