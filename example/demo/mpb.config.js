@@ -45,7 +45,7 @@ module.exports = {
             wxml: false,
             json: false,
             path: minimize_path,
-            pool: false
+            pool: false,
         },
     },
     module: {

@@ -11,6 +11,7 @@ const tsLoaderNext = require('./loader/ts-loader-next');
 const postcssLoader = require('./loader/postcss-loader');
 const jsonLoader = require('./loader/json-loader');
 const renameLoader = require('./loader/rename-loader');
+const injectLoader = require('./loader/inject-loader');
 
 const map = {
     'babel-loader': babelLoader,
@@ -20,7 +21,8 @@ const map = {
     'json-loader': jsonLoader,
     'ts-loader-next': tsLoaderNext,
     'postcss-loader': postcssLoader,
-    'rename-loader': renameLoader
+    'rename-loader': renameLoader,
+    'inject-loader': injectLoader,
 };
 
 module.exports = class LoaderManager {
