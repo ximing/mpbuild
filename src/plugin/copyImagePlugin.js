@@ -8,6 +8,7 @@ const imageminPngquant = require('@yeanzhi/imagemin-pngquant');
 
 module.exports = class CopyImagePlugin {
     constructor(options) {
+        this.name = 'CopyImagePlugin';
         this.options = Object.assign(
             {},
             {

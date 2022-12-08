@@ -5,7 +5,6 @@
 // const jsonminify = require('jsonminify');
 // const htmlmin = require('html-minifier');
 const workerpool = require('workerpool');
-const mm = require('micromatch');
 
 const pool = workerpool.pool();
 
@@ -21,14 +20,11 @@ function clearPool() {
 }
 
 function minifyJS(contents, options) {
-    const UglifyJS = require('uglify-js');
-    if(options && options.output && options.output.comments) {
-      const comments = options.output.comments
-      if (comments !== 'all' && comments !== 'some' && typeof comments !== 'boolean') {
-        options.output.comments = /javascript-obfuscator:disable|javascript-obfuscator:enable/
-      }
-    }
-    const result = UglifyJS.minify(contents, typeof options === 'undefined' ? undefined : options);
+    const opts = JSON.parse(options);
+    // const UglifyJS = require('uglify-js');
+    // const result = UglifyJS.minify(contents);
+    const Terser = require('terser');
+    const result = Terser.minify(contents, typeof opts === 'object' ? opts : undefined);
     if (result.error) {
         console.error('[MinifyPlugin]', result.error);
         throw result.error;
@@ -52,27 +48,6 @@ function minifyJSON(contents) {
     return jsonminify(contents).toString();
 }
 
-function sholdRunMiniFunc(asset, rule) {
-    if(!rule) {
-        return false;
-    }
-    if(typeof rule === "boolean" && rule) {
-        return true;
-    }
-    if(Object.prototype.toString.call(rule) === '[object Object]') {
-        const {include, exclude} = rule || {};
-        let sholdRunMini = true;
-        if (Array.isArray(exclude)) {
-            sholdRunMini = !mm.any(asset.path, exclude);
-            if (!sholdRunMini && Array.isArray(include)) {
-                sholdRunMini = mm.any(asset.path, include);
-            }
-        }
-        return sholdRunMini;
-    }
-    return false
-}
-
 module.exports = class MinifyPlugin {
     constructor() {
         this.js = true;
@@ -93,19 +68,23 @@ module.exports = class MinifyPlugin {
             }
             mpb.hooks.beforeEmitFile.tapPromise('MinifyPlugin', async (asset) => {
                 if (asset.contents) {
-                    if (/\.js$/.test(asset.outputFilePath) && this.js) {
+                    if (
+                        this.js &&
+                        /\.js$/.test(asset.outputFilePath) &&
+                        !/\.min\.js$/.test(asset.outputFilePath)
+                    ) {
                         // const result = UglifyJS.minify(asset.contents);
                         // if (result.error) console.error('[MinifyPlugin]', result.error);
                         // if (result.warnings) console.warn('[MinifyPlugin]', result.warnings);
                         // asset.contents = result.code;
                         asset.contents = await pool.exec(minifyJS, [
                             asset.contents,
-                            this.js
+                            JSON.stringify(this.js)
                         ]);
-                    } else if (/\.json$/.test(asset.outputFilePath) && sholdRunMiniFunc(asset, this.json)) {
+                    } else if (/\.json$/.test(asset.outputFilePath) && this.json) {
                         // asset.contents = jsonminify(asset.contents).toString();
                         asset.contents = await pool.exec(minifyJSON, [asset.contents]);
-                    } else if (/\.wxml$/.test(asset.outputFilePath) && sholdRunMiniFunc(asset, this.wxml)) {
+                    } else if (/\.wxml$/.test(asset.outputFilePath) && this.wxml) {
                         // asset.contents = asset.contents = htmlmin.minify(asset.contents, {
                         //     removeComments: true,
                         //     keepClosingSlash: true,
@@ -115,7 +94,7 @@ module.exports = class MinifyPlugin {
                         asset.contents = await pool.exec(minifyWXML, [asset.contents]);
                     }
                 }
-                return Promise.resolve();
+                return Promise.resolve(asset);
             });
             mpb.hooks.afterCompile.tapPromise('MinifyPlugin', async () => {
                 if (!mpb.isWatch) {

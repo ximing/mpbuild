@@ -5,7 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const fse = require('fs-extra');
 const chalk = require('chalk');
-const { assetType } = require('./consts');
+const { assetType, virtual_file } = require('./consts');
 
 module.exports = class Asset {
     constructor(filePath, outputFilePath, meta) {
@@ -30,7 +30,7 @@ module.exports = class Asset {
     }
 
     getMeta(key) {
-        if(key === undefined) return this.__meta;
+        if (key === undefined) return this.__meta;
         return this.__meta[key];
     }
 
@@ -85,7 +85,7 @@ module.exports = class Asset {
     }
 
     exists() {
-        return this.getMeta('virtual_file') || fs.existsSync(this.filePath);
+        return this.getMeta(virtual_file) || fs.existsSync(this.filePath);
     }
 
     beChanged(asset) {

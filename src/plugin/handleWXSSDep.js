@@ -64,7 +64,6 @@ module.exports = class HandleWXSSDep {
                                         this.mainPkgPathMap[filePath] = outputPath;
                                     }
                                 }
-
                                 distDeps.push(outputPath);
                                 return mpb.assetManager.addAsset(filePath, outputPath, {
                                     root,

@@ -22,26 +22,28 @@ module.exports = class AssetManager {
     }
 
     findExistAsset(asset) {
-        if(this.map[asset.path]) {
+        if (this.map[asset.path]) {
             let index = -1;
             const existAssets = this.map[asset.path];
-            for(let i = 0; i < existAssets.length; i++) {
-                if(existAssets[i].outputFilePath === asset.outputFilePath) {
+            for (let i = 0; i < existAssets.length; i++) {
+                if (existAssets[i].outputFilePath === asset.outputFilePath) {
                     index = i;
                 }
             }
             return index;
-        } else {
-            throw new Error(`This.map[${asset.path}] is undefined`);
         }
+        throw new Error(`This.map[${asset.path}] is undefined`);
     }
 
     setAsset(asset) {
-        if(this.map[asset.path]) {
-            let index = this.findExistAsset(asset);
-            if(index === -1) {
+        // console.log('setAsset',asset.path)
+        if (this.map[asset.path]) {
+            const index = this.findExistAsset(asset);
+            if (index === -1) {
                 this.map[asset.path].push(asset);
             } else {
+                // TODO 更好的办法  比如抽离一个 template 来做这个事情
+                asset.render = this.map[asset.path][index].render;
                 this.map[asset.path][index] = asset;
             }
 
@@ -53,13 +55,14 @@ module.exports = class AssetManager {
     }
 
     removeAsset(asset) {
-        if(!this.map[asset.path]) return;
-        let index = this.findExistAsset(asset);
+        if (!this.map[asset.path]) return;
+        const index = this.findExistAsset(asset);
         this.map[asset.path].splice(index, 1);
     }
 
     // 尝试添加新的资源文件
-    addAsset(path, outputPath, meta) {
+    async addAsset(path, outputPath, meta) {
+        // console.log('addAsset',path)
         let asset;
         if (path instanceof Asset) {
             asset = path;
@@ -68,9 +71,12 @@ module.exports = class AssetManager {
         }
         if (asset.exists()) {
             const existAssets = this.getAssets(asset.path);
-            if(existAssets) {
-                for(let existAsset of existAssets) {
-                    if (!existAsset.beChanged(asset) && existAsset.outputFilePath === asset.outputFilePath) {
+            if (existAssets) {
+                for (const existAsset of existAssets) {
+                    if (
+                        !existAsset.beChanged(asset) &&
+                        existAsset.outputFilePath === asset.outputFilePath
+                    ) {
                         // 终止接下来处理asset的流程
                         // console.log(chalk.yellow('[addAsset] 文件没有更改'), asset.path);
                         return existAsset;
@@ -79,48 +85,44 @@ module.exports = class AssetManager {
             }
             // 更新asset
             this.setAsset(asset);
-            return this.mpb.hooks.addAsset.promise(asset).then(
-                (asset) => {
-                    if (asset.shouldOutput) {
-                        return this.mpb.hooks.beforeEmitFile.promise(asset).then(
-                            () => {
-                                this.emitFile(asset);
-                                return asset;
-                            },
-                            (err) => {
-                                if (this.mpb.isWatch) {
-                                    notifier.notify({
-                                        title: 'beforeEmitFile hooks error',
-                                        message: '输出文件失败，具体错误请查看命令行'
-                                    });
-                                    console.log(
-                                        chalk.red('[beforeEmitFile hooks error]'),
-                                        asset.path
-                                    );
-                                    console.error(err);
-                                } else {
-                                    console.error(err);
-                                    process.exit(1);
-                                }
-                                // throw err;
-                            }
-                        );
+            try {
+                asset = (await this.mpb.hooks.beforeAddAsset.promise(asset)) || asset;
+                asset = await this.mpb.hooks.addAsset.promise(asset);
+                if (asset.shouldOutput) {
+                    try {
+                        asset = await this.mpb.hooks.beforeEmitFile.promise(asset);
+                        if (asset) {
+                            await this.emitFile(asset);
+                            await this.mpb.hooks.afterEmitFile.promise(asset);
+                        }
+                        return asset;
+                    } catch (err) {
+                        if (this.mpb.isWatch) {
+                            notifier.notify({
+                                title: 'beforeEmitFile hooks error',
+                                message: '输出文件失败，具体错误请查看命令行'
+                            });
+                            console.log(chalk.red('[beforeEmitFile hooks error]'), asset.path);
+                            console.error(err);
+                        } else {
+                            console.error(err);
+                            process.exit(1);
+                        }
                     }
                     // 如果不输出，就删除之前的构建文件，这样小程序工具上直观能体现出来有代码有问题了
                     return fse
                         .remove(asset.outputFilePat)
                         .then((_) => asset)
                         .catch((_) => asset);
-                },
-                (err) => {
-                    console.log('asset', asset.path);
-                    console.error(err);
-                    // throw err;
                 }
-            );
+            } catch (err) {
+                console.log('asset', asset.path);
+                console.error(err);
+                // throw err;
+            }
         }
         // console.log(`[assetManager] not found: ${path}`);
-        return Promise.resolve();
+        return null;
         // throw new Error(`not found${path}`);
     }
 
@@ -128,7 +130,7 @@ module.exports = class AssetManager {
         // if(asset.filePath.includes('node_modules') && asset.getMeta('mbp-scan-json-dep')) {
         //     console.log(asset.getMeta('source'), asset.getMeta('root'));
         // }
-        asset.render(this.mpb).catch((err) => {
+        return asset.render(this.mpb).catch((err) => {
             console.error(err);
         });
     }

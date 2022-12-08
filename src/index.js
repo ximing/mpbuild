@@ -4,7 +4,6 @@
 const path = require('path');
 
 const {
-    SyncBailHook,
     AsyncParallelHook,
     AsyncSeriesWaterfallHook,
     AsyncSeriesHook,
@@ -14,6 +13,7 @@ const {
 const LoaderManager = require('./loaderManager');
 const AssetManager = require('./assetManager');
 const log = require('./log');
+const Asset = require('./asset');
 const Scan = require('./scan');
 const Watching = require('./watching');
 const Helper = require('./helper');
@@ -40,16 +40,16 @@ class Mpbuilder {
         this.appEntry = {};
         this.cwd = process.cwd();
         this.hooks = {
-            addAsset: new AsyncSeriesBailHook(['asset']),
             delAsset: new AsyncSeriesBailHook(['asset']),
             start: new AsyncParallelHook(['mpb']),
             beforeCompile: new AsyncParallelHook(['mpb']),
-            afterCompile: new AsyncParallelHook(['mpb']),
+            beforeAddAsset: new AsyncSeriesBailHook(['asset']),
+            addAsset: new AsyncSeriesBailHook(['asset']),
             afterGenerateEntry: new AsyncSeriesBailHook(['afterGenerateEntry']),
             beforeEmitFile: new AsyncSeriesWaterfallHook(['asset']),
-            watchRun: new AsyncSeriesHook(['compiler']),
-            resolveJS: new SyncBailHook(['libName']),
-            resolveAppEntryJS: new SyncBailHook(['entryPath'])
+            afterEmitFile: new AsyncSeriesWaterfallHook(['asset']),
+            afterCompile: new AsyncParallelHook(['mpb']),
+            watchRun: new AsyncSeriesHook(['compiler'])
         };
         this.optimization = Object.assign(
             {
@@ -68,6 +68,10 @@ class Mpbuilder {
         this.assetManager = new AssetManager(this);
         this.hasInit = false;
         this.isWatch = false;
+    }
+
+    getPlugin(name) {
+        return this.config.plugins.find((item) => item.name === name);
     }
 
     initPlugin() {
@@ -90,8 +94,6 @@ class Mpbuilder {
         this.config.plugins.forEach((p) => {
             p.apply(this);
         });
-        this.hooks.resolveJS.tap('resolveJS_MP', (item) => item);
-        this.hooks.resolveAppEntryJS.tap('resolveAppEntryJS', (item) => item);
     }
 
     mountPlugin(plugin) {
@@ -116,6 +118,7 @@ class Mpbuilder {
 }
 
 module.exports = Mpbuilder;
+module.exports.Asset = Asset;
 module.exports.AppJSONPick = AppJSONPick;
 module.exports.CopyPlugin = CopyPlugin;
 module.exports.CopyImagePlugin = CopyImagePlugin;

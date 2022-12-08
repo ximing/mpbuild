@@ -10,7 +10,7 @@ function fixNPM(code) {
     //     code = `var process={};${code}`;
     // }
     if (/[^\w_]process\.\w/.test(code)) {
-        code = `var process={env:{NODE_ENV:"production"}};${code}`;
+        code = `var process={env:{NODE_ENV:"${process.env.NODE_ENV || 'production'}"}};${code}`;
     }
     return code;
 }
@@ -26,6 +26,24 @@ module.exports = class NPMRewrite {
                     asset.contents = asset.contents.replace("Function('return this')()", 'this');
                 } else {
                     asset.contents = fixNPM(asset.contents);
+                }
+                // @TODO 更好的做法？
+                if (asset.filePath.endsWith('react-reconciler/index.js')) {
+                    if (process.env.NODE_ENV === 'production') {
+                        asset.contents = `module.exports = require('./cjs/react-reconciler.production.min.js');`;
+                    } else {
+                        asset.contents = `module.exports = require('./cjs/react-reconciler.development.js');`;
+                    }
+                }
+                if (asset.filePath.endsWith('react/index.js')) {
+                    if (process.env.NODE_ENV === 'production') {
+                        asset.contents = `module.exports = require('./cjs/react.production.min.js');`;
+                    } else {
+                        asset.contents = `module.exports = require('./cjs/react.development.js');`;
+                    }
+                }
+                if (asset.filePath.endsWith('reflect-metadata/Reflect.js')) {
+                    asset.contents = asset.contents.replace('var Reflect;', '');
                 }
             }
             return Promise.resolve();
