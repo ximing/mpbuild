@@ -73,7 +73,7 @@
         "uglify-js": "^3.12.5",
         "watchpack": "^1.6.0",
         "webpack-log": "^2.0.0",
-        "workerpool": "6.0.3"
+        "workerpool": "6.4.0"
     },
     "devDependencies": {
         "@babel/plugin-external-helpers": "^7.2.0",
