@@ -32,7 +32,7 @@
     },
     "dependencies": {
         "@babel/code-frame": "^7.0.0",
-        "@babel/core": "^7.5.5",
+        "@babel/core": "^7.22.6",
         "@babel/generator": "^7.4.4",
         "@babel/parser": "^7.4.5",
         "@babel/traverse": "^7.4.5",
