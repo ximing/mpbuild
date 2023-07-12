@@ -28,15 +28,14 @@ jobs:
             ${{ runner.os }}-build-${{ env.cache-name }}-
             ${{ runner.os }}-build-
             ${{ runner.os }}-
-      - name: use Node.js 10
+      - name: use Node.js 14
         uses: actions/setup-node@v1
         with:
-          node-version: '10.x'
+          node-version: '14.x'
       - name: npm script 🔧
         run: |
-          npm install --registry=https://registry.npmjs.org
-          npm run install:website
-          npm run build:website
+          pnpm install --registry=https://registry.npmjs.org
+          pnpm run build:website
         env:
           CI: true
       - name: Deploy 🚀
