@@ -5,16 +5,32 @@
     "description": "",
     "main": "src/index.js",
     "scripts": {
-        "init": "npm i  && lerna bootstrap --force-local --registry=https://registry.npm.taobao.org",
         "rm": "rm -rf node_modules && find . -name \"node_modules\" -type d -prune -exec rm -rf '{}' +",
-        "release": "standard-version",
         "release:patch": "npm run release -- --release-as patch",
         "release:minor": "npm run release -- --release-as minor",
         "release:major": "npm run release -- --release-as major",
         "lint": "lint-staged",
         "pretty": "prettier --write \"src/**/*.js\"",
-        "install:website": "cd packages/website && npm i --registry=https://registry.npmjs.com",
-        "build:website": "cd packages/website && rm -rf .umi dist && npm run build"
+        "build:website": "cd packages/website && rm -rf .umi dist && npm run build",
+        "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+        "prettier-watch": "onchange '**/*.ts' -- prettier --write {{changed}}",
+        "eslint": "eslint . --ext .ts,.vue,.js,.tsx",
+        "prepare": "husky install",
+        "commit": "git add . && cz",
+        "preinstall": "npx only-allow pnpm",
+        "clean": "rimraf node_modules **/*/node_modules",
+        "cs": "changeset",
+        "cs:update": "node ./scripts/changeset.mjs",
+        "cs:version": "changeset version",
+        "cs:tag": "changeset tag",
+        "prerelease": "pnpm build",
+        "release": "changeset publish"
+    },
+    "packageManager": "pnpm@7.2.1",
+    "config": {
+        "commitizen": {
+            "path": "node_modules/cz-customizable"
+        }
     },
     "repository": {
         "type": "git",
@@ -39,46 +55,46 @@
     },
     "dependencies": {},
     "devDependencies": {
-        "@commitlint/cli": "^11.0.0",
-        "@commitlint/config-conventional": "^11.0.0",
+        "@changesets/cli": "^2.26.0",
+        "@commitlint/cli": "^17.4.4",
+        "@commitlint/config-conventional": "^17.4.4",
+        "@typescript-eslint/eslint-plugin": "^4.33.0",
+        "@typescript-eslint/parser": "^4.33.0",
+        "commitizen": "^4.3.0",
+        "commitlint": "^17.4.4",
+        "commitlint-config-cz": "^0.13.3",
+        "cross-env": "^7.0.3",
+        "cz-conventional-changelog": "^3.3.0",
+        "cz-customizable": "^6.9.2",
+        "eslint": "^7.32.0",
+        "eslint-config-prettier": "^7.2.0",
+        "eslint-plugin-flowtype": "^5.10.0",
+        "eslint-plugin-import": "^2.27.5",
+        "eslint-plugin-jest": "^24.7.0",
+        "eslint-plugin-jsx-a11y": "^6.7.1",
+        "eslint-plugin-prettier": "^3.4.1",
+        "eslint-plugin-react": "^7.32.2",
+        "eslint-plugin-react-hooks": "^4.6.0",
+        "glob": "^7.2.3",
+        "husky": "^8.0.3",
+        "lint-staged": "^13.2.0",
+        "prettier": "^2.8.6",
+        "typescript": "^4.9.5",
         "@types/core-js": "^2.5.2",
         "@types/jest": "^24.0.15",
         "babel-core": "^7.0.0-bridge.0",
         "babel-eslint": "^10.1.0",
         "babel-jest": "^24.8.0",
-        "eslint": "^7.16.0",
         "eslint-config-airbnb": "^18.2.1",
         "eslint-config-airbnb-base": "^14.2.1",
-        "eslint-config-prettier": "^7.1.0",
         "eslint-html-reporter": "^0.7.3",
-        "eslint-plugin-import": "^2.22.1",
-        "eslint-plugin-jest": "^24.1.3",
-        "eslint-plugin-jsx-a11y": "^6.4.1",
-        "eslint-plugin-react": "^7.21.5",
-        "husky": "^2.4.1",
         "jest": "^24.8.0",
-        "lerna": "^3.22.1",
-        "lint-staged": "^10.5.3",
-        "prettier": "^2.2.1",
-        "standard-version": "^8.0.1",
         "ts-jest": "^24.0.2",
         "tsconfig": "^7.0.0",
         "typescript-eslint-parser": "^22.0.0"
     },
-    "husky": {
-        "hooks": {
-            "commit-msg": "commitlint -e $GIT_PARAMS",
-            "pre-commit": "lint-staged"
-        }
-    },
-    "lint-staged": {
-        "src/**/*.js": [
-            "prettier --write",
-            "eslint --fix"
-        ]
-    },
     "engines": {
-        "node": ">=10.0.0"
+        "node": ">=14.0.0"
     },
     "standard-version": {}
 }
