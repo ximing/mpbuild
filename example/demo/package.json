@@ -13,7 +13,7 @@
     "license": "ISC",
     "dependencies": {
         "querystring": "^0.2.0",
-        "util": "^0.12.3"
+        "util": "^0.12.5"
     },
     "devDependencies": {
         "@babel/plugin-external-helpers": "^7.2.0",
