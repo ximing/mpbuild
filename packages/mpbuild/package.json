@@ -55,7 +55,7 @@
         "htmlparser2": "^5.0.1",
         "imagemin": "^6.1.0",
         "jsonlint": "^1.6.3",
-        "jsonminify": "^0.4.1",
+        "jsonminify": "^0.4.2",
         "lodash": "^4.17.20",
         "micromatch": "^3.1.10",
         "moment": "^2.18.1",
