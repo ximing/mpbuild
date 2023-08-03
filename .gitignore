@@ -21,3 +21,5 @@ typings/wx/r.d.ts
 git_ignore
 dist
 !example/demo/dist
+.worktrees/
+.superpowers/
