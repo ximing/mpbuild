@@ -1,0 +1,7 @@
+{
+  "name": "mpbuild-v5",
+  "private": true,
+  "packageManager": "pnpm@9.12.0",
+  "engines": { "node": ">=20.0.0" },
+  "scripts": { "test": "pnpm --filter @mpbuild/core test" }
+}
