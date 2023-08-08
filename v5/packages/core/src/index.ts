@@ -16,4 +16,6 @@ export { EdgeKinds } from './types.js'
 export { weappAdapter, getTargetAdapter } from './target/index.js'
 export type { Severity, Diagnostic } from './diagnostic/index.js'
 export { diagnostic, isError } from './diagnostic/index.js'
+export type { ResolvedConfig } from './config/schema.js'
+export { defineConfig, loadConfig } from './config/load.js'
 
