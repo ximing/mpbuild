@@ -20,4 +20,6 @@ export type { ResolvedConfig } from './config/schema.js'
 export { defineConfig, loadConfig } from './config/load.js'
 export type { ResolveRequest, ResolveResult } from './resolve/resolver.js'
 export { resolveId } from './resolve/resolver.js'
+export type { ExtractInput, ExtractedEdge } from './graph/extract.js'
+export { extractEdges } from './graph/extract.js'
 
