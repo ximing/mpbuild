@@ -22,4 +22,6 @@ export type { ResolveRequest, ResolveResult } from './resolve/resolver.js'
 export { resolveId } from './resolve/resolver.js'
 export type { ExtractInput, ExtractedEdge } from './graph/extract.js'
 export { extractEdges } from './graph/extract.js'
+export type { BuildGraphOptions } from './graph/builder.js'
+export { buildGraph } from './graph/builder.js'
 
