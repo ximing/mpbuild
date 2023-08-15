@@ -1,0 +1,19 @@
+{
+  "name": "@mpbuild/cli",
+  "version": "2.0.0",
+  "type": "module",
+  "bin": {
+    "mpb5": "./bin/mpb5.js"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "main": "./src/index.ts",
+  "dependencies": {
+    "@mpbuild/core": "workspace:*",
+    "tsx": "^4.19.2"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

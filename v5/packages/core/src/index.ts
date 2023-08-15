@@ -25,4 +25,5 @@ export { extractEdges } from './graph/extract.js'
 export type { BuildGraphOptions } from './graph/builder.js'
 export { buildGraph } from './graph/builder.js'
 export { analyzeGraph } from './graph/analyze.js'
+export { formatGraphInspect } from './inspect.js'
 
