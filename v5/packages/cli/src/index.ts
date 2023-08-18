@@ -26,5 +26,5 @@ export async function run(argv: string[] = process.argv): Promise<void> {
     console.log(formatGraphInspect(graph))
     return
   }
-  console.log('usage: mpb5 inspect graph')
+  console.log('usage: mpb inspect graph')
 }

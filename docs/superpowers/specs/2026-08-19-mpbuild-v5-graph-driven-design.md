@@ -31,7 +31,7 @@ entry → Scan 展开四件套 → addAsset → loaders → beforeEmitFile 解�
 - JS/TS 用 SWC，CSS 用 Lightning CSS。依赖从 **load 之后、transform 之前** 的源码 AST 抽取。
 - Watch 按内容 hash 做增量建图与失效；用拓扑/Plan 谓词决定重跑范围，不猜 `owner`。
 - 公开类型用抽象 kind + `TargetAdapter`。首发只实现 `weapp`；加抖音是填表，不是改 core。
-- 4.x 继续可发布；5.0 新包并行。
+- 4.x 源码已移出仓库。
 
 ### 2.2 非目标
 
@@ -41,7 +41,6 @@ entry → Scan 展开四件套 → addAsset → loaders → beforeEmitFile 解�
 - 不做 HMR 运行时。
 - 不实现 `next/` 的五层空壳目录。
 - 不把 Babel / PostCSS 做成默认引擎。`legacyScss()` 仅为金样可选插件。
-- 不在 5.0 首发时接管 `mpb` 二进制名。
 - 首发不做：workers、sitemap/theme 入图、tabBar 图标入图、WXML `<image src>` 入图、json `extends`、指定分包编译、HTML 分析图、`tsc` 型检查、minify 的 include/exclude、路径 hash 缩短。
 
 ## 3. 关键决策
@@ -51,7 +50,7 @@ entry → Scan 展开四件套 → addAsset → loaders → beforeEmitFile 解�
 | 迭代策略 | 方案 C：主版本重写 | 用户确认 |
 | 兼容策略 | 只保证产物语义 | 旧 API 与图驱动冲突 |
 | 代码位置 | 新建 `v5/`，冻结 4.x，不改 `next/` | `next/` 不可用 |
-| CLI / 包名 | `mpb5`；`@mpbuild/core` `@mpbuild/cli@2.0.0` | 与 `mpbuild@4` 分离 |
+| CLI / 包名 | `mpb`；`@mpbuild/core` `@mpbuild/cli@2.0.0` | 与 `mpbuild@4` 分离 |
 | 图冻结点 | **`buildGraph` 结束**后拓扑不可变 | transform 后补边会毁掉 Plan；建图期必须还能加虚拟模块和入口 |
 | JS 工具 | SWC；**允许 parse 两次**（抽依赖 + 编译） | 不为「一次 AST」在图上常驻整棵树 |
 | CSS 工具 | Lightning CSS；Sass/Less / 类 SCSS 为插件 | 替换 PostCSS 7 |
@@ -72,11 +71,11 @@ v5/
   tsconfig.json
   packages/
     core/          # @mpbuild/core
-    cli/           # @mpbuild/cli，bin: mpb5
+    cli/           # @mpbuild/cli，bin: mpb
     example/       # 从 example/demo + example/projects 迁入
 ```
 
-根 workspace 增加 `v5/packages/*`。4.x 包不改行为。`next/` 不删除，禁止当依赖或拷贝源。
+根 workspace 增加 `v5/packages/*`。4.x 包已删除，实现只在 `v5/`。`next/` 不删除，禁止当依赖或拷贝源。
 
 ```
 v5/packages/core/src/
@@ -450,7 +449,7 @@ transform 与 minify 共享同一次 SWC 调用。建图那次 parse 用完即�
 
 Source map：`minify` 为假时默认独立 `.map`。duplicate 的每份 placement 单独改写 `sources` / `sourceMappingURL`；或在 duplicate 时关闭 map。必须在实现里二选一，默认选「每份改写」。
 
-`output.clean === true`：**仅** `run()` / `mpb5 build` 的第一次 emit，以及 `dev` 启动的第一次 emit。Watch **禁止**全量删盘。保留文件名为 `adapter.projectConfigFile`。
+`output.clean === true`：**仅** `run()` / `mpb build` 的第一次 emit，以及 `dev` 启动的第一次 emit。Watch **禁止**全量删盘。保留文件名为 `adapter.projectConfigFile`。
 
 已存在的 project config 不覆盖。自定义用 `projectConfig()`，文件名读 adapter。
 
@@ -569,7 +568,7 @@ transform 缓存键至少：
 
 ## 15. CLI
 
-`mpb5 <command>`
+`mpb <command>`
 
 | 命令 | 行为 |
 |---|---|
@@ -655,16 +654,16 @@ build 遇 error 失败。dev 打印后保持进程，上次成功产物保留。
 ## 19. 交付阶段
 
 **P0 图内核**  
-config Zod、weapp adapter 表、resolve（含 virtual/external）、入口扫描、表驱动抽取、BFS 建图、analyze、假 adapter 图快照、`mpb5 inspect graph`。
+config Zod、weapp adapter 表、resolve（含 virtual/external）、入口扫描、表驱动抽取、BFS 建图、analyze、假 adapter 图快照、`mpb inspect graph`。
 
 **P1 可构建**  
-plan、SWC、Lightning、template/json、rewrite、emit 并行、`mpb5 build`。页面 suite 必须出。`plugin://` 不失败。
+plan、SWC、Lightning、template/json、rewrite、emit 并行、`mpb build`。页面 suite 必须出。`plugin://` 不失败。
 
 **P2 增量**  
-§14 状态机、缓存键、chokidar、首次-only clean、差量 dest、`mpb5 dev`、增量正确性测试。
+§14 状态机、缓存键、chokidar、首次-only clean、差量 dest、`mpb dev`、增量正确性测试。
 
 **P3 对齐金样**  
-platform/ifdef、projects、`.config.js`、`npmCompat`、`legacyScss`、projectConfig、minify、全局 usingComponents、`mpb5 analyze`、金样 CI。JSON 表在本阶段挂上 `componentGenerics` 的字符串路径。
+platform/ifdef、projects、`.config.js`、`npmCompat`、`legacyScss`、projectConfig、minify、全局 usingComponents、`mpb analyze`、金样 CI。JSON 表在本阶段挂上 `componentGenerics` 的字符串路径。
 
 **P4 发布**  
 迁移文档、根 README。`@mpbuild/core@2.0.0` / `@mpbuild/cli@2.0.0`（开发期 `2.0.0-alpha.N`）。不发布名为 `mpbuild` 的 5.0。
@@ -679,7 +678,7 @@ platform/ifdef、projects、`.config.js`、`npmCompat`、`legacyScss`、projectC
 
 ## 21. 迁移要点
 
-1. 安装 `@mpbuild/cli`，命令 `mpb5`。
+1. 安装 `@mpbuild/cli`，命令 `mpb`。
 2. 抄 `entry` / `src` / `output.path` / `alias` / minify 到新字段。`target` 默认 weapp，`platform` 仍写 `'wx'`。
 3. 删除 `module.rules`。原 PostCSS 用 `legacyScss()` 或改真实 Sass。
 4. 删除 PolymorphismPlugin → `platform: 'wx'`；需要额外宏 → `ifdef.tokens`。

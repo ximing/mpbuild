@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "type": "module",
   "bin": {
-    "mpb5": "./bin/mpb5.js"
+    "mpb": "./bin/mpb.js"
   },
   "exports": {
     ".": "./src/index.ts"
