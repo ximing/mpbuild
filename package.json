@@ -11,7 +11,6 @@
         "release:major": "npm run release -- --release-as major",
         "lint": "lint-staged",
         "pretty": "prettier --write \"src/**/*.js\"",
-        "build:website": "cd packages/website && rm -rf .umi dist && npm run build",
         "format": "prettier --write \"**/*.{ts,tsx,md}\"",
         "prettier-watch": "onchange '**/*.ts' -- prettier --write {{changed}}",
         "eslint": "eslint . --ext .ts,.vue,.js,.tsx",
