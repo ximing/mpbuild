@@ -29,9 +29,9 @@ describe('buildGraph', () => {
       'pages/index.js': `require('./util')\nimport 'plugin://x/y'\n`,
       'pages/util.js': `require('./index')\n`,
     })
-    const appId = join(srcDir, 'app.js')
-    const indexId = join(srcDir, 'pages/index.js')
-    const utilId = join(srcDir, 'pages/util.js')
+    const appId = 'app.js'
+    const indexId = 'pages/index.js'
+    const utilId = 'pages/util.js'
 
     const { graph } = await buildGraph({
       rootDir,
@@ -44,6 +44,7 @@ describe('buildGraph', () => {
     expect(graph.nodes.has(appId)).toBe(true)
     expect(graph.nodes.has(indexId)).toBe(true)
     expect(graph.nodes.has(utilId)).toBe(true)
+    expect(graph.nodes.get(appId)?.sourcePath).toBe(join(srcDir, 'app.js'))
     expect([...graph.nodes.keys()].some((id) => id.startsWith('plugin://'))).toBe(false)
     expect(graph.entries).toContain(appId)
     expect(graph.edges).toEqual(
@@ -59,16 +60,16 @@ describe('buildGraph', () => {
     const { rootDir, srcDir } = await fixture({
       'app.js': `require('./nope')\n`,
     })
-    const appId = join(srcDir, 'app.js')
+    const appAbs = join(srcDir, 'app.js')
     const { graph, diagnostics } = await buildGraph({
       rootDir,
       srcDir,
       adapter: weappAdapter,
-      entryScripts: [appId],
+      entryScripts: [appAbs],
     })
 
-    expect(graph.nodes.has(appId)).toBe(true)
-    expect(diagnostics.some((d) => d.code === 'RESOLVE_MISS' && d.file === appId)).toBe(true)
+    expect(graph.nodes.has('app.js')).toBe(true)
+    expect(diagnostics.some((d) => d.code === 'RESOLVE_MISS' && d.file === appAbs)).toBe(true)
     expect([...graph.nodes.keys()].some((id) => id.includes('nope'))).toBe(false)
   })
 })
