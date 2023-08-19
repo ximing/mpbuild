@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
-import { basename, isAbsolute, resolve } from 'node:path'
+import { basename, isAbsolute, relative, resolve } from 'node:path'
 import { diagnostic, type Diagnostic } from '../diagnostic/index.js'
 import { resolveId } from '../resolve/resolver.js'
 import {
@@ -34,6 +34,21 @@ export async function buildGraph(opts: BuildGraphOptions): Promise<{
   const visited = new Set<string>()
   const queue: string[] = []
 
+  const intern = (absPath: string): string => {
+    const id = posixRelative(srcDir, absPath)
+    if (!nodes.has(id)) {
+      nodes.set(id, {
+        id,
+        kind: kindFromExt(absPath, adapter),
+        sourcePath: absPath,
+        owner: 'main',
+        hash: '',
+        meta: {},
+      })
+    }
+    return id
+  }
+
   const enqueue = (id: string): boolean => {
     if (visited.has(id)) {
       return false
@@ -58,8 +73,9 @@ export async function buildGraph(opts: BuildGraphOptions): Promise<{
     if (!result || result.external) {
       continue
     }
-    if (enqueue(result.id)) {
-      entries.push(result.id)
+    const id = intern(result.id)
+    if (enqueue(id)) {
+      entries.push(id)
     }
   }
 
@@ -68,21 +84,17 @@ export async function buildGraph(opts: BuildGraphOptions): Promise<{
     if (id === undefined) {
       break
     }
-    const code = await readFile(id, 'utf8')
-    const kind = kindFromExt(id, adapter)
-    nodes.set(id, {
-      id,
-      kind,
-      sourcePath: id,
-      owner: 'main',
-      hash: createHash('sha256').update(code).digest('hex'),
-      meta: {},
-    })
+    const node = nodes.get(id)
+    if (node === undefined) {
+      break
+    }
+    const code = await readFile(node.sourcePath, 'utf8')
+    node.hash = createHash('sha256').update(code).digest('hex')
 
-    for (const extracted of extractEdges({ id, kind, code, adapter })) {
+    for (const extracted of extractEdges({ id, kind: node.kind, code, adapter })) {
       const result = tryResolve({
         request: extracted.raw,
-        importer: id,
+        importer: node.sourcePath,
         kind: targetKindFromEdge(extracted.kind),
         adapter,
         srcDir,
@@ -92,9 +104,10 @@ export async function buildGraph(opts: BuildGraphOptions): Promise<{
       if (!result) {
         continue
       }
+      const to = result.external ? result.id : intern(result.id)
       const edge: Edge = {
         from: id,
-        to: result.id,
+        to,
         kind: extracted.kind,
         raw: extracted.raw,
         loc: extracted.loc,
@@ -107,7 +120,7 @@ export async function buildGraph(opts: BuildGraphOptions): Promise<{
         continue
       }
       edges.push(edge)
-      enqueue(result.id)
+      enqueue(to)
     }
   }
 
@@ -141,6 +154,11 @@ function tryResolve(input: {
     )
     return undefined
   }
+}
+
+/** 图 id：posix、相对 srcDir。 */
+function posixRelative(from: string, to: string): string {
+  return relative(from, to).split(/[\\/]/).join('/')
 }
 
 /** 当前模块 kind：按 adapter.sourceExts 最长后缀反查，未命中则 script。 */
