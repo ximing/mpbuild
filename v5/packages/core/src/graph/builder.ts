@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
-import { basename, isAbsolute, relative, resolve } from 'node:path'
+import { basename, isAbsolute, join, relative, resolve } from 'node:path'
 import { diagnostic, type Diagnostic } from '../diagnostic/index.js'
 import { resolveId } from '../resolve/resolver.js'
 import {
@@ -9,9 +9,12 @@ import {
   type Edge,
   type Module,
   type ModuleGraph,
+  type PackageInfo,
   type TargetAdapter,
 } from '../types.js'
+import { pageScriptsFromAppJson } from './entries.js'
 import { extractEdges } from './extract.js'
+import { companionPath } from './suite.js'
 
 export interface BuildGraphOptions {
   rootDir: string
@@ -33,10 +36,12 @@ export async function buildGraph(opts: BuildGraphOptions): Promise<{
   const diagnostics: Diagnostic[] = []
   const visited = new Set<string>()
   const queue: string[] = []
+  let packages: PackageInfo[] = []
 
-  const intern = (absPath: string): string => {
+  const intern = (absPath: string, pageType?: Module['pageType']): string => {
     const id = posixRelative(srcDir, absPath)
-    if (!nodes.has(id)) {
+    const existing = nodes.get(id)
+    if (!existing) {
       nodes.set(id, {
         id,
         kind: kindFromExt(absPath, adapter),
@@ -44,7 +49,10 @@ export async function buildGraph(opts: BuildGraphOptions): Promise<{
         owner: 'main',
         hash: '',
         meta: {},
+        ...(pageType ? { pageType } : {}),
       })
+    } else if (pageType && existing.pageType === undefined) {
+      existing.pageType = pageType
     }
     return id
   }
@@ -74,6 +82,10 @@ export async function buildGraph(opts: BuildGraphOptions): Promise<{
       continue
     }
     const id = intern(result.id)
+    const entryNode = nodes.get(id)
+    if (entryNode && isAppScriptId(id, adapter)) {
+      entryNode.pageType = 'app'
+    }
     if (enqueue(id)) {
       entries.push(id)
     }
@@ -91,6 +103,26 @@ export async function buildGraph(opts: BuildGraphOptions): Promise<{
     const code = await readFile(node.sourcePath, 'utf8')
     node.hash = createHash('sha256').update(code).digest('hex')
 
+    if (node.kind === 'script') {
+      expandSuite({ node, adapter, intern, enqueue, edges })
+    }
+
+    if (node.kind === 'json' && isAppJsonId(id, adapter)) {
+      const nextPackages = enqueuePagesFromAppJson({
+        code,
+        adapter,
+        srcDir,
+        alias,
+        intern,
+        enqueue,
+        entries,
+        diagnostics,
+      })
+      if (nextPackages) {
+        packages = nextPackages
+      }
+    }
+
     for (const extracted of extractEdges({ id, kind: node.kind, code, adapter })) {
       const result = tryResolve({
         request: extracted.raw,
@@ -104,7 +136,9 @@ export async function buildGraph(opts: BuildGraphOptions): Promise<{
       if (!result) {
         continue
       }
-      const to = result.external ? result.id : intern(result.id)
+      const to = result.external
+        ? result.id
+        : intern(result.id, extracted.kind === EdgeKinds.usingComponent ? 'component' : undefined)
       const edge: Edge = {
         from: id,
         to,
@@ -125,9 +159,125 @@ export async function buildGraph(opts: BuildGraphOptions): Promise<{
   }
 
   return {
-    graph: { entries, nodes, edges, packages: [] },
+    graph: { entries, nodes, edges, packages },
     diagnostics,
   }
+}
+
+/** 抽边前扫描 adapter.suite（除 script）；缺伴生不报错。 */
+function expandSuite(input: {
+  node: Module
+  adapter: TargetAdapter
+  intern: (absPath: string, pageType?: Module['pageType']) => string
+  enqueue: (id: string) => boolean
+  edges: Edge[]
+}): void {
+  const { node, adapter, intern, enqueue, edges } = input
+  const kind = suiteEdgeKind(node, edges)
+  const seen = new Set<AbstractKind>()
+  for (const slot of Object.keys(adapter.suite) as Array<keyof TargetAdapter['suite']>) {
+    if (slot === 'script') {
+      continue
+    }
+    const companionKind = adapter.suite[slot]
+    if (companionKind === 'script' || seen.has(companionKind)) {
+      continue
+    }
+    seen.add(companionKind)
+    const abs = companionPath(node.sourcePath, companionKind, adapter)
+    if (!abs) {
+      continue
+    }
+    const to = intern(abs)
+    edges.push({
+      from: node.id,
+      to,
+      kind,
+      raw: `./${basename(abs)}`,
+      affectsOwnership: true,
+      meta: {},
+    })
+    enqueue(to)
+  }
+}
+
+function suiteEdgeKind(node: Module, edges: Edge[]): string {
+  if (node.pageType === 'component') {
+    return EdgeKinds.componentSuite
+  }
+  if (edges.some((edge) => edge.to === node.id && edge.kind === EdgeKinds.usingComponent)) {
+    return EdgeKinds.componentSuite
+  }
+  return EdgeKinds.pageSuite
+}
+
+/** 页面 script：`./spec` 相对 src/app.js；失败为 MISSING_PAGE_JS，不入队。 */
+function enqueuePagesFromAppJson(input: {
+  code: string
+  adapter: TargetAdapter
+  srcDir: string
+  alias?: Record<string, string>
+  intern: (absPath: string, pageType?: Module['pageType']) => string
+  enqueue: (id: string) => boolean
+  entries: string[]
+  diagnostics: Diagnostic[]
+}): PackageInfo[] | undefined {
+  const { code, adapter, srcDir, alias, intern, enqueue, entries, diagnostics } = input
+  let parsed: ReturnType<typeof pageScriptsFromAppJson>
+  try {
+    parsed = pageScriptsFromAppJson(code, adapter)
+  } catch {
+    return undefined
+  }
+  const importer = join(srcDir, 'app.js')
+  for (const spec of parsed.scripts) {
+    try {
+      const result = resolveId({
+        request: `./${spec}`,
+        importer,
+        kind: 'script',
+        adapter,
+        srcDir,
+        alias,
+      })
+      if (!result || result.external) {
+        continue
+      }
+      const id = intern(result.id, 'page')
+      if (!entries.includes(id)) {
+        entries.push(id)
+      }
+      enqueue(id)
+    } catch {
+      diagnostics.push(
+        diagnostic({
+          code: 'MISSING_PAGE_JS',
+          severity: 'error',
+          message: `MISSING_PAGE_JS: cannot resolve page script ${spec}`,
+          file: join(srcDir, spec),
+        }),
+      )
+    }
+  }
+  return parsed.packages
+}
+
+function isAppScriptId(id: string, adapter: TargetAdapter): boolean {
+  return stemOf(id, adapter.sourceExts.script ?? []) === 'app'
+}
+
+function isAppJsonId(id: string, adapter: TargetAdapter): boolean {
+  return stemOf(id, adapter.sourceExts.json ?? []) === 'app'
+}
+
+function stemOf(id: string, exts: string[]): string {
+  let matched = ''
+  for (const ext of exts) {
+    if (ext.length > matched.length && id.endsWith(ext)) {
+      matched = ext
+    }
+  }
+  return matched ? id.slice(0, -matched.length) : id
 }
 
 function tryResolve(input: {

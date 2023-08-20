@@ -24,6 +24,8 @@ export type { ExtractInput, ExtractedEdge } from './graph/extract.js'
 export { extractEdges } from './graph/extract.js'
 export type { BuildGraphOptions } from './graph/builder.js'
 export { buildGraph } from './graph/builder.js'
+export { companionPath } from './graph/suite.js'
+export { pageScriptsFromAppJson } from './graph/entries.js'
 export { analyzeGraph } from './graph/analyze.js'
 export { formatGraphInspect } from './inspect.js'
 
