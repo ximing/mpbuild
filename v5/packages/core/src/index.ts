@@ -27,5 +27,6 @@ export { buildGraph } from './graph/builder.js'
 export { companionPath } from './graph/suite.js'
 export { pageScriptsFromAppJson } from './graph/entries.js'
 export { analyzeGraph } from './graph/analyze.js'
+export { planGraph } from './plan/plan.js'
 export { formatGraphInspect } from './inspect.js'
 
