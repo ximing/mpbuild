@@ -29,5 +29,6 @@ export { pageScriptsFromAppJson } from './graph/entries.js'
 export { analyzeGraph } from './graph/analyze.js'
 export { planGraph } from './plan/plan.js'
 export { transformModule } from './compile/transform.js'
+export { rewriteCode } from './compile/rewrite.js'
 export { formatGraphInspect } from './inspect.js'
 
