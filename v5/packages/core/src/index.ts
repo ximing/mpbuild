@@ -30,5 +30,7 @@ export { analyzeGraph } from './graph/analyze.js'
 export { planGraph } from './plan/plan.js'
 export { transformModule } from './compile/transform.js'
 export { rewriteCode } from './compile/rewrite.js'
+export { emitPlan } from './compile/emit.js'
+export { createCompiler } from './compiler.js'
 export { formatGraphInspect } from './inspect.js'
 
