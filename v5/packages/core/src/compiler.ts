@@ -18,7 +18,12 @@ function emptyPlan(): OutputPlan {
 
 /** 建图 → analyze → plan → emit。缺 app.js/ts 则 MISSING_APP_JS。 */
 export function createCompiler(config: ResolvedConfig): {
-  run(): Promise<{ graph: ModuleGraph; plan: OutputPlan; diagnostics: Diagnostic[] }>
+  run(): Promise<{
+    graph: ModuleGraph
+    plan: OutputPlan
+    diagnostics: Diagnostic[]
+    dests: string[]
+  }>
 } {
   return {
     async run() {
@@ -38,6 +43,7 @@ export function createCompiler(config: ResolvedConfig): {
               file: appJs,
             }),
           ],
+          dests: [],
         }
       }
 
@@ -66,17 +72,18 @@ export function createCompiler(config: ResolvedConfig): {
       })
       diagnostics.push(...planned.diagnostics)
 
-      diagnostics.push(
-        ...(await emitPlan({
-          graph: analyzed.graph,
-          plan: planned.plan,
-          outputDir,
-          clean: config.output.clean,
-          js: config.compile.js,
-        })),
-      )
+      const emitted = await emitPlan({
+        graph: analyzed.graph,
+        plan: planned.plan,
+        outputDir,
+        clean: config.output.clean,
+        js: config.compile.js,
+        previousDests: [],
+        preserveNames: [config.target.projectConfigFile],
+      })
+      diagnostics.push(...emitted.diagnostics)
 
-      return { graph: analyzed.graph, plan: planned.plan, diagnostics }
+      return { graph: analyzed.graph, plan: planned.plan, diagnostics, dests: emitted.dests }
     },
   }
 }
