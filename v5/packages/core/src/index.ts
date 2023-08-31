@@ -33,5 +33,7 @@ export { transformModule } from './compile/transform.js'
 export { rewriteCode } from './compile/rewrite.js'
 export { emitPlan } from './compile/emit.js'
 export { createCompiler } from './compiler.js'
+export { topologyChanged, planChanged } from './watch/diff.js'
+export { applyWatchTick } from './watch/tick.js'
 export { formatGraphInspect } from './inspect.js'
 
