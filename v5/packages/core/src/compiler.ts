@@ -7,6 +7,7 @@ import { analyzeGraph } from './graph/analyze.js'
 import { buildGraph } from './graph/builder.js'
 import { planGraph } from './plan/plan.js'
 import type { ModuleGraph, OutputPlan } from './types.js'
+import { applyWatchTick as applyWatchTickOnce } from './watch/tick.js'
 
 function emptyGraph(): ModuleGraph {
   return { entries: [], nodes: new Map(), edges: [], packages: [] }
@@ -16,74 +17,125 @@ function emptyPlan(): OutputPlan {
   return { placements: [], rewrites: [] }
 }
 
+type CompilerRunResult = {
+  graph: ModuleGraph
+  plan: OutputPlan
+  diagnostics: Diagnostic[]
+  dests: string[]
+}
+
+type CompilerTickResult = CompilerRunResult & {
+  topologyChanged: boolean
+  planChanged: boolean
+}
+
 /** 建图 → analyze → plan → emit。缺 app.js/ts 则 MISSING_APP_JS。 */
 export function createCompiler(config: ResolvedConfig): {
-  run(): Promise<{
-    graph: ModuleGraph
-    plan: OutputPlan
-    diagnostics: Diagnostic[]
-    dests: string[]
-  }>
+  run(): Promise<CompilerRunResult>
+  applyWatchTick(args: {
+    changedIds: string[]
+    deletedIds: string[]
+    addedRelPaths: string[]
+  }): Promise<CompilerTickResult>
 } {
-  return {
-    async run() {
-      const srcDir = resolve(config.rootDir, config.src)
-      const appJs = join(srcDir, 'app.js')
-      const appTs = join(srcDir, 'app.ts')
-      const entryScript = existsSync(appJs) ? appJs : existsSync(appTs) ? appTs : undefined
-      if (!entryScript) {
-        return {
-          graph: emptyGraph(),
-          plan: emptyPlan(),
-          diagnostics: [
-            diagnostic({
-              code: 'MISSING_APP_JS',
-              severity: 'error',
-              message: 'MISSING_APP_JS: no app.js or app.ts',
-              file: appJs,
-            }),
-          ],
-          dests: [],
-        }
+  let lastGraph: ModuleGraph = emptyGraph()
+  let lastPlan: OutputPlan = emptyPlan()
+  let lastDests: string[] = []
+  let didEmit = false
+
+  async function run(): Promise<CompilerRunResult> {
+    const srcDir = resolve(config.rootDir, config.src)
+    const appJs = join(srcDir, 'app.js')
+    const appTs = join(srcDir, 'app.ts')
+    const entryScript = existsSync(appJs) ? appJs : existsSync(appTs) ? appTs : undefined
+    if (!entryScript) {
+      const result: CompilerRunResult = {
+        graph: emptyGraph(),
+        plan: emptyPlan(),
+        diagnostics: [
+          diagnostic({
+            code: 'MISSING_APP_JS',
+            severity: 'error',
+            message: 'MISSING_APP_JS: no app.js or app.ts',
+            file: appJs,
+          }),
+        ],
+        dests: [],
       }
+      remember(result)
+      return result
+    }
 
-      const diagnostics: Diagnostic[] = []
-      const built = await buildGraph({
-        rootDir: config.rootDir,
-        srcDir,
-        adapter: config.target,
-        entryScripts: [entryScript],
-        alias: config.resolve.alias,
+    const diagnostics: Diagnostic[] = []
+    const built = await buildGraph({
+      rootDir: config.rootDir,
+      srcDir,
+      adapter: config.target,
+      entryScripts: [entryScript],
+      alias: config.resolve.alias,
+    })
+    diagnostics.push(...built.diagnostics)
+
+    const analyzed = analyzeGraph(
+      built.graph,
+      built.graph.packages.length ? built.graph.packages : [{ root: '' }],
+      config.target,
+    )
+    diagnostics.push(...analyzed.diagnostics)
+
+    const outputDir = resolve(config.rootDir, config.output.dir)
+    const planned = planGraph(analyzed.graph, {
+      outputDir,
+      shared: config.subPackage.shared,
+      adapter: config.target,
+    })
+    diagnostics.push(...planned.diagnostics)
+
+    const emitted = await emitPlan({
+      graph: analyzed.graph,
+      plan: planned.plan,
+      outputDir,
+      clean: didEmit ? false : config.output.clean,
+      js: config.compile.js,
+      previousDests: didEmit ? lastDests : [],
+      preserveNames: [config.target.projectConfigFile],
+    })
+    diagnostics.push(...emitted.diagnostics)
+
+    const result: CompilerRunResult = {
+      graph: analyzed.graph,
+      plan: planned.plan,
+      diagnostics,
+      dests: emitted.dests,
+    }
+    remember(result)
+    return result
+  }
+
+  function remember(result: CompilerRunResult): void {
+    lastGraph = result.graph
+    lastPlan = result.plan
+    lastDests = result.dests
+    didEmit = true
+  }
+
+  return {
+    run,
+    async applyWatchTick(args) {
+      if (!didEmit) {
+        await run()
+      }
+      const result = await applyWatchTickOnce({
+        config,
+        graph: lastGraph,
+        plan: lastPlan,
+        previousDests: lastDests,
+        changedIds: args.changedIds,
+        deletedIds: args.deletedIds,
+        addedRelPaths: args.addedRelPaths,
       })
-      diagnostics.push(...built.diagnostics)
-
-      const analyzed = analyzeGraph(
-        built.graph,
-        built.graph.packages.length ? built.graph.packages : [{ root: '' }],
-        config.target,
-      )
-      diagnostics.push(...analyzed.diagnostics)
-
-      const outputDir = resolve(config.rootDir, config.output.dir)
-      const planned = planGraph(analyzed.graph, {
-        outputDir,
-        shared: config.subPackage.shared,
-        adapter: config.target,
-      })
-      diagnostics.push(...planned.diagnostics)
-
-      const emitted = await emitPlan({
-        graph: analyzed.graph,
-        plan: planned.plan,
-        outputDir,
-        clean: config.output.clean,
-        js: config.compile.js,
-        previousDests: [],
-        preserveNames: [config.target.projectConfigFile],
-      })
-      diagnostics.push(...emitted.diagnostics)
-
-      return { graph: analyzed.graph, plan: planned.plan, diagnostics, dests: emitted.dests }
+      remember(result)
+      return result
     },
   }
 }
