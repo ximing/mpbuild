@@ -10,7 +10,7 @@ import {
   weappAdapter,
 } from '@mpbuild/core'
 
-/** inspect graph：cwd 下有 src/app.js 则建图打印。build：loadConfig → createCompiler.run。 */
+/** inspect graph：cwd 下有 src/app.js 则建图打印。build：run 一次。dev/--watch：watch 并保持进程。 */
 export async function run(argv: string[] = process.argv): Promise<void> {
   if (argv[2] === 'inspect' && argv[3] === 'graph') {
     const cwd = process.cwd()
@@ -29,32 +29,50 @@ export async function run(argv: string[] = process.argv): Promise<void> {
     console.log(formatGraphInspect(graph))
     return
   }
+  if (argv[2] === 'dev' || argv[2] === '--watch' || (argv[2] === 'build' && argv.includes('--watch'))) {
+    const config = await loadOrReport(process.cwd())
+    if (!config) {
+      return
+    }
+    await createCompiler(config).watch()
+    await new Promise<void>(() => {})
+    return
+  }
   if (argv[2] === 'build') {
-    const cwd = process.cwd()
-    let config
-    try {
-      config = await loadConfig(cwd)
-    } catch (err) {
-      const code = thrownCode(err)
-      const message = err instanceof Error ? err.message : String(err)
-      console.error(code && !message.startsWith(code) ? `${code} ${message}` : message)
-      process.exitCode = code === 'CONFIG_NOT_FOUND' || code === 'LEGACY_CONFIG' ? 2 : 1
+    const config = await loadOrReport(process.cwd())
+    if (!config) {
       return
     }
     const { diagnostics } = await createCompiler(config).run()
-    for (const d of diagnostics) {
-      const parts = [d.code, d.message]
-      if (d.file) {
-        parts.push(d.file)
-      }
-      console.error(parts.join(' '))
-    }
+    printDiagnostics(diagnostics)
     if (diagnostics.some(isError)) {
       process.exitCode = 1
     }
     return
   }
-  console.log('usage: mpb <inspect graph|build>')
+  console.log('usage: mpb <inspect graph|build|dev>')
+}
+
+async function loadOrReport(cwd: string) {
+  try {
+    return await loadConfig(cwd)
+  } catch (err) {
+    const code = thrownCode(err)
+    const message = err instanceof Error ? err.message : String(err)
+    console.error(code && !message.startsWith(code) ? `${code} ${message}` : message)
+    process.exitCode = code === 'CONFIG_NOT_FOUND' || code === 'LEGACY_CONFIG' ? 2 : 1
+    return undefined
+  }
+}
+
+function printDiagnostics(diagnostics: { code: string; message: string; file?: string }[]) {
+  for (const d of diagnostics) {
+    const parts = [d.code, d.message]
+    if (d.file) {
+      parts.push(d.file)
+    }
+    console.error(parts.join(' '))
+  }
 }
 
 function thrownCode(err: unknown): string | undefined {
