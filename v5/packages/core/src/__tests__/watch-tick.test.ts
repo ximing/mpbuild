@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs'
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -151,5 +151,33 @@ describe('createCompiler applyWatchTick', () => {
     expect(existsSync(join(rootDir, 'dist/pkgC/lib.js'))).toBe(true)
     expect(existsSync(join(rootDir, 'dist/pkgA/lib.js'))).toBe(true)
     expect(existsSync(join(rootDir, 'dist/pkgB/lib.js'))).toBe(true)
+  })
+
+  it('emits a leaf index.wxml without retopology or touching index.js', async () => {
+    const rootDir = await fixture({
+      'src/app.js': 'App({})\n',
+      'src/app.json': JSON.stringify({ pages: ['pages/index/index'] }),
+      'src/pages/index/index.js': '',
+      'src/pages/index/index.json': JSON.stringify({}),
+      'src/pages/index/index.wxml': '<view>leaf</view>',
+    })
+    const compiler = createCompiler(configOf(rootDir))
+    await compiler.run()
+
+    const wxmlDest = join(rootDir, 'dist/pages/index/index.wxml')
+    const jsDest = join(rootDir, 'dist/pages/index/index.js')
+    expect(existsSync(wxmlDest)).toBe(true)
+    const jsMtime = (await stat(jsDest)).mtimeMs
+
+    await writeRel(rootDir, 'src/pages/index/index.wxml', '<view>leaf-watch-v2</view>')
+    const tick = await compiler.applyWatchTick({
+      changedIds: ['pages/index/index.wxml'],
+      deletedIds: [],
+      addedRelPaths: [],
+    })
+    expect(tick.topologyChanged).toBe(false)
+    expect(tick.planChanged).toBe(false)
+    expect(await readFile(wxmlDest, 'utf8')).toContain('leaf-watch-v2')
+    expect((await stat(jsDest)).mtimeMs).toBe(jsMtime)
   })
 })
