@@ -14,12 +14,43 @@ const outputSchema = z
   })
   .default({ dir: 'dist', npm: 'npm', clean: true, componentRelative: true })
 
+export type AliasValue = string | ((ctx: { importer: string; request: string }) => string | undefined)
+
+export interface SubProject {
+  name: string
+  src: string
+  alias: Record<string, string>
+}
+
+export interface AppEntry {
+  router?: Array<{ root: string; pages: Record<string, string>; independent?: boolean; [k: string]: unknown }>
+  pages?: string[]
+  subPackages?: Array<{ root: string; pages: string[]; independent?: boolean; [k: string]: unknown }>
+  usingComponents?: Record<string, string>
+  [k: string]: unknown
+}
+
+const aliasValueSchema = z.union([z.string(), z.function()])
+
 const resolveSchema = z
   .object({
-    alias: z.record(z.string(), z.string()).default({}),
+    alias: z.record(z.string(), aliasValueSchema).default({}),
     extensions: z.record(z.string(), z.array(z.string())).optional(),
   })
   .default({ alias: {} })
+
+const subProjectSchema = z.object({
+  name: z.string(),
+  src: z.string(),
+  alias: z.record(z.string(), z.string()).default({}),
+})
+
+const ifdefSchema = z
+  .object({
+    tokens: z.record(z.string(), z.union([z.boolean(), z.string()])).default({}),
+    blockcode: z.boolean().default(true),
+  })
+  .default({ tokens: {}, blockcode: true })
 
 const compileSchema = z
   .object({
@@ -57,6 +88,8 @@ export const userConfigSchema = z.object({
   resolve: resolveSchema,
   compile: compileSchema,
   subPackage: subPackageSchema,
+  projects: z.array(subProjectSchema).default([]),
+  ifdef: ifdefSchema,
 })
 
 export interface ResolvedConfig {
@@ -66,12 +99,15 @@ export interface ResolvedConfig {
   platform?: string
   entry: string | Record<string, unknown>
   output: { dir: string; npm: string; clean: boolean; componentRelative: boolean }
-  resolve: { alias: Record<string, string>; extensions: TargetAdapter['sourceExts'] }
+  resolve: { alias: Record<string, AliasValue>; extensions: TargetAdapter['sourceExts'] }
   compile: {
     js: { target: 'es5' | 'es2018' | 'es2020'; module: 'commonjs' | 'es6' }
     css: { lightningcss: boolean }
     minify: boolean | Record<string, boolean>
   }
   subPackage: { shared: 'duplicate' | 'main' }
+  projects: SubProject[]
+  ifdef: { tokens: Record<string, boolean | string>; blockcode: boolean }
+  appEntry: AppEntry
   configPath: string
 }
