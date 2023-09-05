@@ -3,7 +3,8 @@ import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { getTargetAdapter } from '../target/index.js'
 import type { TargetAdapter } from '../types.js'
-import { userConfigSchema, type ResolvedConfig } from './schema.js'
+import { loadAppEntry } from './entry.js'
+import { userConfigSchema, type AliasValue, type ResolvedConfig } from './schema.js'
 
 const CONFIG_NAMES = ['mpbuild.config.ts', 'mpbuild.config.mts', 'mpbuild.config.js'] as const
 
@@ -31,6 +32,7 @@ export async function loadConfig(rootDir: string): Promise<ResolvedConfig> {
   const imported = (await import(pathToFileURL(configPath).href)) as { default?: unknown }
   const parsed = userConfigSchema.parse(imported.default ?? imported)
   const target = resolveTarget(parsed.target)
+  const appEntry = await loadAppEntry(rootDir, parsed.entry)
 
   return {
     rootDir,
@@ -40,11 +42,14 @@ export async function loadConfig(rootDir: string): Promise<ResolvedConfig> {
     entry: parsed.entry,
     output: parsed.output,
     resolve: {
-      alias: parsed.resolve.alias,
+      alias: parsed.resolve.alias as Record<string, AliasValue>,
       extensions: { ...target.sourceExts, ...parsed.resolve.extensions },
     },
     compile: parsed.compile,
     subPackage: parsed.subPackage,
+    projects: parsed.projects,
+    ifdef: parsed.ifdef,
+    appEntry,
     configPath,
   }
 }
