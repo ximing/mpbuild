@@ -1,10 +1,12 @@
 import { existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { emitPlan } from './compile/emit.js'
+import { loadAppEntry } from './config/entry.js'
 import type { ResolvedConfig } from './config/schema.js'
 import { diagnostic, type Diagnostic } from './diagnostic/index.js'
 import { analyzeGraph } from './graph/analyze.js'
 import { buildGraph } from './graph/builder.js'
+import { appJsonFromEntry, pageScriptsFromRouter } from './graph/entries.js'
 import { planGraph } from './plan/plan.js'
 import type { ModuleGraph, OutputPlan } from './types.js'
 import { applyWatchTick as applyWatchTickOnce } from './watch/tick.js'
@@ -69,12 +71,26 @@ export function createCompiler(config: ResolvedConfig): {
     }
 
     const diagnostics: Diagnostic[] = []
+    const appEntry = await loadAppEntry(config.rootDir, config.entry)
+    const fromRouter = Array.isArray(appEntry.router) ? pageScriptsFromRouter(appEntry) : undefined
     const built = await buildGraph({
       rootDir: config.rootDir,
       srcDir,
       adapter: config.target,
-      entryScripts: [entryScript],
+      entryScripts: fromRouter ? [entryScript, ...fromRouter.sources] : [entryScript],
       alias: config.resolve.alias,
+      packages: fromRouter?.packages,
+      skipAppJsonPages: fromRouter !== undefined,
+      virtualModules:
+        fromRouter === undefined
+          ? undefined
+          : [
+              {
+                id: 'virtual:app.json',
+                kind: 'json',
+                code: JSON.stringify(appJsonFromEntry(appEntry, config.target)),
+              },
+            ],
     })
     diagnostics.push(...built.diagnostics)
 
