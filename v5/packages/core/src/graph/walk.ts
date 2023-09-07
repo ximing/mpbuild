@@ -26,6 +26,8 @@ export interface GraphWalk {
   diagnostics: Diagnostic[]
   visited: Set<string>
   queue: string[]
+  /** 有 router 时不从磁盘 app.json 扫 pages */
+  skipAppJsonPages?: boolean
 }
 
 /** 图 id：posix、相对 srcDir。 */
@@ -71,6 +73,31 @@ export function intern(
   return id
 }
 
+/** 虚模块：id 保留 `virtual:` 前缀，sourcePath 为空，code 放 meta.code。 */
+export function internVirtual(
+  walk: GraphWalk,
+  id: string,
+  init: { kind: AbstractKind; code: string },
+): string {
+  const existing = walk.nodes.get(id)
+  if (!existing) {
+    walk.nodes.set(id, {
+      id,
+      kind: init.kind,
+      sourcePath: '',
+      virtual: true,
+      owner: 'main',
+      hash: '',
+      meta: { code: init.code },
+    })
+  } else {
+    existing.virtual = true
+    existing.kind = init.kind
+    existing.meta = { ...existing.meta, code: init.code }
+  }
+  return id
+}
+
 export function enqueue(walk: GraphWalk, id: string): boolean {
   if (walk.visited.has(id)) {
     return false
@@ -99,15 +126,20 @@ export async function processModule(walk: GraphWalk, id: string): Promise<void> 
   if (node === undefined) {
     return
   }
-  const code = await readFile(node.sourcePath, 'utf8')
+  let code: string
+  if (isVirtualNode(node)) {
+    code = typeof node.meta.code === 'string' ? node.meta.code : ''
+  } else {
+    code = await readFile(node.sourcePath, 'utf8')
+    node.kind = kindFromExt(node.sourcePath, walk.adapter)
+  }
   node.hash = createHash('sha256').update(code).digest('hex')
-  node.kind = kindFromExt(node.sourcePath, walk.adapter)
 
   if (node.kind === 'script') {
     expandSuite(walk, node)
   }
 
-  if (node.kind === 'json' && isAppJsonId(id, walk.adapter)) {
+  if (node.kind === 'json' && !walk.skipAppJsonPages && isAppJsonId(id, walk.adapter)) {
     const nextPackages = enqueuePagesFromAppJson(walk, code)
     if (nextPackages) {
       walk.packages.length = 0
@@ -115,6 +147,7 @@ export async function processModule(walk: GraphWalk, id: string): Promise<void> 
     }
   }
 
+  const importer = node.sourcePath || join(walk.srcDir, stripVirtualPrefix(id))
   for (const extracted of extractEdges({
     id,
     kind: node.kind,
@@ -123,7 +156,7 @@ export async function processModule(walk: GraphWalk, id: string): Promise<void> 
   })) {
     const result = tryResolve(walk, {
       request: extracted.raw,
-      importer: node.sourcePath,
+      importer,
       kind: targetKindFromEdge(extracted.kind),
     })
     if (!result) {
@@ -166,6 +199,9 @@ export function expandSuite(walk: GraphWalk, node: Module): void {
     }
     const companionKind = adapter.suite[slot]
     if (companionKind === 'script' || seen.has(companionKind)) {
+      continue
+    }
+    if (walk.skipAppJsonPages && node.pageType === 'app' && companionKind === 'json') {
       continue
     }
     seen.add(companionKind)
@@ -257,6 +293,24 @@ function enqueuePagesFromAppJson(walk: GraphWalk, code: string): PackageInfo[] |
 
 export function isAppScriptId(id: string, adapter: TargetAdapter): boolean {
   return stemOf(id, adapter.sourceExts.script ?? []) === 'app'
+}
+
+export function isVirtualNode(node: Module): boolean {
+  return node.virtual === true || node.sourcePath === '' || isVirtualId(node.id)
+}
+
+export function isVirtualId(id: string): boolean {
+  return id.startsWith('virtual:') || id.startsWith('\0')
+}
+
+export function stripVirtualPrefix(id: string): string {
+  if (id.startsWith('virtual:')) {
+    return id.slice('virtual:'.length)
+  }
+  if (id.startsWith('\0')) {
+    return id.slice(1)
+  }
+  return id
 }
 
 function isAppJsonId(id: string, adapter: TargetAdapter): boolean {

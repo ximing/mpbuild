@@ -1,10 +1,19 @@
-import { basename, isAbsolute, resolve } from 'node:path'
-import type { Diagnostic } from '../diagnostic/index.js'
-import type { ModuleGraph, TargetAdapter } from '../types.js'
+import { existsSync, statSync } from 'node:fs'
+import { basename, isAbsolute, join, resolve } from 'node:path'
+import { diagnostic, type Diagnostic } from '../diagnostic/index.js'
+import { resolveId } from '../resolve/resolver.js'
+import {
+  EdgeKinds,
+  type AbstractKind,
+  type ModuleGraph,
+  type PackageInfo,
+  type TargetAdapter,
+} from '../types.js'
 import {
   drainQueue,
   enqueue,
   intern,
+  internVirtual,
   isAppScriptId,
   tryResolve,
   type GraphWalk,
@@ -14,8 +23,11 @@ export interface BuildGraphOptions {
   rootDir: string
   srcDir: string
   adapter: TargetAdapter
-  entryScripts: string[] // 绝对或相对 rootDir 的 script 路径
+  entryScripts: string[] // 绝对路径、相对 rootDir，或 `/` 相对 src 的页面源
   alias?: Record<string, string>
+  packages?: PackageInfo[]
+  skipAppJsonPages?: boolean
+  virtualModules?: Array<{ id: string; kind: AbstractKind; code: string }>
 }
 
 /** 从 entry 入队，按最终 id BFS；环边照常写入，不递归 process。 */
@@ -23,7 +35,8 @@ export async function buildGraph(opts: BuildGraphOptions): Promise<{
   graph: ModuleGraph
   diagnostics: Diagnostic[]
 }> {
-  const { rootDir, srcDir, adapter, entryScripts, alias } = opts
+  const { rootDir, srcDir, adapter, entryScripts, alias, packages, skipAppJsonPages, virtualModules } =
+    opts
   const walk: GraphWalk = {
     srcDir,
     adapter,
@@ -31,31 +44,21 @@ export async function buildGraph(opts: BuildGraphOptions): Promise<{
     nodes: new Map(),
     edges: [],
     entries: [],
-    packages: [],
+    packages: packages ? packages.map((pkg) => ({ ...pkg })) : [],
     diagnostics: [],
     visited: new Set(),
     queue: [],
+    skipAppJsonPages: skipAppJsonPages === true,
   }
 
   for (const entry of entryScripts) {
-    // `/` 在 resolveId 里相对 srcDir；入口先归一到绝对路径，再发 `./basename`
-    const abs = isAbsolute(entry) ? entry : resolve(rootDir, entry)
-    const result = tryResolve(walk, {
-      request: `./${basename(abs)}`,
-      importer: abs,
-      kind: 'script',
-    })
-    if (!result || result.external) {
-      continue
-    }
-    const id = intern(walk, result.id)
-    const entryNode = walk.nodes.get(id)
-    if (entryNode && isAppScriptId(id, adapter)) {
-      entryNode.pageType = 'app'
-    }
-    if (enqueue(walk, id)) {
-      walk.entries.push(id)
-    }
+    enqueueEntryScript(walk, entry, rootDir)
+  }
+
+  for (const virt of virtualModules ?? []) {
+    internVirtual(walk, virt.id, { kind: virt.kind, code: virt.code })
+    enqueue(walk, virt.id)
+    attachVirtualAppJson(walk, virt.id)
   }
 
   await drainQueue(walk)
@@ -69,4 +72,91 @@ export async function buildGraph(opts: BuildGraphOptions): Promise<{
     },
     diagnostics: walk.diagnostics,
   }
+}
+
+function enqueueEntryScript(walk: GraphWalk, entry: string, rootDir: string): void {
+  const disk = existingFile(entry, rootDir)
+  if (disk) {
+    // `/` 在 resolveId 里相对 srcDir；磁盘入口先归一到绝对路径，再发 `./basename`
+    const result = tryResolve(walk, {
+      request: `./${basename(disk)}`,
+      importer: disk,
+      kind: 'script',
+    })
+    if (!result || result.external) {
+      return
+    }
+    const id = intern(walk, result.id)
+    const entryNode = walk.nodes.get(id)
+    if (entryNode && isAppScriptId(id, walk.adapter)) {
+      entryNode.pageType = 'app'
+    }
+    if (enqueue(walk, id)) {
+      walk.entries.push(id)
+    }
+    return
+  }
+
+  // 非落盘入口：`/` 相对 src，或 alias（Task 3 再解析）
+  try {
+    const result = resolveId({
+      request: entry,
+      importer: join(walk.srcDir, 'app.js'),
+      kind: 'script',
+      adapter: walk.adapter,
+      srcDir: walk.srcDir,
+      alias: walk.alias,
+    })
+    if (!result || result.external || result.virtual) {
+      return
+    }
+    const id = intern(walk, result.id, 'page')
+    if (enqueue(walk, id)) {
+      walk.entries.push(id)
+    }
+  } catch {
+    walk.diagnostics.push(
+      diagnostic({
+        code: 'MISSING_PAGE_JS',
+        severity: 'error',
+        message: `MISSING_PAGE_JS: cannot resolve page script ${entry}`,
+        file: join(walk.srcDir, entry),
+      }),
+    )
+  }
+}
+
+function attachVirtualAppJson(walk: GraphWalk, virtId: string): void {
+  if (virtId !== 'virtual:app.json') {
+    return
+  }
+  let appId: string | undefined
+  for (const node of walk.nodes.values()) {
+    if (node.pageType === 'app') {
+      appId = node.id
+      break
+    }
+  }
+  if (!appId) {
+    return
+  }
+  if (walk.edges.some((edge) => edge.from === appId && edge.to === virtId)) {
+    return
+  }
+  walk.edges.push({
+    from: appId,
+    to: virtId,
+    kind: EdgeKinds.pageSuite,
+    raw: virtId,
+    affectsOwnership: true,
+    meta: {},
+  })
+}
+
+function existingFile(entry: string, rootDir: string): string | undefined {
+  const abs = isAbsolute(entry) ? entry : resolve(rootDir, entry)
+  if (existsSync(abs) && statSync(abs).isFile()) {
+    return abs
+  }
+  return undefined
 }

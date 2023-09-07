@@ -105,11 +105,21 @@ function destPathFor(
   node: Module,
   adapter: TargetAdapter,
 ): string {
-  const rel = replaceExt(idRelativeToPackage(node.id, pkg), emitExt(node.kind, adapter))
+  const rel = replaceExt(idRelativeToPackage(stripVirtualPrefix(node.id), pkg), emitExt(node.kind, adapter))
   if (pkg === 'main') {
     return posixJoin(outputDir, rel)
   }
   return posixJoin(outputDir, pkg, rel)
+}
+
+function stripVirtualPrefix(id: string): string {
+  if (id.startsWith('virtual:')) {
+    return id.slice('virtual:'.length)
+  }
+  if (id.startsWith('\0')) {
+    return id.slice(1)
+  }
+  return id
 }
 
 function idRelativeToPackage(id: string, pkg: string): string {

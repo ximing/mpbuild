@@ -1,7 +1,7 @@
 import { mkdir, readdir, readFile, rm, stat, unlink, writeFile } from 'node:fs/promises'
 import { basename, dirname, join } from 'node:path'
 import type { Diagnostic } from '../diagnostic/index.js'
-import type { ModuleGraph, OutputPlan } from '../types.js'
+import type { Module, ModuleGraph, OutputPlan } from '../types.js'
 import { rewriteCode } from './rewrite.js'
 import { transformModule } from './transform.js'
 
@@ -25,10 +25,13 @@ export async function emitPlan(input: {
 
   for (const placement of input.plan.placements) {
     const node = input.graph.nodes.get(placement.moduleId)
-    if (!node || node.virtual || node.sourcePath === '') {
+    if (!node) {
       continue
     }
-    const source = await readFile(node.sourcePath, 'utf8')
+    const source = await sourceOf(node)
+    if (source === undefined) {
+      continue
+    }
     const { code } = transformModule({
       kind: node.kind,
       sourcePath: node.sourcePath,
@@ -84,6 +87,13 @@ async function cleanOutputDir(outputDir: string, preserveNames: string[]): Promi
     }
     await rm(join(outputDir, name), { recursive: true, force: true })
   }
+}
+
+async function sourceOf(node: Module): Promise<string | undefined> {
+  if (node.virtual || node.sourcePath === '') {
+    return typeof node.meta.code === 'string' ? node.meta.code : undefined
+  }
+  return readFile(node.sourcePath, 'utf8')
 }
 
 async function sameUtf8(destPath: string, next: string): Promise<boolean> {
