@@ -46,6 +46,7 @@ export function createCompiler(config: ResolvedConfig): {
   let lastPlan: OutputPlan = emptyPlan()
   let lastDests: string[] = []
   let didEmit = false
+  let skipAppJsonPages = false
 
   async function run(): Promise<CompilerRunResult> {
     const srcDir = resolve(config.rootDir, config.src)
@@ -53,6 +54,7 @@ export function createCompiler(config: ResolvedConfig): {
     const appTs = join(srcDir, 'app.ts')
     const entryScript = existsSync(appJs) ? appJs : existsSync(appTs) ? appTs : undefined
     if (!entryScript) {
+      skipAppJsonPages = false
       const result: CompilerRunResult = {
         graph: emptyGraph(),
         plan: emptyPlan(),
@@ -73,6 +75,7 @@ export function createCompiler(config: ResolvedConfig): {
     const diagnostics: Diagnostic[] = []
     const appEntry = await loadAppEntry(config.rootDir, config.entry)
     const fromRouter = Array.isArray(appEntry.router) ? pageScriptsFromRouter(appEntry) : undefined
+    skipAppJsonPages = fromRouter !== undefined
     const built = await buildGraph({
       rootDir: config.rootDir,
       srcDir,
@@ -80,7 +83,7 @@ export function createCompiler(config: ResolvedConfig): {
       entryScripts: fromRouter ? [entryScript, ...fromRouter.sources] : [entryScript],
       alias: config.resolve.alias,
       packages: fromRouter?.packages,
-      skipAppJsonPages: fromRouter !== undefined,
+      skipAppJsonPages,
       virtualModules:
         fromRouter === undefined
           ? undefined
@@ -153,6 +156,7 @@ export function createCompiler(config: ResolvedConfig): {
       changedIds: args.changedIds,
       deletedIds: args.deletedIds,
       addedRelPaths: args.addedRelPaths,
+      skipAppJsonPages,
     })
     remember(result)
     return result

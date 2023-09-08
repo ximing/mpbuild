@@ -295,6 +295,34 @@ export function isAppScriptId(id: string, adapter: TargetAdapter): boolean {
   return stemOf(id, adapter.sourceExts.script ?? []) === 'app'
 }
 
+/** 把 `virtual:app.json` 挂回 app 入口的 pageSuite，避免 watch 重扫时被 GC。 */
+export function attachVirtualAppJson(walk: GraphWalk, virtId = 'virtual:app.json'): void {
+  if (virtId !== 'virtual:app.json' || !walk.nodes.has(virtId)) {
+    return
+  }
+  let appId: string | undefined
+  for (const node of walk.nodes.values()) {
+    if (node.pageType === 'app') {
+      appId = node.id
+      break
+    }
+  }
+  if (!appId) {
+    return
+  }
+  if (walk.edges.some((edge) => edge.from === appId && edge.to === virtId)) {
+    return
+  }
+  walk.edges.push({
+    from: appId,
+    to: virtId,
+    kind: EdgeKinds.pageSuite,
+    raw: virtId,
+    affectsOwnership: true,
+    meta: {},
+  })
+}
+
 export function isVirtualNode(node: Module): boolean {
   return node.virtual === true || node.sourcePath === '' || isVirtualId(node.id)
 }
