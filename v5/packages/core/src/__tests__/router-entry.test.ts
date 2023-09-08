@@ -125,4 +125,35 @@ describe('createCompiler router entry', () => {
     expect(existsSync(join(dist, 'pages/index/index.js'))).toBe(true)
     expect(diagnostics.some((d) => d.severity === 'error')).toBe(false)
   })
+
+  it('keeps dist/app.json after a hash-only app.js watch tick', async () => {
+    const entry: AppEntry = {
+      router: [
+        {
+          root: '',
+          pages: { 'pages/index/index': '/pages/index/index' },
+        },
+      ],
+    }
+    const rootDir = await fixture({
+      'src/app.js': 'App({})\n',
+      'src/pages/index/index.js': 'Page({})\n',
+      'src/pages/index/index.json': '{}\n',
+      'src/pages/index/index.wxml': '<view/>',
+      'src/pages/index/index.wxss': '.a{color:red}',
+    })
+    const compiler = createCompiler(configOf(rootDir, entry))
+    await compiler.run()
+    const distAppJson = join(rootDir, 'dist', 'app.json')
+    expect(existsSync(distAppJson)).toBe(true)
+
+    await writeFile(join(rootDir, 'src/app.js'), 'App({ watch: true })\n')
+    await compiler.applyWatchTick({
+      changedIds: ['app.js'],
+      deletedIds: [],
+      addedRelPaths: [],
+    })
+
+    expect(existsSync(distAppJson)).toBe(true)
+  })
 })

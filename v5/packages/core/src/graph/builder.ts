@@ -2,14 +2,14 @@ import { existsSync, statSync } from 'node:fs'
 import { basename, isAbsolute, join, resolve } from 'node:path'
 import { diagnostic, type Diagnostic } from '../diagnostic/index.js'
 import { resolveId } from '../resolve/resolver.js'
-import {
-  EdgeKinds,
-  type AbstractKind,
-  type ModuleGraph,
-  type PackageInfo,
-  type TargetAdapter,
+import type {
+  AbstractKind,
+  ModuleGraph,
+  PackageInfo,
+  TargetAdapter,
 } from '../types.js'
 import {
+  attachVirtualAppJson,
   drainQueue,
   enqueue,
   intern,
@@ -124,33 +124,6 @@ function enqueueEntryScript(walk: GraphWalk, entry: string, rootDir: string): vo
       }),
     )
   }
-}
-
-function attachVirtualAppJson(walk: GraphWalk, virtId: string): void {
-  if (virtId !== 'virtual:app.json') {
-    return
-  }
-  let appId: string | undefined
-  for (const node of walk.nodes.values()) {
-    if (node.pageType === 'app') {
-      appId = node.id
-      break
-    }
-  }
-  if (!appId) {
-    return
-  }
-  if (walk.edges.some((edge) => edge.from === appId && edge.to === virtId)) {
-    return
-  }
-  walk.edges.push({
-    from: appId,
-    to: virtId,
-    kind: EdgeKinds.pageSuite,
-    raw: virtId,
-    affectsOwnership: true,
-    meta: {},
-  })
 }
 
 function existingFile(entry: string, rootDir: string): string | undefined {

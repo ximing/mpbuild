@@ -17,6 +17,7 @@ export async function applyWatchTick(input: {
   changedIds: string[]
   deletedIds: string[]
   addedRelPaths: string[]
+  skipAppJsonPages?: boolean
 }): Promise<{
   graph: ModuleGraph
   plan: OutputPlan
@@ -39,6 +40,7 @@ export async function applyWatchTick(input: {
     changedIds: input.changedIds,
     deletedIds: input.deletedIds,
     addedRelPaths: input.addedRelPaths,
+    skipAppJsonPages: input.skipAppJsonPages === true,
   })
 
   const diagnostics: Diagnostic[] = [...patched.diagnostics]
