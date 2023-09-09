@@ -11,10 +11,13 @@ async function fixture() {
   dirs.push(root)
   const srcDir = join(root, 'src')
   await mkdir(join(srcDir, 'n'), { recursive: true })
+  await mkdir(join(srcDir, 'utils'), { recursive: true })
   await writeFile(join(srcDir, 'a.js'), 'export default 1\n')
   await writeFile(join(srcDir, 'b.js'), 'export default 2\n')
   await writeFile(join(srcDir, 'n/index.js'), 'export default 3\n')
+  await writeFile(join(srcDir, 'utils/util.js'), 'export default 4\n')
   return {
+    root,
     srcDir,
     base: {
       importer: join(srcDir, 'a.js'),
@@ -91,6 +94,80 @@ describe('resolveId', () => {
       }),
     ).toEqual({
       id: join(srcDir, 'n', 'index.js'),
+    })
+  })
+
+  it('rewrites @utils to src/utils', async () => {
+    const { srcDir, base } = await fixture()
+    expect(
+      resolveId({
+        ...base,
+        request: '@utils/util',
+        alias: { '@utils': join(srcDir, 'utils') },
+      }),
+    ).toEqual({
+      id: join(srcDir, 'utils', 'util.js'),
+    })
+  })
+
+  it('applies function alias @/ from a subproject importer', async () => {
+    const { root, base } = await fixture()
+    const projectSrc = join(root, 'projects', 'one')
+    await mkdir(join(projectSrc, 'pages'), { recursive: true })
+    await mkdir(join(projectSrc, 'utils'), { recursive: true })
+    const importer = join(projectSrc, 'pages', 'x.js')
+    await writeFile(importer, 'require(\'@/utils/b\')\n')
+    await writeFile(join(projectSrc, 'utils', 'b.js'), 'export default 1\n')
+
+    expect(
+      resolveId({
+        ...base,
+        importer,
+        request: '@/utils/b',
+        alias: {
+          '@/': ({ importer: from }) => (from.startsWith(projectSrc) ? projectSrc : undefined),
+        },
+      }),
+    ).toEqual({
+      id: join(projectSrc, 'utils', 'b.js'),
+    })
+  })
+
+  it('skips a function alias that returns empty and tries the next key', async () => {
+    const { srcDir, base } = await fixture()
+    expect(
+      resolveId({
+        ...base,
+        request: '@/n',
+        alias: {
+          '@/': () => undefined,
+          '@': srcDir,
+        },
+      }),
+    ).toEqual({
+      id: join(srcDir, 'n', 'index.js'),
+    })
+  })
+
+  it('uses project.alias before global alias when the importer is under project.src', async () => {
+    const { root, srcDir, base } = await fixture()
+    const projectSrc = join(root, 'projects', 'one')
+    await mkdir(join(projectSrc, 'utils'), { recursive: true })
+    await writeFile(join(projectSrc, 'utils', 'b.js'), 'export default 1\n')
+    const importer = join(projectSrc, 'pages', 'x.js')
+    await mkdir(join(projectSrc, 'pages'), { recursive: true })
+    await writeFile(importer, '')
+
+    expect(
+      resolveId({
+        ...base,
+        importer,
+        request: '@utils/b',
+        alias: { '@utils': join(srcDir, 'utils') },
+        projects: [{ name: '@one', src: projectSrc, alias: { '@utils': join(projectSrc, 'utils') } }],
+      }),
+    ).toEqual({
+      id: join(projectSrc, 'utils', 'b.js'),
     })
   })
 })

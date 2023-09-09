@@ -1,5 +1,6 @@
 import { existsSync, statSync } from 'node:fs'
 import { basename, isAbsolute, join, resolve } from 'node:path'
+import type { AliasValue, SubProject } from '../config/schema.js'
 import { diagnostic, type Diagnostic } from '../diagnostic/index.js'
 import { resolveId } from '../resolve/resolver.js'
 import type {
@@ -24,7 +25,8 @@ export interface BuildGraphOptions {
   srcDir: string
   adapter: TargetAdapter
   entryScripts: string[] // 绝对路径、相对 rootDir，或 `/` 相对 src 的页面源
-  alias?: Record<string, string>
+  alias?: Record<string, AliasValue>
+  projects?: SubProject[]
   packages?: PackageInfo[]
   skipAppJsonPages?: boolean
   virtualModules?: Array<{ id: string; kind: AbstractKind; code: string }>
@@ -35,12 +37,13 @@ export async function buildGraph(opts: BuildGraphOptions): Promise<{
   graph: ModuleGraph
   diagnostics: Diagnostic[]
 }> {
-  const { rootDir, srcDir, adapter, entryScripts, alias, packages, skipAppJsonPages, virtualModules } =
+  const { rootDir, srcDir, adapter, entryScripts, alias, projects, packages, skipAppJsonPages, virtualModules } =
     opts
   const walk: GraphWalk = {
     srcDir,
     adapter,
     alias,
+    projects,
     nodes: new Map(),
     edges: [],
     entries: [],
@@ -106,6 +109,7 @@ function enqueueEntryScript(walk: GraphWalk, entry: string, rootDir: string): vo
       adapter: walk.adapter,
       srcDir: walk.srcDir,
       alias: walk.alias,
+      projects: walk.projects,
     })
     if (!result || result.external || result.virtual) {
       return

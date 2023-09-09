@@ -1,4 +1,5 @@
 import { dirname, resolve } from 'node:path'
+import type { AliasValue, SubProject } from '../config/schema.js'
 import type { Diagnostic } from '../diagnostic/index.js'
 import {
   EdgeKinds,
@@ -24,19 +25,21 @@ export async function applyGraphChange(opts: {
   srcDir: string
   rootDir: string
   adapter: TargetAdapter
-  alias?: Record<string, string>
+  alias?: Record<string, AliasValue>
+  projects?: SubProject[]
   skipAppJsonPages?: boolean
   changedIds: string[] // src-relative，文件仍在
   deletedIds: string[] // src-relative，文件已删
   addedRelPaths: string[] // src-relative，新出现的文件（可能尚未入图）
 }): Promise<{ graph: ModuleGraph; diagnostics: Diagnostic[]; topologyChanged: boolean }> {
-  const { graph, srcDir, adapter, alias, changedIds, deletedIds, addedRelPaths } = opts
+  const { graph, srcDir, adapter, alias, projects, changedIds, deletedIds, addedRelPaths } = opts
   const skipAppJsonPages = opts.skipAppJsonPages === true
   const before = topologyFingerprint(graph)
   const walk: GraphWalk = {
     srcDir,
     adapter,
     alias,
+    projects,
     nodes: graph.nodes,
     edges: graph.edges,
     entries: graph.entries,

@@ -82,6 +82,7 @@ export function createCompiler(config: ResolvedConfig): {
       adapter: config.target,
       entryScripts: fromRouter ? [entryScript, ...fromRouter.sources] : [entryScript],
       alias: config.resolve.alias,
+      projects: config.projects,
       packages: fromRouter?.packages,
       skipAppJsonPages,
       virtualModules:

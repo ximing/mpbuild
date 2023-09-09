@@ -1,8 +1,9 @@
 import { createHash } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import { basename, join, relative } from 'node:path'
+import type { AliasValue, SubProject } from '../config/schema.js'
 import { diagnostic, type Diagnostic } from '../diagnostic/index.js'
-import { resolveId } from '../resolve/resolver.js'
+import { projectForPath, resolveId } from '../resolve/resolver.js'
 import {
   EdgeKinds,
   type AbstractKind,
@@ -18,7 +19,8 @@ import { companionPath } from './suite.js'
 export interface GraphWalk {
   srcDir: string
   adapter: TargetAdapter
-  alias?: Record<string, string>
+  alias?: Record<string, AliasValue>
+  projects?: SubProject[]
   nodes: Map<string, Module>
   edges: Edge[]
   entries: string[]
@@ -33,6 +35,18 @@ export interface GraphWalk {
 /** 图 id：posix、相对 srcDir。 */
 export function posixRelative(from: string, to: string): string {
   return relative(from, to).split(/[\\/]/).join('/')
+}
+
+export function posixJoin(left: string, right: string): string {
+  const a = left.replace(/\\/g, '/').replace(/\/+$/, '')
+  const b = right.replace(/\\/g, '/').replace(/^\/+/, '')
+  if (!a) {
+    return b
+  }
+  if (!b) {
+    return a
+  }
+  return `${a}/${b}`
 }
 
 /** 当前模块 kind：按 adapter.sourceExts 最长后缀反查，未命中则 script。 */
@@ -55,7 +69,11 @@ export function intern(
   absPath: string,
   pageType?: Module['pageType'],
 ): string {
-  const id = posixRelative(walk.srcDir, absPath)
+  // 落在子仓库 src 下时 id 为 name/相对路径
+  const project = projectForPath(absPath, walk.projects)
+  const id = project
+    ? posixJoin(project.name, posixRelative(project.src, absPath))
+    : posixRelative(walk.srcDir, absPath)
   const existing = walk.nodes.get(id)
   if (!existing) {
     walk.nodes.set(id, {
@@ -244,7 +262,7 @@ export function addSuiteEdge(
 
 /** 页面 script：`./spec` 相对 src/app.js；失败为 MISSING_PAGE_JS，不入队。 */
 function enqueuePagesFromAppJson(walk: GraphWalk, code: string): PackageInfo[] | undefined {
-  const { adapter, srcDir, alias, diagnostics } = walk
+  const { adapter, srcDir, alias, projects, diagnostics } = walk
   let parsed: ReturnType<typeof pageScriptsFromAppJson>
   try {
     parsed = pageScriptsFromAppJson(code, adapter)
@@ -262,6 +280,7 @@ function enqueuePagesFromAppJson(walk: GraphWalk, code: string): PackageInfo[] |
         adapter,
         srcDir,
         alias,
+        projects,
       })
       if (!result || result.external) {
         continue
@@ -367,6 +386,7 @@ export function tryResolve(
       adapter: walk.adapter,
       srcDir: walk.srcDir,
       alias: walk.alias,
+      projects: walk.projects,
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
