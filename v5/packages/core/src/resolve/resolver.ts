@@ -1,5 +1,6 @@
 import { existsSync, statSync } from 'node:fs'
-import { dirname, isAbsolute, join, resolve } from 'node:path'
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
+import type { AliasValue, SubProject } from '../config/schema.js'
 import type { AbstractKind, TargetAdapter } from '../types.js'
 
 export interface ResolveRequest {
@@ -8,7 +9,8 @@ export interface ResolveRequest {
   kind: AbstractKind
   adapter: TargetAdapter
   srcDir: string
-  alias?: Record<string, string>
+  alias?: Record<string, AliasValue>
+  projects?: SubProject[]
   virtualIds?: Set<string>
 }
 
@@ -19,7 +21,7 @@ export interface ResolveResult {
 }
 
 export function resolveId(req: ResolveRequest): ResolveResult {
-  const { request, importer, kind, adapter, srcDir, alias, virtualIds } = req
+  const { request, importer, kind, adapter, srcDir, alias, projects, virtualIds } = req
 
   // 规格 §8.2：external 不落盘、不报 RESOLVE_MISS
   if (adapter.externalSpecifiers.test(request)) {
@@ -31,7 +33,7 @@ export function resolveId(req: ResolveRequest): ResolveResult {
     return { id: request, virtual: true }
   }
 
-  const rewritten = applyLongestAlias(request, alias)
+  const rewritten = rewriteWithAlias(request, importer, alias, projects)
   const specifier = rewritten ?? request
   const fromAlias = rewritten != null
 
@@ -49,28 +51,80 @@ export function resolveId(req: ResolveRequest): ResolveResult {
   })
 }
 
-/** 最长前缀；仅精确命中或后接 `/`，避免 `@` 吃掉 `@foo`。 */
-function applyLongestAlias(request: string, alias?: Record<string, string>): string | undefined {
+/** 子仓库内 importer 先走 project.alias，再走全局。 */
+function rewriteWithAlias(
+  request: string,
+  importer: string,
+  alias?: Record<string, AliasValue>,
+  projects?: SubProject[],
+): string | undefined {
+  const ctx = { importer, request }
+  const project = projectForPath(importer, projects)
+  if (project) {
+    const local = applyLongestAlias(request, project.alias, ctx)
+    if (local !== undefined) {
+      return local
+    }
+  }
+  return applyLongestAlias(request, alias, ctx)
+}
+
+/** 最长前缀；函数返回空则跳过该 key。仅精确命中或后接 `/`，避免 `@` 吃掉 `@foo`。 */
+function applyLongestAlias(
+  request: string,
+  alias: Record<string, AliasValue> | undefined,
+  ctx: { importer: string; request: string },
+): string | undefined {
   if (!alias) {
     return undefined
   }
-  let bestKey: string | undefined
-  for (const key of Object.keys(alias)) {
-    if (!aliasMatches(key, request)) {
+  const keys = Object.keys(alias)
+    .filter((key) => aliasMatches(key, request))
+    .sort((a, b) => b.length - a.length)
+  for (const key of keys) {
+    const target = alias[key]
+    if (target === undefined) {
       continue
     }
-    if (bestKey === undefined || key.length > bestKey.length) {
-      bestKey = key
+    const replacement = typeof target === 'function' ? target(ctx) : target
+    if (replacement == null || replacement === '') {
+      continue
+    }
+    return concatAlias(replacement, request.slice(key.length))
+  }
+  return undefined
+}
+
+function concatAlias(target: string, rest: string): string {
+  if (rest === '') {
+    return target
+  }
+  if (/[/\\]$/.test(target) || /^[/\\]/.test(rest)) {
+    return target + rest
+  }
+  return `${target}/${rest}`
+}
+
+/** 落在某个 project.src 下的路径；重叠时取最长 src。 */
+export function projectForPath(filePath: string, projects?: SubProject[]): SubProject | undefined {
+  if (!projects?.length) {
+    return undefined
+  }
+  const abs = resolve(filePath)
+  let best: SubProject | undefined
+  let bestLen = -1
+  for (const project of projects) {
+    const src = resolve(project.src)
+    const rel = relative(src, abs)
+    if (rel.startsWith('..') || isAbsolute(rel)) {
+      continue
+    }
+    if (src.length > bestLen) {
+      best = project
+      bestLen = src.length
     }
   }
-  if (bestKey === undefined) {
-    return undefined
-  }
-  const target = alias[bestKey]
-  if (target === undefined) {
-    return undefined
-  }
-  return target + request.slice(bestKey.length)
+  return best
 }
 
 function aliasMatches(key: string, request: string): boolean {

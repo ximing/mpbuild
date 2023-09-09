@@ -37,6 +37,7 @@ export async function applyWatchTick(input: {
     rootDir: config.rootDir,
     adapter: config.target,
     alias: config.resolve.alias,
+    projects: config.projects,
     changedIds: input.changedIds,
     deletedIds: input.deletedIds,
     addedRelPaths: input.addedRelPaths,
