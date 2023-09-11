@@ -21,6 +21,7 @@ export interface GraphWalk {
   adapter: TargetAdapter
   alias?: Record<string, AliasValue>
   projects?: SubProject[]
+  platform?: string
   nodes: Map<string, Module>
   edges: Edge[]
   entries: string[]
@@ -68,6 +69,7 @@ export function intern(
   walk: GraphWalk,
   absPath: string,
   pageType?: Module['pageType'],
+  extraWatchFiles?: string[],
 ): string {
   // 落在子仓库 src 下时 id 为 name/相对路径
   const project = projectForPath(absPath, walk.projects)
@@ -76,6 +78,7 @@ export function intern(
     : posixRelative(walk.srcDir, absPath)
   const existing = walk.nodes.get(id)
   if (!existing) {
+    const extras = uniqueWatchFiles(absPath, extraWatchFiles)
     walk.nodes.set(id, {
       id,
       kind: kindFromExt(absPath, walk.adapter),
@@ -84,11 +87,38 @@ export function intern(
       hash: '',
       meta: {},
       ...(pageType ? { pageType } : {}),
+      ...(extras.length ? { extraWatchFiles: extras } : {}),
     })
-  } else if (pageType && existing.pageType === undefined) {
-    existing.pageType = pageType
+  } else {
+    if (pageType && existing.pageType === undefined) {
+      existing.pageType = pageType
+    }
+    // intern 已存在则 concat 未选中兄弟
+    const extras = uniqueWatchFiles(existing.sourcePath, [
+      ...(existing.extraWatchFiles ?? []),
+      ...(extraWatchFiles ?? []),
+    ])
+    if (extras.length) {
+      existing.extraWatchFiles = extras
+    }
   }
   return id
+}
+
+function uniqueWatchFiles(sourcePath: string, files: string[] | undefined): string[] {
+  if (!files?.length) {
+    return []
+  }
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const file of files) {
+    if (!file || file === sourcePath || seen.has(file)) {
+      continue
+    }
+    seen.add(file)
+    out.push(file)
+  }
+  return out
 }
 
 /** 虚模块：id 保留 `virtual:` 前缀，sourcePath 为空，code 放 meta.code。 */
@@ -186,6 +216,7 @@ export async function processModule(walk: GraphWalk, id: string): Promise<void> 
           walk,
           result.id,
           extracted.kind === EdgeKinds.usingComponent ? 'component' : undefined,
+          result.extraWatchFiles,
         )
     const edge: Edge = {
       from: id,
@@ -223,7 +254,7 @@ export function expandSuite(walk: GraphWalk, node: Module): void {
       continue
     }
     seen.add(companionKind)
-    const abs = companionPath(node.sourcePath, companionKind, adapter)
+    const abs = companionPath(node.sourcePath, companionKind, adapter, walk.platform)
     if (!abs) {
       continue
     }
@@ -281,11 +312,12 @@ function enqueuePagesFromAppJson(walk: GraphWalk, code: string): PackageInfo[] |
         srcDir,
         alias,
         projects,
+        platform: walk.platform,
       })
       if (!result || result.external) {
         continue
       }
-      const id = intern(walk, result.id, 'page')
+      const id = intern(walk, result.id, 'page', result.extraWatchFiles)
       pageIds.push(id)
       enqueue(walk, id)
     } catch {
@@ -387,6 +419,7 @@ export function tryResolve(
       srcDir: walk.srcDir,
       alias: walk.alias,
       projects: walk.projects,
+      platform: walk.platform,
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)

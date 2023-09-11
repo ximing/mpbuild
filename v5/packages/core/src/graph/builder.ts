@@ -27,6 +27,7 @@ export interface BuildGraphOptions {
   entryScripts: string[] // 绝对路径、相对 rootDir，或 `/` 相对 src 的页面源
   alias?: Record<string, AliasValue>
   projects?: SubProject[]
+  platform?: string
   packages?: PackageInfo[]
   skipAppJsonPages?: boolean
   virtualModules?: Array<{ id: string; kind: AbstractKind; code: string }>
@@ -37,13 +38,14 @@ export async function buildGraph(opts: BuildGraphOptions): Promise<{
   graph: ModuleGraph
   diagnostics: Diagnostic[]
 }> {
-  const { rootDir, srcDir, adapter, entryScripts, alias, projects, packages, skipAppJsonPages, virtualModules } =
+  const { rootDir, srcDir, adapter, entryScripts, alias, projects, platform, packages, skipAppJsonPages, virtualModules } =
     opts
   const walk: GraphWalk = {
     srcDir,
     adapter,
     alias,
     projects,
+    platform,
     nodes: new Map(),
     edges: [],
     entries: [],
@@ -89,7 +91,7 @@ function enqueueEntryScript(walk: GraphWalk, entry: string, rootDir: string): vo
     if (!result || result.external) {
       return
     }
-    const id = intern(walk, result.id)
+    const id = intern(walk, result.id, undefined, result.extraWatchFiles)
     const entryNode = walk.nodes.get(id)
     if (entryNode && isAppScriptId(id, walk.adapter)) {
       entryNode.pageType = 'app'
@@ -110,11 +112,12 @@ function enqueueEntryScript(walk: GraphWalk, entry: string, rootDir: string): vo
       srcDir: walk.srcDir,
       alias: walk.alias,
       projects: walk.projects,
+      platform: walk.platform,
     })
     if (!result || result.external || result.virtual) {
       return
     }
-    const id = intern(walk, result.id, 'page')
+    const id = intern(walk, result.id, 'page', result.extraWatchFiles)
     if (enqueue(walk, id)) {
       walk.entries.push(id)
     }
