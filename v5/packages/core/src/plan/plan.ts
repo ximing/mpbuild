@@ -13,9 +13,14 @@ import type {
 /** 按 owner 生成 placement 与 rewrite；冲突 dest 加 hash 后缀。不改图。 */
 export function planGraph(
   graph: ModuleGraph,
-  opts: { outputDir: string; shared: 'duplicate' | 'main'; adapter: TargetAdapter },
+  opts: {
+    outputDir: string
+    shared: 'duplicate' | 'main'
+    adapter: TargetAdapter
+    platform?: string
+  },
 ): { plan: OutputPlan; diagnostics: Diagnostic[] } {
-  const { outputDir, shared, adapter } = opts
+  const { outputDir, shared, adapter, platform } = opts
   const diagnostics: Diagnostic[] = []
   const placements: Placement[] = []
   const occupied = new Map<string, string>()
@@ -26,7 +31,7 @@ export function planGraph(
     }
     for (const pkg of packagesFor(node, graph, shared)) {
       const destPath = uniqueDest(
-        destPathFor(outputDir, pkg, node, adapter),
+        destPathFor(outputDir, pkg, node, adapter, platform),
         node,
         occupied,
         diagnostics,
@@ -104,12 +109,37 @@ function destPathFor(
   pkg: string,
   node: Module,
   adapter: TargetAdapter,
+  platform?: string,
 ): string {
-  const rel = replaceExt(idRelativeToPackage(stripVirtualPrefix(node.id), pkg), emitExt(node.kind, adapter))
+  let rel = idRelativeToPackage(stripVirtualPrefix(node.id), pkg)
+  // suite 脚本去掉 basename 的 .${platform} 再换 emitExt
+  if (isSuitePageType(node.pageType) && platform) {
+    rel = stripPlatformInfix(rel, platform)
+  }
+  rel = replaceExt(rel, emitExt(node.kind, adapter))
   if (pkg === 'main') {
     return posixJoin(outputDir, rel)
   }
   return posixJoin(outputDir, pkg, rel)
+}
+
+function isSuitePageType(pageType: Module['pageType']): boolean {
+  return pageType === 'app' || pageType === 'page' || pageType === 'component'
+}
+
+/** 只剥 basename 语言扩展名之前的 `.${platform}`，避免 index.wxml 被 wx 误伤。 */
+function stripPlatformInfix(id: string, platform: string): string {
+  const slash = id.lastIndexOf('/')
+  const dir = slash === -1 ? '' : id.slice(0, slash + 1)
+  const base = slash === -1 ? id : id.slice(slash + 1)
+  const infix = `.${platform}`
+  const dot = base.lastIndexOf('.')
+  const stem = dot === -1 ? base : base.slice(0, dot)
+  const ext = dot === -1 ? '' : base.slice(dot)
+  if (!stem.endsWith(infix)) {
+    return id
+  }
+  return `${dir}${stem.slice(0, -infix.length)}${ext}`
 }
 
 function stripVirtualPrefix(id: string): string {

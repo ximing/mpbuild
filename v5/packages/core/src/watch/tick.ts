@@ -38,6 +38,7 @@ export async function applyWatchTick(input: {
     adapter: config.target,
     alias: config.resolve.alias,
     projects: config.projects,
+    platform: config.platform,
     changedIds: input.changedIds,
     deletedIds: input.deletedIds,
     addedRelPaths: input.addedRelPaths,
@@ -56,6 +57,7 @@ export async function applyWatchTick(input: {
       outputDir,
       shared: config.subPackage.shared,
       adapter: config.target,
+      platform: config.platform,
     })
     diagnostics.push(...planned.diagnostics)
     plan = planned.plan

@@ -27,12 +27,13 @@ export async function applyGraphChange(opts: {
   adapter: TargetAdapter
   alias?: Record<string, AliasValue>
   projects?: SubProject[]
+  platform?: string
   skipAppJsonPages?: boolean
   changedIds: string[] // src-relative，文件仍在
   deletedIds: string[] // src-relative，文件已删
   addedRelPaths: string[] // src-relative，新出现的文件（可能尚未入图）
 }): Promise<{ graph: ModuleGraph; diagnostics: Diagnostic[]; topologyChanged: boolean }> {
-  const { graph, srcDir, adapter, alias, projects, changedIds, deletedIds, addedRelPaths } = opts
+  const { graph, srcDir, adapter, alias, projects, platform, changedIds, deletedIds, addedRelPaths } = opts
   const skipAppJsonPages = opts.skipAppJsonPages === true
   const before = topologyFingerprint(graph)
   const walk: GraphWalk = {
@@ -40,6 +41,7 @@ export async function applyGraphChange(opts: {
     adapter,
     alias,
     projects,
+    platform,
     nodes: graph.nodes,
     edges: graph.edges,
     entries: graph.entries,
@@ -117,7 +119,7 @@ function attachAddedCompanions(walk: GraphWalk, addedRelPaths: string[]): void {
         if (walk.skipAppJsonPages && node.pageType === 'app' && companionKind === 'json') {
           continue
         }
-        const hit = companionPath(node.sourcePath, companionKind, adapter)
+        const hit = companionPath(node.sourcePath, companionKind, adapter, walk.platform)
         if (!hit || posixRelative(srcDir, hit) !== id) {
           continue
         }

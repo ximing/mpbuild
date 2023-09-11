@@ -83,6 +83,7 @@ export function createCompiler(config: ResolvedConfig): {
       entryScripts: fromRouter ? [entryScript, ...fromRouter.sources] : [entryScript],
       alias: config.resolve.alias,
       projects: config.projects,
+      platform: config.platform,
       packages: fromRouter?.packages,
       skipAppJsonPages,
       virtualModules:
@@ -110,6 +111,7 @@ export function createCompiler(config: ResolvedConfig): {
       outputDir,
       shared: config.subPackage.shared,
       adapter: config.target,
+      platform: config.platform,
     })
     diagnostics.push(...planned.diagnostics)
 

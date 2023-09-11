@@ -12,16 +12,18 @@ export interface ResolveRequest {
   alias?: Record<string, AliasValue>
   projects?: SubProject[]
   virtualIds?: Set<string>
+  platform?: string
 }
 
 export interface ResolveResult {
   id: string
   external?: boolean
   virtual?: boolean
+  extraWatchFiles?: string[]
 }
 
 export function resolveId(req: ResolveRequest): ResolveResult {
-  const { request, importer, kind, adapter, srcDir, alias, projects, virtualIds } = req
+  const { request, importer, kind, adapter, srcDir, alias, projects, virtualIds, platform } = req
 
   // 规格 §8.2：external 不落盘、不报 RESOLVE_MISS
   if (adapter.externalSpecifiers.test(request)) {
@@ -40,9 +42,11 @@ export function resolveId(req: ResolveRequest): ResolveResult {
   const candidate = toCandidate(specifier, importer, srcDir, fromAlias)
   if (candidate) {
     const exts = adapter.sourceExts[kind] ?? []
-    const id = completeSource(candidate, exts)
-    if (id) {
-      return { id }
+    const completed = completeSource(candidate, exts, platform)
+    if (completed) {
+      return completed.extraWatchFiles.length
+        ? { id: completed.id, extraWatchFiles: completed.extraWatchFiles }
+        : { id: completed.id }
     }
   }
 
@@ -159,24 +163,41 @@ function toCandidate(
   return undefined
 }
 
-/** 先原名，再名+ext，再 name/index+ext。目录不当命中。 */
-function completeSource(abs: string, exts: string[]): string | undefined {
+/** 先原名，再名+ext，再 name/index+ext。目录不当命中。platform 时每个候选先试 infix。 */
+function completeSource(
+  abs: string,
+  exts: string[],
+  platform?: string,
+): { id: string; extraWatchFiles: string[] } | undefined {
   if (isFile(abs)) {
-    return abs
+    return { id: abs, extraWatchFiles: [] }
   }
+  return pickNamedSource(abs, exts, platform) ?? pickNamedSource(join(abs, 'index'), exts, platform)
+}
+
+/** 每个 ext 先 `name.${platform}${ext}` 再 `name${ext}`。未选中的存在文件列入 extraWatchFiles。 */
+export function pickNamedSource(
+  abs: string,
+  exts: string[],
+  platform?: string,
+): { id: string; extraWatchFiles: string[] } | undefined {
+  const infix = platform ? `.${platform}` : ''
+  let id: string | undefined
+  const extraWatchFiles: string[] = []
   for (const ext of exts) {
-    const withExt = abs + ext
-    if (isFile(withExt)) {
-      return withExt
+    const candidates = infix ? [`${abs}${infix}${ext}`, `${abs}${ext}`] : [`${abs}${ext}`]
+    for (const candidate of candidates) {
+      if (!isFile(candidate)) {
+        continue
+      }
+      if (id === undefined) {
+        id = candidate
+      } else {
+        extraWatchFiles.push(candidate)
+      }
     }
   }
-  for (const ext of exts) {
-    const indexFile = join(abs, `index${ext}`)
-    if (isFile(indexFile)) {
-      return indexFile
-    }
-  }
-  return undefined
+  return id === undefined ? undefined : { id, extraWatchFiles }
 }
 
 function isFile(filePath: string): boolean {
