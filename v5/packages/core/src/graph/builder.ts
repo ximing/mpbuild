@@ -1,6 +1,6 @@
 import { existsSync, statSync } from 'node:fs'
 import { basename, isAbsolute, join, resolve } from 'node:path'
-import type { AliasValue, SubProject } from '../config/schema.js'
+import type { AliasValue, ResolvedConfig, SubProject } from '../config/schema.js'
 import { diagnostic, type Diagnostic } from '../diagnostic/index.js'
 import { resolveId } from '../resolve/resolver.js'
 import type {
@@ -28,6 +28,7 @@ export interface BuildGraphOptions {
   alias?: Record<string, AliasValue>
   projects?: SubProject[]
   platform?: string
+  ifdef?: ResolvedConfig['ifdef']
   packages?: PackageInfo[]
   skipAppJsonPages?: boolean
   virtualModules?: Array<{ id: string; kind: AbstractKind; code: string }>
@@ -38,14 +39,26 @@ export async function buildGraph(opts: BuildGraphOptions): Promise<{
   graph: ModuleGraph
   diagnostics: Diagnostic[]
 }> {
-  const { rootDir, srcDir, adapter, entryScripts, alias, projects, platform, packages, skipAppJsonPages, virtualModules } =
-    opts
+  const {
+    rootDir,
+    srcDir,
+    adapter,
+    entryScripts,
+    alias,
+    projects,
+    platform,
+    ifdef,
+    packages,
+    skipAppJsonPages,
+    virtualModules,
+  } = opts
   const walk: GraphWalk = {
     srcDir,
     adapter,
     alias,
     projects,
     platform,
+    ifdef,
     nodes: new Map(),
     edges: [],
     entries: [],

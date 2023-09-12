@@ -90,8 +90,11 @@ async function cleanOutputDir(outputDir: string, preserveNames: string[]): Promi
 }
 
 async function sourceOf(node: Module): Promise<string | undefined> {
+  if (typeof node.meta.code === 'string') {
+    return node.meta.code
+  }
   if (node.virtual || node.sourcePath === '') {
-    return typeof node.meta.code === 'string' ? node.meta.code : undefined
+    return undefined
   }
   return readFile(node.sourcePath, 'utf8')
 }

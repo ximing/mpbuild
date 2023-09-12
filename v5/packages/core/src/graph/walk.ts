@@ -1,8 +1,9 @@
 import { createHash } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import { basename, join, relative } from 'node:path'
-import type { AliasValue, SubProject } from '../config/schema.js'
+import type { AliasValue, ResolvedConfig, SubProject } from '../config/schema.js'
 import { diagnostic, type Diagnostic } from '../diagnostic/index.js'
+import { applyIfdef } from '../load/ifdef.js'
 import { projectForPath, resolveId } from '../resolve/resolver.js'
 import {
   EdgeKinds,
@@ -22,6 +23,7 @@ export interface GraphWalk {
   alias?: Record<string, AliasValue>
   projects?: SubProject[]
   platform?: string
+  ifdef?: ResolvedConfig['ifdef']
   nodes: Map<string, Module>
   edges: Edge[]
   entries: string[]
@@ -181,6 +183,8 @@ export async function processModule(walk: GraphWalk, id: string): Promise<void> 
     code = await readFile(node.sourcePath, 'utf8')
     node.kind = kindFromExt(node.sourcePath, walk.adapter)
   }
+  code = stripIfdef(code, node.kind, walk)
+  node.meta = { ...node.meta, code }
   node.hash = createHash('sha256').update(code).digest('hex')
 
   if (node.kind === 'script') {
@@ -433,6 +437,19 @@ export function tryResolve(
     )
     return undefined
   }
+}
+
+/** blockcode 关闭或无 platform 时原样返回。 */
+function stripIfdef(code: string, kind: AbstractKind, walk: GraphWalk): string {
+  const platform = walk.platform
+  if (!platform || walk.ifdef?.blockcode === false) {
+    return code
+  }
+  return applyIfdef(code, kind, {
+    [platform]: true,
+    p: platform,
+    ...walk.ifdef?.tokens,
+  })
 }
 
 /** 边目标 kind，不是 importer 的 kind。 */
