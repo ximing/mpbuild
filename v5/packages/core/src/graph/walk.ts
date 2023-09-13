@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises'
 import { basename, join, relative } from 'node:path'
 import type { AliasValue, ResolvedConfig, SubProject } from '../config/schema.js'
 import { diagnostic, type Diagnostic } from '../diagnostic/index.js'
+import { isConfigJsFile, loadConfigJs } from '../load/config-js.js'
 import { applyIfdef } from '../load/ifdef.js'
 import { projectForPath, resolveId } from '../resolve/resolver.js'
 import {
@@ -179,11 +180,17 @@ export async function processModule(walk: GraphWalk, id: string): Promise<void> 
   let code: string
   if (isVirtualNode(node)) {
     code = typeof node.meta.code === 'string' ? node.meta.code : ''
+    code = stripIfdef(code, node.kind, walk)
   } else {
-    code = await readFile(node.sourcePath, 'utf8')
     node.kind = kindFromExt(node.sourcePath, walk.adapter)
+    if (isConfigJsModule(node, walk.adapter)) {
+      // Node 执行磁盘原文；不吃 ifdef 后的 meta.code
+      code = isolateLoadConfigJs(walk, node)
+    } else {
+      code = await readFile(node.sourcePath, 'utf8')
+      code = stripIfdef(code, node.kind, walk)
+    }
   }
-  code = stripIfdef(code, node.kind, walk)
   node.meta = { ...node.meta, code }
   node.hash = createHash('sha256').update(code).digest('hex')
 
@@ -436,6 +443,36 @@ export function tryResolve(
       }),
     )
     return undefined
+  }
+}
+
+function isConfigJsModule(node: Module, adapter: TargetAdapter): boolean {
+  return isConfigJsFile(node.sourcePath, adapter.sourceExts.json)
+}
+
+/** 隔离执行 .config.js，得到 JSON 文本；失败记 CONFIG_JS_INVALID。 */
+function isolateLoadConfigJs(walk: GraphWalk, node: Module): string {
+  try {
+    const loaded = loadConfigJs(node.sourcePath)
+    const extras = uniqueWatchFiles(node.sourcePath, [
+      ...(node.extraWatchFiles ?? []),
+      ...loaded.watchFiles,
+    ])
+    if (extras.length) {
+      node.extraWatchFiles = extras
+    }
+    return loaded.json
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    walk.diagnostics.push(
+      diagnostic({
+        code: 'CONFIG_JS_INVALID',
+        severity: 'error',
+        message,
+        file: node.sourcePath,
+      }),
+    )
+    return '{}'
   }
 }
 

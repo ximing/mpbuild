@@ -116,7 +116,7 @@ function destPathFor(
   if (isSuitePageType(node.pageType) && platform) {
     rel = stripPlatformInfix(rel, platform)
   }
-  rel = replaceExt(rel, emitExt(node.kind, adapter))
+  rel = replaceExt(rel, emitExt(node.kind, adapter), adapter.sourceExts[node.kind] ?? [])
   if (pkg === 'main') {
     return posixJoin(outputDir, rel)
   }
@@ -172,16 +172,27 @@ function emitExt(kind: AbstractKind, adapter: TargetAdapter): string {
   return adapter.emitExt[kind] ?? ''
 }
 
-/** 只换 basename 最后一段扩展名；ext 为空则保留原后缀。 */
-function replaceExt(id: string, ext: string): string {
+/** 换最长 sourceExt（`.config.js`→emitExt.json）；否则最后一段。ext 为空则保留。 */
+function replaceExt(id: string, ext: string, sourceExts: string[] = []): string {
   if (!ext) {
     return id
   }
   const slash = id.lastIndexOf('/')
   const dir = slash === -1 ? '' : id.slice(0, slash + 1)
   const base = slash === -1 ? id : id.slice(slash + 1)
-  const dot = base.lastIndexOf('.')
-  const stem = dot === -1 ? base : base.slice(0, dot)
+  let matched = ''
+  for (const sourceExt of sourceExts) {
+    if (sourceExt.length > matched.length && base.endsWith(sourceExt)) {
+      matched = sourceExt
+    }
+  }
+  let stem = base
+  if (matched) {
+    stem = base.slice(0, -matched.length)
+  } else {
+    const dot = base.lastIndexOf('.')
+    stem = dot === -1 ? base : base.slice(0, dot)
+  }
   return `${dir}${stem}${ext}`
 }
 
