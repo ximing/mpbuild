@@ -112,11 +112,18 @@ function destPathFor(
   platform?: string,
 ): string {
   let rel = idRelativeToPackage(stripVirtualPrefix(node.id), pkg)
-  // suite 脚本去掉 basename 的 .${platform} 再换 emitExt
-  if (isSuitePageType(node.pageType) && platform) {
-    rel = stripPlatformInfix(rel, platform)
+  const ext = emitExt(node.kind, adapter)
+  // *.config.js / *.wx.config.js：剥 .${platform}.config 与 .config 再换 emitExt.json
+  const fromConfigJs = node.kind === 'json' ? replaceConfigJsExt(rel, ext, platform) : undefined
+  if (fromConfigJs !== undefined) {
+    rel = fromConfigJs
+  } else {
+    // suite 脚本去掉 basename 的 .${platform} 再换 emitExt
+    if (isSuitePageType(node.pageType) && platform) {
+      rel = stripPlatformInfix(rel, platform)
+    }
+    rel = replaceExt(rel, ext, adapter.sourceExts[node.kind] ?? [])
   }
-  rel = replaceExt(rel, emitExt(node.kind, adapter), adapter.sourceExts[node.kind] ?? [])
   if (pkg === 'main') {
     return posixJoin(outputDir, rel)
   }
@@ -140,6 +147,27 @@ function stripPlatformInfix(id: string, platform: string): string {
     return id
   }
   return `${dir}${stem.slice(0, -infix.length)}${ext}`
+}
+
+/** `index.wx.config.js` → `index.json`；`p.config.js` → `p.json`。 */
+function replaceConfigJsExt(id: string, emitJsonExt: string, platform?: string): string | undefined {
+  if (!emitJsonExt) {
+    return undefined
+  }
+  const slash = id.lastIndexOf('/')
+  const dir = slash === -1 ? '' : id.slice(0, slash + 1)
+  const base = slash === -1 ? id : id.slice(slash + 1)
+  if (!base.endsWith('.config.js')) {
+    return undefined
+  }
+  let stem = base.slice(0, -'.config.js'.length)
+  if (platform) {
+    const infix = `.${platform}`
+    if (stem.endsWith(infix)) {
+      stem = stem.slice(0, -infix.length)
+    }
+  }
+  return `${dir}${stem}${emitJsonExt}`
 }
 
 function stripVirtualPrefix(id: string): string {
