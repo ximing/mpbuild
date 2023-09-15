@@ -111,6 +111,35 @@ describe('createCompiler config.js', () => {
     expect(JSON.parse(await readFile(destJson, 'utf8')).usingComponents.x).toBeTruthy()
   })
 
+  it('emits p.json not p.wx.json from page index.wx.config.js', async () => {
+    const { rootDir } = await fixture({
+      'src/app.js': 'App({})\n',
+      'src/app.json': JSON.stringify({ pages: ['pages/p/p'] }),
+      'src/pages/p/p.js': 'Page({})\n',
+      'src/pages/p/p.wx.config.js': `module.exports = { navigationBarTitleText: 'wx' }\n`,
+      'src/pages/p/p.wxml': '<view/>',
+    })
+
+    const { graph, plan, diagnostics } = await createCompiler(
+      configOf(rootDir, { platform: 'wx' }),
+    ).run()
+    const dist = join(rootDir, 'dist')
+    const destJson = join(dist, 'pages/p/p.json')
+    const byId = new Map(plan.placements.map((p) => [p.moduleId, p.destPath]))
+
+    expect(diagnostics.filter((d) => d.severity === 'error')).toEqual([])
+    expect(graph.nodes.has('pages/p/p.wx.config.js')).toBe(true)
+    expect(graph.nodes.get('pages/p/p.wx.config.js')?.kind).toBe('json')
+    expect(byId.get('pages/p/p.wx.config.js')).toBe(destJson)
+    expect(existsSync(destJson)).toBe(true)
+    expect(existsSync(join(dist, 'pages/p/p.wx.json'))).toBe(false)
+    expect(existsSync(join(dist, 'pages/p/p.wx.config.json'))).toBe(false)
+    expect(existsSync(join(dist, 'pages/p/p.config.json'))).toBe(false)
+    expect(JSON.parse(await readFile(destJson, 'utf8'))).toEqual({
+      navigationBarTitleText: 'wx',
+    })
+  })
+
   it('prefers index.${platform}.config.js over index.config.js', async () => {
     const { rootDir } = await fixture(
       miniPage({
