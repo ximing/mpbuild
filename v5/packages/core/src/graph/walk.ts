@@ -1,11 +1,11 @@
 import { createHash } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
-import { basename, join, relative } from 'node:path'
+import { basename, isAbsolute, join, relative } from 'node:path'
 import type { AliasValue, ResolvedConfig, SubProject } from '../config/schema.js'
 import { diagnostic, type Diagnostic } from '../diagnostic/index.js'
 import { isConfigJsFile, loadConfigJs } from '../load/config-js.js'
 import { applyIfdef } from '../load/ifdef.js'
-import { projectForPath, resolveId } from '../resolve/resolver.js'
+import { pathInsideNodeModules, projectForPath, resolveId } from '../resolve/resolver.js'
 import {
   EdgeKinds,
   type AbstractKind,
@@ -74,11 +74,11 @@ export function intern(
   pageType?: Module['pageType'],
   extraWatchFiles?: string[],
 ): string {
-  // 落在子仓库 src 下时 id 为 name/相对路径
+  // 落在子仓库 src 下时 id 为 name/相对路径；src 外的 npm 为 npm/<pkg>/...
   const project = projectForPath(absPath, walk.projects)
   const id = project
     ? posixJoin(project.name, posixRelative(project.src, absPath))
-    : posixRelative(walk.srcDir, absPath)
+    : npmGraphId(walk.srcDir, absPath)
   const existing = walk.nodes.get(id)
   if (!existing) {
     const extras = uniqueWatchFiles(absPath, extraWatchFiles)
@@ -106,6 +106,16 @@ export function intern(
     }
   }
   return id
+}
+
+function npmGraphId(srcDir: string, absPath: string): string {
+  const rel = posixRelative(srcDir, absPath)
+  const outside = rel.startsWith('../') || rel === '..' || isAbsolute(rel)
+  if (!outside) {
+    return rel
+  }
+  const inner = pathInsideNodeModules(absPath)
+  return inner ? posixJoin('npm', inner) : rel
 }
 
 function uniqueWatchFiles(sourcePath: string, files: string[] | undefined): string[] {

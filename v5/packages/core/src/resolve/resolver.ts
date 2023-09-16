@@ -1,4 +1,4 @@
-import { existsSync, statSync } from 'node:fs'
+import { existsSync, readFileSync, statSync } from 'node:fs'
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
 import type { AliasValue, SubProject } from '../config/schema.js'
 import type { AbstractKind, TargetAdapter } from '../types.js'
@@ -44,10 +44,16 @@ export function resolveId(req: ResolveRequest): ResolveResult {
     const exts = adapter.sourceExts[kind] ?? []
     const completed = completeSource(candidate, exts, platform)
     if (completed) {
-      return completed.extraWatchFiles.length
-        ? { id: completed.id, extraWatchFiles: completed.extraWatchFiles }
-        : { id: completed.id }
+      return toResolveResult(completed)
     }
+    throw Object.assign(new Error(`RESOLVE_MISS: cannot resolve ${request} from ${importer}`), {
+      code: 'RESOLVE_MISS',
+    })
+  }
+
+  const npm = resolveNpm(specifier, importer, kind, adapter, platform)
+  if (npm) {
+    return toResolveResult(npm)
   }
 
   throw Object.assign(new Error(`RESOLVE_MISS: cannot resolve ${request} from ${importer}`), {
@@ -202,4 +208,130 @@ export function pickNamedSource(
 
 function isFile(filePath: string): boolean {
   return existsSync(filePath) && statSync(filePath).isFile()
+}
+
+function toResolveResult(completed: { id: string; extraWatchFiles: string[] }): ResolveResult {
+  return completed.extraWatchFiles.length
+    ? { id: completed.id, extraWatchFiles: completed.extraWatchFiles }
+    : { id: completed.id }
+}
+
+/** node_modules 之后的 posix 路径（`leftpad/index.js`）。 */
+export function pathInsideNodeModules(filePath: string): string | undefined {
+  const norm = filePath.replace(/\\/g, '/')
+  const token = '/node_modules/'
+  const idx = norm.lastIndexOf(token)
+  if (idx !== -1) {
+    return norm.slice(idx + token.length)
+  }
+  if (norm.startsWith('node_modules/')) {
+    return norm.slice('node_modules/'.length)
+  }
+  return undefined
+}
+
+function parseBareSpecifier(request: string): { name: string; subpath: string } | undefined {
+  if (!request || request.startsWith('.') || request.startsWith('/') || isAbsolute(request)) {
+    return undefined
+  }
+  if (request.startsWith('@')) {
+    const parts = request.split('/')
+    const scope = parts[0]
+    const pkg = parts[1]
+    if (!scope || !pkg) {
+      return undefined
+    }
+    return { name: `${scope}/${pkg}`, subpath: parts.slice(2).join('/') }
+  }
+  const slash = request.indexOf('/')
+  if (slash === -1) {
+    return { name: request, subpath: '' }
+  }
+  return { name: request.slice(0, slash), subpath: request.slice(slash + 1) }
+}
+
+/** 从 importer 向上找 `node_modules/<name>`，按 npmPackageFields 读入口。 */
+function resolveNpm(
+  request: string,
+  importer: string,
+  kind: AbstractKind,
+  adapter: TargetAdapter,
+  platform?: string,
+): { id: string; extraWatchFiles: string[] } | undefined {
+  const parsed = parseBareSpecifier(request)
+  if (!parsed) {
+    return undefined
+  }
+  let dir = dirname(resolve(importer))
+  for (;;) {
+    const pkgDir = join(dir, 'node_modules', parsed.name)
+    if (isFile(join(pkgDir, 'package.json'))) {
+      return resolveFromPackage(pkgDir, parsed.subpath, kind, adapter, platform)
+    }
+    const parent = dirname(dir)
+    if (parent === dir) {
+      return undefined
+    }
+    dir = parent
+  }
+}
+
+function resolveFromPackage(
+  pkgDir: string,
+  subpath: string,
+  kind: AbstractKind,
+  adapter: TargetAdapter,
+  platform?: string,
+): { id: string; extraWatchFiles: string[] } | undefined {
+  const pkg = readPkgJson(pkgDir)
+  const exts = adapter.sourceExts[kind] ?? []
+  if (subpath) {
+    const mini = fieldAsPath(pkg.miniprogram)
+    if (mini) {
+      const miniRoot = join(pkgDir, mini)
+      if (existsSync(miniRoot) && statSync(miniRoot).isDirectory()) {
+        const hit = completeSource(join(miniRoot, subpath), exts, platform)
+        if (hit) {
+          return hit
+        }
+      }
+    }
+    return completeSource(join(pkgDir, subpath), exts, platform)
+  }
+  for (const field of adapter.npmPackageFields) {
+    const value = fieldAsPath(pkg[field])
+    if (!value) {
+      continue
+    }
+    const hit = completeSource(join(pkgDir, value), exts, platform)
+    if (hit) {
+      return hit
+    }
+  }
+  return completeSource(pkgDir, exts, platform)
+}
+
+function readPkgJson(pkgDir: string): Record<string, unknown> {
+  try {
+    const data: unknown = JSON.parse(readFileSync(join(pkgDir, 'package.json'), 'utf8'))
+    if (data && typeof data === 'object' && !Array.isArray(data)) {
+      return data as Record<string, unknown>
+    }
+  } catch {
+    // 坏 JSON 当空字段，再试 index
+  }
+  return {}
+}
+
+function fieldAsPath(value: unknown): string | undefined {
+  if (typeof value === 'string' && value !== '') {
+    return value
+  }
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    const main = (value as Record<string, unknown>)['.']
+    if (typeof main === 'string' && main !== '') {
+      return main
+    }
+  }
+  return undefined
 }

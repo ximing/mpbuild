@@ -113,6 +113,7 @@ export function createCompiler(config: ResolvedConfig): {
       shared: config.subPackage.shared,
       adapter: config.target,
       platform: config.platform,
+      npm: config.output.npm,
     })
     diagnostics.push(...planned.diagnostics)
 
@@ -124,6 +125,7 @@ export function createCompiler(config: ResolvedConfig): {
       js: config.compile.js,
       previousDests: didEmit ? lastDests : [],
       preserveNames: [config.target.projectConfigFile],
+      npmCompat: config.target.npmCompat,
     })
     diagnostics.push(...emitted.diagnostics)
 
