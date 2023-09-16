@@ -1,4 +1,5 @@
 import { diagnostic, type Diagnostic } from '../diagnostic/index.js'
+import { pathInsideNodeModules } from '../resolve/resolver.js'
 import type {
   AbstractKind,
   Edge,
@@ -18,9 +19,10 @@ export function planGraph(
     shared: 'duplicate' | 'main'
     adapter: TargetAdapter
     platform?: string
+    npm?: string
   },
 ): { plan: OutputPlan; diagnostics: Diagnostic[] } {
-  const { outputDir, shared, adapter, platform } = opts
+  const { outputDir, shared, adapter, platform, npm = 'npm' } = opts
   const diagnostics: Diagnostic[] = []
   const placements: Placement[] = []
   const occupied = new Map<string, string>()
@@ -31,7 +33,7 @@ export function planGraph(
     }
     for (const pkg of packagesFor(node, graph, shared)) {
       const destPath = uniqueDest(
-        destPathFor(outputDir, pkg, node, adapter, platform),
+        destPathFor(outputDir, pkg, node, adapter, platform, npm),
         node,
         occupied,
         diagnostics,
@@ -109,9 +111,13 @@ function destPathFor(
   pkg: string,
   node: Module,
   adapter: TargetAdapter,
-  platform?: string,
+  platform: string | undefined,
+  npm: string,
 ): string {
-  let rel = idRelativeToPackage(stripVirtualPrefix(node.id), pkg)
+  const npmInner = pathInsideNodeModules(node.sourcePath) ?? pathInsideNodeModules(node.id)
+  let rel = npmInner
+    ? posixJoin(npm, npmInner)
+    : idRelativeToPackage(stripVirtualPrefix(node.id), pkg)
   const ext = emitExt(node.kind, adapter)
   // *.config.js / *.wx.config.js：剥 .${platform}.config 与 .config 再换 emitExt.json
   const fromConfigJs = node.kind === 'json' ? replaceConfigJsExt(rel, ext, platform) : undefined

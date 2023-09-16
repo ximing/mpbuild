@@ -1,6 +1,7 @@
 import { mkdir, readdir, readFile, rm, stat, unlink, writeFile } from 'node:fs/promises'
 import { basename, dirname, join } from 'node:path'
 import type { Diagnostic } from '../diagnostic/index.js'
+import { isNodeModulesPath, npmCompat } from '../plugin/npm-compat.js'
 import type { Module, ModuleGraph, OutputPlan } from '../types.js'
 import { rewriteCode } from './rewrite.js'
 import { transformModule } from './transform.js'
@@ -14,6 +15,7 @@ export async function emitPlan(input: {
   js: { target: 'es5' | 'es2018' | 'es2020'; module: 'commonjs' | 'es6' }
   previousDests?: Iterable<string>
   preserveNames?: string[]
+  npmCompat?: 'weapp' | 'none'
 }): Promise<{ diagnostics: Diagnostic[]; dests: string[] }> {
   const diagnostics: Diagnostic[] = []
   const dests = input.plan.placements.map((placement) => placement.destPath)
@@ -32,12 +34,21 @@ export async function emitPlan(input: {
     if (source === undefined) {
       continue
     }
-    const { code } = transformModule({
-      kind: node.kind,
-      sourcePath: node.sourcePath,
-      code: source,
-      js: input.js,
-    })
+    const useNpmCompat =
+      input.npmCompat === 'weapp' && node.kind === 'script' && isNodeModulesPath(node.sourcePath)
+    const { code } = useNpmCompat
+      ? npmCompat({
+          kind: node.kind,
+          sourcePath: node.sourcePath,
+          code: source,
+          js: input.js,
+        })
+      : transformModule({
+          kind: node.kind,
+          sourcePath: node.sourcePath,
+          code: source,
+          js: input.js,
+        })
     const rewritten = rewriteCode({
       moduleId: node.id,
       kind: node.kind,

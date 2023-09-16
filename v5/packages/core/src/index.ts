@@ -33,6 +33,7 @@ export { pageScriptsFromAppJson, pageScriptsFromRouter, appJsonFromEntry } from 
 export { analyzeGraph } from './graph/analyze.js'
 export { planGraph } from './plan/plan.js'
 export { transformModule } from './compile/transform.js'
+export { npmCompat } from './plugin/npm-compat.js'
 export { rewriteCode } from './compile/rewrite.js'
 export { emitPlan } from './compile/emit.js'
 export { createCompiler } from './compiler.js'

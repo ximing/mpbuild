@@ -59,6 +59,7 @@ export async function applyWatchTick(input: {
       shared: config.subPackage.shared,
       adapter: config.target,
       platform: config.platform,
+      npm: config.output.npm,
     })
     diagnostics.push(...planned.diagnostics)
     plan = planned.plan
@@ -78,6 +79,7 @@ export async function applyWatchTick(input: {
     js: config.compile.js,
     previousDests: input.previousDests,
     preserveNames: [config.target.projectConfigFile],
+    npmCompat: config.target.npmCompat,
   })
   diagnostics.push(...emitted.diagnostics)
 
