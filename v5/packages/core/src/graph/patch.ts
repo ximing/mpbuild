@@ -1,10 +1,11 @@
-import { dirname, resolve } from 'node:path'
+import { basename, dirname, resolve } from 'node:path'
 import type { AliasValue, ResolvedConfig, SubProject } from '../config/schema.js'
 import type { Diagnostic } from '../diagnostic/index.js'
 import {
   EdgeKinds,
   type ModuleGraph,
   type PackageInfo,
+  type Plugin,
   type TargetAdapter,
 } from '../types.js'
 import { companionPath } from './suite.js'
@@ -13,7 +14,8 @@ import {
   attachVirtualAppJson,
   drainQueue,
   enqueue,
-  intern,
+  posixDirname,
+  posixJoin,
   posixRelative,
   processModule,
   suiteEdgeKind,
@@ -30,6 +32,7 @@ export async function applyGraphChange(opts: {
   platform?: string
   ifdef?: ResolvedConfig['ifdef']
   skipAppJsonPages?: boolean
+  plugins?: Plugin[]
   changedIds: string[] // src-relative，文件仍在
   deletedIds: string[] // src-relative，文件已删
   addedRelPaths: string[] // src-relative，新出现的文件（可能尚未入图）
@@ -52,6 +55,7 @@ export async function applyGraphChange(opts: {
     visited: new Set(),
     queue: [],
     skipAppJsonPages,
+    plugins: opts.plugins,
   }
 
   removeDeleted(walk, deletedIds)
@@ -126,7 +130,7 @@ function attachAddedCompanions(walk: GraphWalk, addedRelPaths: string[]): void {
           continue
         }
         const kind = suiteEdgeKind(node, walk.edges)
-        const to = intern(walk, hit)
+        const to = posixJoin(posixDirname(node.id), basename(hit))
         const exists = walk.edges.some(
           (edge) => edge.from === node.id && edge.to === to && edge.kind === kind,
         )

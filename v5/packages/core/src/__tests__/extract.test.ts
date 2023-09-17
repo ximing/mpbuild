@@ -68,10 +68,28 @@ describe('extractEdges', () => {
       adapter: weappAdapter,
       code: JSON.stringify({
         usingComponents: { btn: '/comp/btn' },
-        componentGenerics: { item: '/comp/item' },
+        componentPlaceholder: { item: '/comp/item' },
       }),
     })
     expect(edges.map((e) => e.raw)).toEqual(['/comp/btn'])
+  })
+
+  it('extracts string componentGenerics leaves and skips true / objects', () => {
+    const edges = extractEdges({
+      id: '/p.json',
+      kind: 'json',
+      adapter: weappAdapter,
+      code: JSON.stringify({
+        componentGenerics: {
+          item: '/comp/item',
+          slot: true,
+          nested: { default: '/comp/nested' },
+        },
+      }),
+    })
+    expect(edges).toEqual([
+      expect.objectContaining({ raw: '/comp/item', kind: EdgeKinds.usingComponent }),
+    ])
   })
 
   it('extracts string import() and export-from', () => {

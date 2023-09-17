@@ -7,6 +7,7 @@ import type {
   AbstractKind,
   ModuleGraph,
   PackageInfo,
+  Plugin,
   TargetAdapter,
 } from '../types.js'
 import {
@@ -16,6 +17,8 @@ import {
   intern,
   internVirtual,
   isAppScriptId,
+  posixDirname,
+  posixJoin,
   tryResolve,
   type GraphWalk,
 } from './walk.js'
@@ -32,6 +35,9 @@ export interface BuildGraphOptions {
   packages?: PackageInfo[]
   skipAppJsonPages?: boolean
   virtualModules?: Array<{ id: string; kind: AbstractKind; code: string }>
+  /** router 页面：source 为入口值，logical 为无扩展名逻辑路径 */
+  pageEntries?: Array<{ source: string; logical: string }>
+  plugins?: Plugin[]
 }
 
 /** 从 entry 入队，按最终 id BFS；环边照常写入，不递归 process。 */
@@ -51,6 +57,8 @@ export async function buildGraph(opts: BuildGraphOptions): Promise<{
     packages,
     skipAppJsonPages,
     virtualModules,
+    pageEntries,
+    plugins,
   } = opts
   const walk: GraphWalk = {
     srcDir,
@@ -67,10 +75,14 @@ export async function buildGraph(opts: BuildGraphOptions): Promise<{
     visited: new Set(),
     queue: [],
     skipAppJsonPages: skipAppJsonPages === true,
+    plugins,
   }
 
   for (const entry of entryScripts) {
     enqueueEntryScript(walk, entry, rootDir)
+  }
+  for (const page of pageEntries ?? []) {
+    enqueuePageEntry(walk, page, rootDir)
   }
 
   for (const virt of virtualModules ?? []) {
@@ -141,6 +153,42 @@ function enqueueEntryScript(walk: GraphWalk, entry: string, rootDir: string): vo
         severity: 'error',
         message: `MISSING_PAGE_JS: cannot resolve page script ${entry}`,
         file: join(walk.srcDir, entry),
+      }),
+    )
+  }
+}
+
+function enqueuePageEntry(
+  walk: GraphWalk,
+  page: { source: string; logical: string },
+  rootDir: string,
+): void {
+  try {
+    const result = resolveId({
+      request: page.source,
+      importer: join(walk.srcDir, 'app.js'),
+      kind: 'script',
+      adapter: walk.adapter,
+      srcDir: walk.srcDir,
+      alias: walk.alias,
+      projects: walk.projects,
+      platform: walk.platform,
+    })
+    if (!result || result.external || result.virtual) {
+      return
+    }
+    const logicalId = posixJoin(posixDirname(page.logical), basename(result.id))
+    const id = intern(walk, result.id, 'page', result.extraWatchFiles, logicalId)
+    if (enqueue(walk, id)) {
+      walk.entries.push(id)
+    }
+  } catch {
+    walk.diagnostics.push(
+      diagnostic({
+        code: 'MISSING_PAGE_JS',
+        severity: 'error',
+        message: `MISSING_PAGE_JS: cannot resolve page script ${page.source}`,
+        file: join(rootDir, page.source),
       }),
     )
   }

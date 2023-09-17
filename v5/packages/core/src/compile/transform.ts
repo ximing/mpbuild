@@ -9,6 +9,7 @@ export function transformModule(input: {
   sourcePath: string
   code: string
   js: { target: 'es5' | 'es2018' | 'es2020'; module: 'commonjs' | 'es6' }
+  css?: { lightningcss: boolean }
   minify?: boolean
 }): { code: string } {
   const minify = input.minify ?? false
@@ -19,6 +20,9 @@ export function transformModule(input: {
       return { code: transformScript({ kind, sourcePath, code, js }, minify) }
     }
     case 'style':
+      if (input.css?.lightningcss === false) {
+        return { code: input.code }
+      }
       return { code: transformStyle(input, minify) }
     case 'json':
       return { code: transformJson(input.code, minify) }
@@ -61,12 +65,16 @@ function transformStyle(
   input: { sourcePath: string; code: string },
   minify: boolean,
 ): string {
-  const result = transformCss({
-    filename: input.sourcePath,
-    code: Buffer.from(input.code),
-    minify,
-  })
-  return Buffer.from(result.code).toString('utf8')
+  try {
+    const result = transformCss({
+      filename: input.sourcePath,
+      code: Buffer.from(input.code),
+      minify,
+    })
+    return Buffer.from(result.code).toString('utf8')
+  } catch {
+    return input.code
+  }
 }
 
 function transformJson(code: string, minify: boolean): string {

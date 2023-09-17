@@ -12,6 +12,7 @@ import {
   type Edge,
   type Module,
   type PackageInfo,
+  type Plugin,
   type TargetAdapter,
 } from '../types.js'
 import { pageScriptsFromAppJson } from './entries.js'
@@ -34,6 +35,7 @@ export interface GraphWalk {
   queue: string[]
   /** 有 router 时不从磁盘 app.json 扫 pages */
   skipAppJsonPages?: boolean
+  plugins?: Plugin[]
 }
 
 /** 图 id：posix、相对 srcDir。 */
@@ -68,17 +70,25 @@ export function kindFromExt(id: string, adapter: TargetAdapter): AbstractKind {
   return matched ?? 'script'
 }
 
+export function posixDirname(id: string): string {
+  const slash = id.replace(/\\/g, '/').lastIndexOf('/')
+  return slash === -1 ? '' : id.slice(0, slash)
+}
+
 export function intern(
   walk: GraphWalk,
   absPath: string,
   pageType?: Module['pageType'],
   extraWatchFiles?: string[],
+  idOverride?: string,
 ): string {
   // 落在子仓库 src 下时 id 为 name/相对路径；src 外的 npm 为 npm/<pkg>/...
   const project = projectForPath(absPath, walk.projects)
-  const id = project
-    ? posixJoin(project.name, posixRelative(project.src, absPath))
-    : npmGraphId(walk.srcDir, absPath)
+  const id =
+    idOverride ||
+    (project
+      ? posixJoin(project.name, posixRelative(project.src, absPath))
+      : npmGraphId(walk.srcDir, absPath))
   const existing = walk.nodes.get(id)
   if (!existing) {
     const extras = uniqueWatchFiles(absPath, extraWatchFiles)
@@ -201,6 +211,7 @@ export async function processModule(walk: GraphWalk, id: string): Promise<void> 
       code = stripIfdef(code, node.kind, walk)
     }
   }
+  code = await applyLoadPlugins(walk, node, code)
   node.meta = { ...node.meta, code }
   node.hash = createHash('sha256').update(code).digest('hex')
 
@@ -299,7 +310,8 @@ export function addSuiteEdge(
   abs: string,
   kind = suiteEdgeKind(from, walk.edges),
 ): string {
-  const to = intern(walk, abs)
+  const logicalId = posixJoin(posixDirname(from.id), basename(abs))
+  const to = intern(walk, abs, undefined, undefined, logicalId)
   walk.edges.push({
     from: from.id,
     to,
@@ -487,6 +499,47 @@ function isolateLoadConfigJs(walk: GraphWalk, node: Module): string {
 }
 
 /** blockcode 关闭或无 platform 时原样返回。 */
+/** load 钩子第一个非空胜出。 */
+async function applyLoadPlugins(walk: GraphWalk, node: Module, code: string): Promise<string> {
+  const plugins = walk.plugins
+  if (!plugins?.length) {
+    return code
+  }
+  const watches: string[] = []
+  let current = code
+  for (const plugin of plugins) {
+    if (!plugin.load) {
+      continue
+    }
+    const next = await plugin.load(node.id, {
+      adapter: walk.adapter,
+      kind: node.kind,
+      sourcePath: node.sourcePath,
+      code: current,
+      addWatchFile: (file) => {
+        watches.push(file)
+      },
+      warn: (d) => {
+        walk.diagnostics.push(diagnostic(d))
+      },
+      error: (d) => {
+        walk.diagnostics.push(diagnostic(d))
+      },
+    })
+    if (typeof next === 'string') {
+      current = next
+      break
+    }
+  }
+  if (watches.length) {
+    const extras = uniqueWatchFiles(node.sourcePath, [...(node.extraWatchFiles ?? []), ...watches])
+    if (extras.length) {
+      node.extraWatchFiles = extras
+    }
+  }
+  return current
+}
+
 function stripIfdef(code: string, kind: AbstractKind, walk: GraphWalk): string {
   const platform = walk.platform
   if (!platform || walk.ifdef?.blockcode === false) {

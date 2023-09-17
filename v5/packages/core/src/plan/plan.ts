@@ -1,14 +1,15 @@
 import { diagnostic, type Diagnostic } from '../diagnostic/index.js'
 import { pathInsideNodeModules } from '../resolve/resolver.js'
-import type {
-  AbstractKind,
-  Edge,
-  Module,
-  ModuleGraph,
-  OutputPlan,
-  Placement,
-  Rewrite,
-  TargetAdapter,
+import {
+  EdgeKinds,
+  type AbstractKind,
+  type Edge,
+  type Module,
+  type ModuleGraph,
+  type OutputPlan,
+  type Placement,
+  type Rewrite,
+  type TargetAdapter,
 } from '../types.js'
 
 /** 按 owner 生成 placement 与 rewrite；冲突 dest 加 hash 后缀。不改图。 */
@@ -26,6 +27,7 @@ export function planGraph(
   const diagnostics: Diagnostic[] = []
   const placements: Placement[] = []
   const occupied = new Map<string, string>()
+  const suiteIds = suiteMemberIds(graph)
 
   for (const node of graph.nodes.values()) {
     if (adapter.externalSpecifiers.test(node.id)) {
@@ -33,7 +35,7 @@ export function planGraph(
     }
     for (const pkg of packagesFor(node, graph, shared)) {
       const destPath = uniqueDest(
-        destPathFor(outputDir, pkg, node, adapter, platform, npm),
+        destPathFor(outputDir, pkg, node, adapter, platform, npm, suiteIds.has(node.id)),
         node,
         occupied,
         diagnostics,
@@ -106,6 +108,22 @@ function walksOwnership(edge: Edge): boolean {
   return edge.external !== true && edge.affectsOwnership !== false
 }
 
+function suiteMemberIds(graph: ModuleGraph): Set<string> {
+  const ids = new Set<string>()
+  for (const node of graph.nodes.values()) {
+    if (isSuitePageType(node.pageType)) {
+      ids.add(node.id)
+    }
+  }
+  for (const edge of graph.edges) {
+    if (edge.kind === EdgeKinds.pageSuite || edge.kind === EdgeKinds.componentSuite) {
+      ids.add(edge.from)
+      ids.add(edge.to)
+    }
+  }
+  return ids
+}
+
 function destPathFor(
   outputDir: string,
   pkg: string,
@@ -113,6 +131,7 @@ function destPathFor(
   adapter: TargetAdapter,
   platform: string | undefined,
   npm: string,
+  suiteMember: boolean,
 ): string {
   const npmInner = pathInsideNodeModules(node.sourcePath) ?? pathInsideNodeModules(node.id)
   let rel = npmInner
@@ -124,8 +143,8 @@ function destPathFor(
   if (fromConfigJs !== undefined) {
     rel = fromConfigJs
   } else {
-    // suite 脚本去掉 basename 的 .${platform} 再换 emitExt
-    if (isSuitePageType(node.pageType) && platform) {
+    // suite 成员去掉 basename 的 .${platform} 再换 emitExt
+    if (suiteMember && platform) {
       rel = stripPlatformInfix(rel, platform)
     }
     rel = replaceExt(rel, ext, adapter.sourceExts[node.kind] ?? [])

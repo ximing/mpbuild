@@ -44,6 +44,7 @@ export async function applyWatchTick(input: {
     deletedIds: input.deletedIds,
     addedRelPaths: input.addedRelPaths,
     skipAppJsonPages: input.skipAppJsonPages === true,
+    plugins: config.plugins,
   })
 
   const diagnostics: Diagnostic[] = [...patched.diagnostics]
@@ -77,6 +78,7 @@ export async function applyWatchTick(input: {
     outputDir,
     clean: false,
     js: config.compile.js,
+    css: config.compile.css,
     previousDests: input.previousDests,
     preserveNames: [config.target.projectConfigFile],
     npmCompat: config.target.npmCompat,

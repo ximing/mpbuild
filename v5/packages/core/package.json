@@ -20,8 +20,12 @@
   },
   "dependencies": {
     "@swc/core": "^1.16.1",
+    "@yeanzhi/postcss-advanced-variables": "^3.1.0",
     "chokidar": "^3.6.0",
     "lightningcss": "^1.30.1",
+    "postcss": "^8.5.26",
+    "postcss-nested": "^8.0.1",
+    "postcss-scss": "^4.0.9",
     "zod": "^4.4.3"
   }
 }

@@ -1,9 +1,11 @@
 import { existsSync } from 'node:fs'
-import { join } from 'node:path'
+import { mkdir, writeFile } from 'node:fs/promises'
+import { join, resolve } from 'node:path'
 import {
   analyzeGraph,
   buildGraph,
   createCompiler,
+  formatAnalyzeJson,
   formatGraphInspect,
   isError,
   loadConfig,
@@ -38,6 +40,24 @@ export async function run(argv: string[] = process.argv): Promise<void> {
     await new Promise<void>(() => {})
     return
   }
+  if (argv[2] === 'analyze') {
+    const config = await loadOrReport(process.cwd())
+    if (!config) {
+      return
+    }
+    const { graph, plan, diagnostics } = await createCompiler(config).analyze()
+    printDiagnostics(diagnostics)
+    const outputDir = resolve(config.rootDir, config.output.dir)
+    await mkdir(outputDir, { recursive: true })
+    await writeFile(
+      join(outputDir, 'mpbuild-analyze.json'),
+      `${JSON.stringify(formatAnalyzeJson(graph, plan), null, 2)}\n`,
+    )
+    if (diagnostics.some(isError)) {
+      process.exitCode = 1
+    }
+    return
+  }
   if (argv[2] === 'build') {
     const config = await loadOrReport(process.cwd())
     if (!config) {
@@ -50,7 +70,7 @@ export async function run(argv: string[] = process.argv): Promise<void> {
     }
     return
   }
-  console.log('usage: mpb <inspect graph|build|dev>')
+  console.log('usage: mpb <inspect graph|build|dev|analyze>')
 }
 
 async function loadOrReport(cwd: string) {
