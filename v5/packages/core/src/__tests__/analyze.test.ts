@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { analyzeGraph, EdgeKinds, weappAdapter } from '../index'
+import { analyzeGraph, EdgeKinds, formatAnalyzeJson, weappAdapter } from '../index'
 import type { Edge, Module, ModuleGraph, PackageInfo, TargetAdapter } from '../index'
 
 function mod(id: string, owner: string = 'main'): Module {
@@ -159,5 +159,19 @@ describe('analyzeGraph', () => {
     expect([...out.nodes.keys()]).toEqual(nodeIds)
     expect(out.packages).toEqual(packages)
     expect(out.packages).not.toBe(packages)
+  })
+})
+
+describe('formatAnalyzeJson', () => {
+  it('serializes nodes as an array so JSON.stringify works', () => {
+    const graph = graphOf(['app.js', 'lib.js'], ['app.js'], [edge('app.js', 'lib.js')])
+    const json = formatAnalyzeJson(graph, {
+      placements: [{ moduleId: 'app.js', destPath: 'dist/app.js', package: 'main' }],
+      rewrites: [],
+    })
+    const text = JSON.stringify(json)
+    expect(text).toContain('"app.js"')
+    const parsed = JSON.parse(text) as { nodes: Array<{ id: string }> }
+    expect(parsed.nodes.map((node) => node.id).sort()).toEqual(['app.js', 'lib.js'])
   })
 })

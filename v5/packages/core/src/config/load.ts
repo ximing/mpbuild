@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { getTargetAdapter } from '../target/index.js'
-import type { TargetAdapter } from '../types.js'
+import type { Plugin, TargetAdapter } from '../types.js'
 import { loadAppEntry } from './entry.js'
 import { userConfigSchema, type AliasValue, type ResolvedConfig } from './schema.js'
 
@@ -51,5 +51,6 @@ export async function loadConfig(rootDir: string): Promise<ResolvedConfig> {
     ifdef: parsed.ifdef,
     appEntry,
     configPath,
+    plugins: Array.isArray(parsed.plugins) ? (parsed.plugins as Plugin[]) : undefined,
   }
 }

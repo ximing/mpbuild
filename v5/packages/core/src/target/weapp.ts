@@ -33,6 +33,7 @@ export const weappAdapter: TargetAdapter = {
   ],
   jsonPathFields: [
     { path: 'usingComponents.*', edge: EdgeKinds.usingComponent, value: 'path' },
+    { path: 'componentGenerics.*', edge: EdgeKinds.usingComponent, value: 'name-or-path' },
   ],
   projectConfigFile: 'project.config.json',
   appJson: { pages: 'pages', subPackages: 'subPackages' },

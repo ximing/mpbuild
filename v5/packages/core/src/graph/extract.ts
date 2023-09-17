@@ -84,22 +84,23 @@ function extractJson(code: string, adapter: TargetAdapter): ExtractedEdge[] {
   const data: unknown = JSON.parse(code)
   const edges: ExtractedEdge[] = []
   for (const field of adapter.jsonPathFields) {
-    walkJsonPath(data, field.path.split('.'), [], field.edge, edges)
+    walkJsonPath(data, field.path.split('.'), [], field.edge, field.value, edges)
   }
   return edges
 }
 
-/** `.` 分段，`*` 展开对象键；只收表里登记的路径。 */
+/** `.` 分段，`*` 展开对象键；只收表里登记的路径。name-or-path 仅字符串叶子当路径。 */
 function walkJsonPath(
   node: unknown,
   segments: string[],
   pointer: string[],
   edge: EdgeKind,
+  value: 'path' | 'path-or-true' | 'name-or-path',
   edges: ExtractedEdge[],
 ): void {
   const [head, ...tail] = segments
   if (head === undefined) {
-    if (typeof node === 'string' && node !== '') {
+    if (isJsonPathLeaf(node, value)) {
       edges.push({ raw: node, kind: edge, rewritePath: toJsonPointer(pointer) })
     }
     return
@@ -110,19 +111,29 @@ function walkJsonPath(
   if (head === '*') {
     if (Array.isArray(node)) {
       node.forEach((child, index) => {
-        walkJsonPath(child, tail, [...pointer, String(index)], edge, edges)
+        walkJsonPath(child, tail, [...pointer, String(index)], edge, value, edges)
       })
       return
     }
     for (const [key, child] of Object.entries(node)) {
-      walkJsonPath(child, tail, [...pointer, key], edge, edges)
+      walkJsonPath(child, tail, [...pointer, key], edge, value, edges)
     }
     return
   }
   if (Array.isArray(node)) {
     return
   }
-  walkJsonPath((node as Record<string, unknown>)[head], tail, [...pointer, head], edge, edges)
+  walkJsonPath((node as Record<string, unknown>)[head], tail, [...pointer, head], edge, value, edges)
+}
+
+function isJsonPathLeaf(
+  node: unknown,
+  value: 'path' | 'path-or-true' | 'name-or-path',
+): node is string {
+  if (typeof node !== 'string' || node === '') {
+    return false
+  }
+  return value === 'path' || value === 'path-or-true' || value === 'name-or-path'
 }
 
 function extractTemplate(code: string, adapter: TargetAdapter): ExtractedEdge[] {

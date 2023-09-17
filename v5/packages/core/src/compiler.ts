@@ -1,5 +1,6 @@
 import { existsSync } from 'node:fs'
-import { join, resolve } from 'node:path'
+import { mkdir, writeFile } from 'node:fs/promises'
+import { dirname, join, resolve } from 'node:path'
 import { emitPlan } from './compile/emit.js'
 import { loadAppEntry } from './config/entry.js'
 import type { ResolvedConfig } from './config/schema.js'
@@ -8,7 +9,7 @@ import { analyzeGraph } from './graph/analyze.js'
 import { buildGraph } from './graph/builder.js'
 import { appJsonFromEntry, pageScriptsFromRouter } from './graph/entries.js'
 import { planGraph } from './plan/plan.js'
-import type { ModuleGraph, OutputPlan } from './types.js'
+import type { ModuleGraph, OutputPlan, Plugin } from './types.js'
 import { applyWatchTick as applyWatchTickOnce } from './watch/tick.js'
 import { startWatch, watchPaths } from './watch/watcher.js'
 
@@ -35,6 +36,7 @@ type CompilerTickResult = CompilerRunResult & {
 /** 建图 → analyze → plan → emit。缺 app.js/ts 则 MISSING_APP_JS。 */
 export function createCompiler(config: ResolvedConfig): {
   run(): Promise<CompilerRunResult>
+  analyze(): Promise<Omit<CompilerRunResult, 'dests'>>
   applyWatchTick(args: {
     changedIds: string[]
     deletedIds: string[]
@@ -48,45 +50,59 @@ export function createCompiler(config: ResolvedConfig): {
   let didEmit = false
   let skipAppJsonPages = false
 
-  async function run(): Promise<CompilerRunResult> {
+  async function missingApp(): Promise<CompilerRunResult> {
+    const srcDir = resolve(config.rootDir, config.src)
+    const appJs = join(srcDir, 'app.js')
+    skipAppJsonPages = false
+    return {
+      graph: emptyGraph(),
+      plan: emptyPlan(),
+      diagnostics: [
+        diagnostic({
+          code: 'MISSING_APP_JS',
+          severity: 'error',
+          message: 'MISSING_APP_JS: no app.js or app.ts',
+          file: appJs,
+        }),
+      ],
+      dests: [],
+    }
+  }
+
+  async function buildAndPlan(): Promise<Omit<CompilerRunResult, 'dests'> & { outputDir: string }> {
     const srcDir = resolve(config.rootDir, config.src)
     const appJs = join(srcDir, 'app.js')
     const appTs = join(srcDir, 'app.ts')
     const entryScript = existsSync(appJs) ? appJs : existsSync(appTs) ? appTs : undefined
+    const outputDir = resolve(config.rootDir, config.output.dir)
     if (!entryScript) {
-      skipAppJsonPages = false
-      const result: CompilerRunResult = {
-        graph: emptyGraph(),
-        plan: emptyPlan(),
-        diagnostics: [
-          diagnostic({
-            code: 'MISSING_APP_JS',
-            severity: 'error',
-            message: 'MISSING_APP_JS: no app.js or app.ts',
-            file: appJs,
-          }),
-        ],
-        dests: [],
-      }
-      remember(result)
-      return result
+      const result = await missingApp()
+      return { ...result, outputDir }
     }
 
     const diagnostics: Diagnostic[] = []
     const appEntry = await loadAppEntry(config.rootDir, config.entry)
     const fromRouter = Array.isArray(appEntry.router) ? pageScriptsFromRouter(appEntry) : undefined
     skipAppJsonPages = fromRouter !== undefined
+    const pageEntries = fromRouter
+      ? fromRouter.sources.map((source, index) => ({
+          source,
+          logical: fromRouter.scripts[index] ?? source,
+        }))
+      : undefined
     const built = await buildGraph({
       rootDir: config.rootDir,
       srcDir,
       adapter: config.target,
-      entryScripts: fromRouter ? [entryScript, ...fromRouter.sources] : [entryScript],
+      entryScripts: [entryScript],
+      pageEntries,
       alias: config.resolve.alias,
       projects: config.projects,
       platform: config.platform,
       ifdef: config.ifdef,
       packages: fromRouter?.packages,
       skipAppJsonPages,
+      plugins: config.plugins,
       virtualModules:
         fromRouter === undefined
           ? undefined
@@ -107,7 +123,6 @@ export function createCompiler(config: ResolvedConfig): {
     )
     diagnostics.push(...analyzed.diagnostics)
 
-    const outputDir = resolve(config.rootDir, config.output.dir)
     const planned = planGraph(analyzed.graph, {
       outputDir,
       shared: config.subPackage.shared,
@@ -117,26 +132,52 @@ export function createCompiler(config: ResolvedConfig): {
     })
     diagnostics.push(...planned.diagnostics)
 
-    const emitted = await emitPlan({
+    return {
       graph: analyzed.graph,
       plan: planned.plan,
+      diagnostics,
       outputDir,
+    }
+  }
+
+  async function run(): Promise<CompilerRunResult> {
+    const built = await buildAndPlan()
+    const emitted = await emitPlan({
+      graph: built.graph,
+      plan: built.plan,
+      outputDir: built.outputDir,
       clean: didEmit ? false : config.output.clean,
       js: config.compile.js,
+      css: config.compile.css,
       previousDests: didEmit ? lastDests : [],
       preserveNames: [config.target.projectConfigFile],
       npmCompat: config.target.npmCompat,
     })
-    diagnostics.push(...emitted.diagnostics)
-
+    const extras = await applyGeneratePlugins(config.plugins ?? [], {
+      outputDir: built.outputDir,
+      adapter: config.target,
+      graph: built.graph,
+      plan: built.plan,
+    })
     const result: CompilerRunResult = {
-      graph: analyzed.graph,
-      plan: planned.plan,
-      diagnostics,
-      dests: emitted.dests,
+      graph: built.graph,
+      plan: built.plan,
+      diagnostics: [...built.diagnostics, ...emitted.diagnostics],
+      dests: [...emitted.dests, ...extras],
     }
     remember(result)
     return result
+  }
+
+  async function analyze(): Promise<Omit<CompilerRunResult, 'dests'>> {
+    const built = await buildAndPlan()
+    lastGraph = built.graph
+    lastPlan = built.plan
+    return {
+      graph: built.graph,
+      plan: built.plan,
+      diagnostics: built.diagnostics,
+    }
   }
 
   function remember(result: CompilerRunResult): void {
@@ -185,14 +226,53 @@ export function createCompiler(config: ResolvedConfig): {
     return startWatch({
       paths,
       srcDir,
-      onTick: (batch) => applyWatchTick(batch),
-      onConfigChange: () => run(),
+      onTick: async (batch) => {
+        await applyWatchTick(batch)
+      },
+      onConfigChange: async () => {
+        await run()
+      },
     })
   }
 
   return {
     run,
+    analyze,
     applyWatchTick,
     watch,
   }
+}
+
+async function applyGeneratePlugins(
+  plugins: Plugin[],
+  ctx: {
+    outputDir: string
+    adapter: ResolvedConfig['target']
+    graph: ModuleGraph
+    plan: OutputPlan
+  },
+): Promise<string[]> {
+  const dests: string[] = []
+  const destPath = join(ctx.outputDir, ctx.adapter.projectConfigFile)
+  for (const plugin of plugins) {
+    if (!plugin.generate) {
+      continue
+    }
+    const result = await plugin.generate(
+      { destPath, content: '' },
+      {
+        adapter: ctx.adapter,
+        outputDir: ctx.outputDir,
+        graph: ctx.graph,
+        plan: ctx.plan,
+      },
+    )
+    if (!result || existsSync(result.destPath)) {
+      continue
+    }
+    await mkdir(dirname(result.destPath), { recursive: true })
+    await writeFile(result.destPath, result.content)
+    dests.push(result.destPath)
+  }
+  return dests
 }

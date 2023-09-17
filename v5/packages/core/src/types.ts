@@ -105,3 +105,32 @@ export interface TargetAdapter {
   externalSpecifiers: RegExp
   independentEdge: 'error' | 'warning' | 'ignore'
 }
+
+export interface PluginLoadContext {
+  adapter: TargetAdapter
+  kind: AbstractKind
+  sourcePath: string
+  code: string
+  addWatchFile(path: string): void
+  warn(d: { code: string; severity: 'error' | 'warning'; message: string; file?: string }): void
+  error(d: { code: string; severity: 'error' | 'warning'; message: string; file?: string }): void
+}
+
+export interface PluginGenerateContext {
+  adapter: TargetAdapter
+  outputDir?: string
+  graph?: ModuleGraph
+  plan?: OutputPlan
+}
+
+export interface Plugin {
+  name: string
+  load?(id: string, ctx: PluginLoadContext): string | void | Promise<string | void>
+  generate?(
+    file: { destPath: string; content: string | Buffer; moduleId?: string },
+    ctx: PluginGenerateContext,
+  ):
+    | { destPath: string; content: string | Buffer; moduleId?: string }
+    | void
+    | Promise<{ destPath: string; content: string | Buffer; moduleId?: string } | void>
+}

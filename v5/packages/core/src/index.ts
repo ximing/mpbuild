@@ -16,6 +16,11 @@ export { EdgeKinds } from './types.js'
 export { weappAdapter, getTargetAdapter } from './target/index.js'
 export type { Severity, Diagnostic } from './diagnostic/index.js'
 export { diagnostic, isError } from './diagnostic/index.js'
+export type {
+  Plugin,
+  PluginGenerateContext,
+  PluginLoadContext,
+} from './types.js'
 export type { ResolvedConfig, AliasValue, SubProject, AppEntry } from './config/schema.js'
 export { defineConfig, loadConfig } from './config/load.js'
 export { loadAppEntry } from './config/entry.js'
@@ -34,6 +39,9 @@ export { analyzeGraph } from './graph/analyze.js'
 export { planGraph } from './plan/plan.js'
 export { transformModule } from './compile/transform.js'
 export { npmCompat } from './plugin/npm-compat.js'
+export { projectConfig } from './plugin/project-config.js'
+export { legacyScss } from './plugin/legacy-scss.js'
+export { formatAnalyzeJson } from './analyze-json.js'
 export { rewriteCode } from './compile/rewrite.js'
 export { emitPlan } from './compile/emit.js'
 export { createCompiler } from './compiler.js'

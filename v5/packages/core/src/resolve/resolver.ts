@@ -40,8 +40,8 @@ export function resolveId(req: ResolveRequest): ResolveResult {
   const fromAlias = rewritten != null
 
   const candidate = toCandidate(specifier, importer, srcDir, fromAlias)
+  const exts = adapter.sourceExts[kind] ?? []
   if (candidate) {
-    const exts = adapter.sourceExts[kind] ?? []
     const completed = completeSource(candidate, exts, platform)
     if (completed) {
       return toResolveResult(completed)
@@ -49,6 +49,14 @@ export function resolveId(req: ResolveRequest): ResolveResult {
     throw Object.assign(new Error(`RESOLVE_MISS: cannot resolve ${request} from ${importer}`), {
       code: 'RESOLVE_MISS',
     })
+  }
+
+  // 模板/样式无 ./ 前缀时按相对 importer 补全（`<import src="tpl"/>`）
+  if (kind === 'template' || kind === 'style') {
+    const rel = completeSource(resolve(dirname(importer), specifier), exts, platform)
+    if (rel) {
+      return toResolveResult(rel)
+    }
   }
 
   const npm = resolveNpm(specifier, importer, kind, adapter, platform)

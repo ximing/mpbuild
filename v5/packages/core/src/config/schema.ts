@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { TargetAdapter } from '../types.js'
+import type { Plugin, TargetAdapter } from '../types.js'
 
 function isTargetAdapter(value: unknown): value is TargetAdapter {
   return typeof value === 'object' && value !== null && typeof (value as { id?: unknown }).id === 'string'
@@ -90,6 +90,7 @@ export const userConfigSchema = z.object({
   subPackage: subPackageSchema,
   projects: z.array(subProjectSchema).default([]),
   ifdef: ifdefSchema,
+  plugins: z.array(z.any()).optional(),
 })
 
 export interface ResolvedConfig {
@@ -110,4 +111,5 @@ export interface ResolvedConfig {
   ifdef: { tokens: Record<string, boolean | string>; blockcode: boolean }
   appEntry: AppEntry
   configPath: string
+  plugins?: Plugin[]
 }

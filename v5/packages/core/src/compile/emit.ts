@@ -13,6 +13,7 @@ export async function emitPlan(input: {
   outputDir: string
   clean: boolean
   js: { target: 'es5' | 'es2018' | 'es2020'; module: 'commonjs' | 'es6' }
+  css?: { lightningcss: boolean }
   previousDests?: Iterable<string>
   preserveNames?: string[]
   npmCompat?: 'weapp' | 'none'
@@ -48,6 +49,7 @@ export async function emitPlan(input: {
           sourcePath: node.sourcePath,
           code: source,
           js: input.js,
+          css: input.css,
         })
     const rewritten = rewriteCode({
       moduleId: node.id,
