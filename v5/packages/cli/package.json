@@ -2,6 +2,16 @@
   "name": "@mpbuild/cli",
   "version": "2.0.0",
   "type": "module",
+  "description": "CLI for @mpbuild/core (command: mpb)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ximing/mpbuild.git",
+    "directory": "v5/packages/cli"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "bin": {
     "mpb": "./bin/mpb.js"
   },
