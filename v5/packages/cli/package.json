@@ -28,15 +28,16 @@
     "bin"
   ],
   "scripts": {
+    "dev": "tsx src/index.ts",
     "build": "tsc -p tsconfig.json",
     "pack:check": "pnpm build && npm pack --dry-run"
   },
   "dependencies": {
-    "@mpbuild/core": "workspace:*",
-    "tsx": "^4.19.2"
+    "@mpbuild/core": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.20.1",
+    "tsx": "^4.19.2",
     "typescript": "^5.9.3"
   },
   "engines": {
