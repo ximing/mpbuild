@@ -13,13 +13,13 @@ importers:
       '@mpbuild/core':
         specifier: workspace:*
         version: link:../core
-      tsx:
-        specifier: ^4.19.2
-        version: 4.23.12
     devDependencies:
       '@types/node':
         specifier: ^22.20.1
         version: 22.20.1
+      tsx:
+        specifier: ^4.19.2
+        version: 4.23.12
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
