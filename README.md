@@ -1,24 +1,74 @@
-# 小程序构建工具
+# mpbuild
+
+微信小程序图驱动构建器。5.x 实现位于 `v5/`，npm 包是 [`@mpbuild/core`](https://www.npmjs.com/package/@mpbuild/core) 与 [`@mpbuild/cli`](https://www.npmjs.com/package/@mpbuild/cli)（都是 `2.0.0`）。
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
 [![All Contributors](https://img.shields.io/badge/all_contributors-4-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
-[comment]: <> ([![npm dependents]&#40;https://badgen.net/npm/dependents/mpbuild&#41;]&#40;https://www.npmjs.com/package/mpbuild?activeTab=dependents&#41;)
-[![NPM Version](http://img.shields.io/npm/v/mpbuild.svg?style=flat)](https://www.npmjs.org/package/mpbuild)
-[![Downloads](https://badgen.net/npm/dt/mpbuild)](https://www.npmjs.com/package/mpbuild)
-[![lerna](https://img.shields.io/badge/maintained%20with-lerna-cc00ff.svg)](https://lerna.js.org/)
-<br>
+[![NPM Version](https://img.shields.io/npm/v/@mpbuild/cli.svg?style=flat)](https://www.npmjs.com/package/@mpbuild/cli)
+
+命令行是 `mpb`。**不会**再发布名为 `mpbuild` 的 5.0；历史上的 `mpbuild@4` 已冻结，源码已移出本仓库。
+
+## 要求
+
+- Node.js `>=20`
+
+## 安装
+
+```bash
+pnpm add -D @mpbuild/cli
+```
+
+## 命令
+
+```bash
+mpb build
+mpb dev
+mpb analyze
+mpb inspect graph
+```
+
+`--watch` 是 `dev` 的别名。退出码：0 成功；1 含 error；2 配置错误。
+
+## 配置
+
+项目根使用 `mpbuild.config.ts` / `mpbuild.config.mts` / `mpbuild.config.js`（`export default` 或 `module.exports`）。生产环境请用 `mpbuild.config.js`。
+
+**不读取** `mpb.config.js`。
+
+```js
+import { defineConfig, legacyScss, projectConfig } from '@mpbuild/core'
+
+export default defineConfig({
+  src: 'src',
+  entry: './entry.js',
+  platform: 'wx',
+  output: { dir: 'dist', npm: 'npm', clean: true, componentRelative: true },
+  plugins: [
+    legacyScss(),
+    projectConfig({ projectname: 'my-app', appId: 'touristappid' }),
+  ],
+})
+```
+
+从 4.x 迁移见 [docs/migration-v5.md](docs/migration-v5.md)。
 
 ## 文档
 
-文档已经发布到[https://ximing.github.io/mpbuild/](https://ximing.github.io/mpbuild/)，还在努力完善更多细节内容，欢迎大家贡献
+- 迁移：[docs/migration-v5.md](docs/migration-v5.md)
+- 架构规格：[docs/superpowers/specs/2026-08-19-mpbuild-v5-graph-driven-design.md](docs/superpowers/specs/2026-08-19-mpbuild-v5-graph-driven-design.md)
+- 包说明：[v5/packages/cli/README.md](v5/packages/cli/README.md)、[v5/packages/core/README.md](v5/packages/core/README.md)
 
-国内镜像地址[https://mpbuild.gitee.io/](https://mpbuild.gitee.io/)
+冷构建相对 4.x 快 5 倍是志向指标，不进 CI fail。
+
+## 仓库
+
+实现只在 `v5/packages/core` 与 `v5/packages/cli`。金样在 `example/demo`（不要到 `v5/packages/example` 找）。
 
 ## License
 
-[MIT](https://github.com/ximing/mpbuild/blob/master/LICENSE)
+[MIT](LICENSE)
 
 ## Contributors ✨
 

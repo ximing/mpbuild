@@ -2,7 +2,7 @@
 
 > 总规格：`docs/superpowers/specs/2026-08-19-mpbuild-v5-graph-driven-design.md`  
 > 执行方式：主 Agent 只编排；每阶段一份独立实施计划；子代理 TDD；每完成一小步就提交。  
-> 当前开工：P4 → `docs/superpowers/plans/2026-08-19-mpbuild-v5-p4-release.md`
+> 当前开工：P4 已交付 → `docs/superpowers/plans/2026-08-19-mpbuild-v5-p4-release.md`
 
 ## 阶段
 
