@@ -38,7 +38,7 @@ await createCompiler(config).run()
 
 **不读取** `mpb.config.js`。工作区里只有旧文件时诊断 `LEGACY_CONFIG`，退出码 2。
 
-生产环境的 `@mpbuild/cli`（`mpb` bin）是编译后的 JS，**请把发布配置写成 `mpbuild.config.js`**。`.ts` / `.mts` 需要额外的 TypeScript loader，本版本的生产 bin 不再默认 `tsx register`。
+生产环境的 `@mpbuild/cli`（`mpb` bin）是编译后的 JS，**请把发布配置写成 `mpbuild.config.js`**。`.ts` / `.mts` 需要额外的 TypeScript loader，本版本的生产 bin 不再默认 `tsx register`。生产环境不要同时留下 `mpbuild.config.ts` / `.mts`，否则会先加载它们并失败，请删掉或只留 `.js`。
 
 字段对照：
 

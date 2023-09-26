@@ -28,6 +28,8 @@ describe('migration-v5.md', () => {
       'plugin://',
       'Node.js',
       '>=20',
+      'mpbuild.config.ts',
+      '不要同时留下',
     ]
     for (const token of required) {
       expect(md, `missing ${token}`).toContain(token)

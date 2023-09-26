@@ -18,6 +18,10 @@ describe('root README', () => {
     expect(readme).not.toMatch(/maintained%20with-lerna/)
     expect(readme).not.toContain('https://ximing.github.io/mpbuild/')
     expect(readme).not.toContain('https://mpbuild.gitee.io/')
+    expect(readme).toContain('mpbuild.config.ts')
+    expect(readme).toContain('type": "module"')
+    expect(readme).toContain('mpbuild.config.mjs')
+    expect(readme).toContain('不要同时留下')
   })
 
   it('ships npm README files for core and cli', () => {
