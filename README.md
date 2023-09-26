@@ -33,7 +33,7 @@ mpb inspect graph
 
 ## 配置
 
-项目根使用 `mpbuild.config.ts` / `mpbuild.config.mts` / `mpbuild.config.js`（`export default` 或 `module.exports`）。生产环境请用 `mpbuild.config.js`。
+项目根使用 `mpbuild.config.ts` / `mpbuild.config.mts` / `mpbuild.config.js`（`export default` 或 `module.exports`）。加载顺序：`mpbuild.config.ts` → `mpbuild.config.mts` → `mpbuild.config.js`。生产环境请用 `mpbuild.config.js`。生产 bin 不能加载 `.ts` / `.mts`；生产环境不要同时留下 `mpbuild.config.ts` / `.mts`，否则会先加载它们并失败，请删掉或只留 `.js`。
 
 **不读取** `mpb.config.js`。
 
@@ -51,6 +51,8 @@ export default defineConfig({
   ],
 })
 ```
+
+该示例需要 `package.json` 的 `"type": "module"`，或把文件命名为 `mpbuild.config.mjs`。无插件的字段配置仍可用 CJS `module.exports`（不要 `require('@mpbuild/core')`）。
 
 从 4.x 迁移见 [docs/migration-v5.md](docs/migration-v5.md)。
 
