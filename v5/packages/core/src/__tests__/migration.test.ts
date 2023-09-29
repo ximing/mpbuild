@@ -29,6 +29,7 @@ describe('migration-v5.md', () => {
       'Node.js',
       '>=20',
       'mpbuild.config.ts',
+      'mpbuild.config.mjs',
       '不要同时留下',
     ]
     for (const token of required) {

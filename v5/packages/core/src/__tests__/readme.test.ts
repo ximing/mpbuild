@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
+import { CONFIG_NAMES } from '../index'
 import { cliDir, coreDir, repoRoot } from './repo'
 
 describe('root README', () => {
@@ -22,6 +23,9 @@ describe('root README', () => {
     expect(readme).toContain('type": "module"')
     expect(readme).toContain('mpbuild.config.mjs')
     expect(readme).toContain('不要同时留下')
+    expect(readme).toContain(
+      'mpbuild.config.ts` → `mpbuild.config.mts` → `mpbuild.config.js` → `mpbuild.config.mjs',
+    )
   })
 
   it('ships npm README files for core and cli', () => {
@@ -32,6 +36,21 @@ describe('root README', () => {
     expect(cliReadme).toContain('@mpbuild/cli')
     expect(cliReadme).toContain('`mpb`')
     expect(cliReadme).toContain('Node.js')
+    expect(cliReadme).toContain('mpbuild.config.mjs')
   })
 
+
+  it('locks CONFIG_NAMES order with js before mjs', () => {
+    expect(CONFIG_NAMES).toEqual([
+      'mpbuild.config.ts',
+      'mpbuild.config.mts',
+      'mpbuild.config.js',
+      'mpbuild.config.mjs',
+    ])
+    const watcher = readFileSync(join(coreDir, 'src/watch/watcher.ts'), 'utf8')
+    const compiler = readFileSync(join(coreDir, 'src/compiler.ts'), 'utf8')
+    expect(watcher).toContain('CONFIG_NAMES')
+    expect(compiler).toContain('CONFIG_NAMES')
+    expect(watcher).toContain('mpbuild.config.mjs')
+  })
 })

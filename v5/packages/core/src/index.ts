@@ -22,7 +22,7 @@ export type {
   PluginLoadContext,
 } from './types.js'
 export type { ResolvedConfig, AliasValue, SubProject, AppEntry } from './config/schema.js'
-export { defineConfig, loadConfig } from './config/load.js'
+export { defineConfig, loadConfig, CONFIG_NAMES } from './config/load.js'
 export { loadAppEntry } from './config/entry.js'
 export type { ResolveRequest, ResolveResult } from './resolve/resolver.js'
 export { resolveId } from './resolve/resolver.js'

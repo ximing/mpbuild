@@ -33,7 +33,7 @@ mpb inspect graph
 
 ## 配置
 
-项目根使用 `mpbuild.config.ts` / `mpbuild.config.mts` / `mpbuild.config.js`（`export default` 或 `module.exports`）。加载顺序：`mpbuild.config.ts` → `mpbuild.config.mts` → `mpbuild.config.js`。生产环境请用 `mpbuild.config.js`。生产 bin 不能加载 `.ts` / `.mts`；生产环境不要同时留下 `mpbuild.config.ts` / `.mts`，否则会先加载它们并失败，请删掉或只留 `.js`。
+项目根使用 `mpbuild.config.ts` / `mpbuild.config.mts` / `mpbuild.config.js` / `mpbuild.config.mjs`（`export default` 或 `module.exports`）。加载顺序：`mpbuild.config.ts` → `mpbuild.config.mts` → `mpbuild.config.js` → `mpbuild.config.mjs`（**.js 在 .mjs 前**，已有 `.js` 项目行为不变）。生产 bin 不能加载 `.ts` / `.mts`；生产请用 `.js` 或 `.mjs`。生产环境不要同时留下 `mpbuild.config.ts` / `.mts`，否则会先加载它们并失败，请删掉或只留 `.js` / `.mjs`。
 
 **不读取** `mpb.config.js`。
 
