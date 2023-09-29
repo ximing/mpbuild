@@ -3,6 +3,7 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { emitPlan } from './compile/emit.js'
 import { loadAppEntry } from './config/entry.js'
+import { CONFIG_NAMES } from './config/load.js'
 import type { ResolvedConfig } from './config/schema.js'
 import { diagnostic, type Diagnostic } from './diagnostic/index.js'
 import { analyzeGraph } from './graph/analyze.js'
@@ -216,9 +217,7 @@ export function createCompiler(config: ResolvedConfig): {
     const srcDir = resolve(config.rootDir, config.src)
     const paths = [
       ...watchPaths(lastGraph, srcDir),
-      join(config.rootDir, 'mpbuild.config.js'),
-      join(config.rootDir, 'mpbuild.config.ts'),
-      join(config.rootDir, 'mpbuild.config.mts'),
+      ...CONFIG_NAMES.map((name) => join(config.rootDir, name)),
     ]
     if (config.configPath) {
       paths.push(config.configPath)

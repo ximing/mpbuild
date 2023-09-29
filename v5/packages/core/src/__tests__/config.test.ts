@@ -72,6 +72,33 @@ describe('loadConfig', () => {
     await writeFile(join(root, 'mpb.config.js'), "export default { src: 'src' }\n")
     await expect(loadConfig(root)).rejects.toThrow(/LEGACY_CONFIG/)
   })
+
+  it('loads mpbuild.config.mjs when no ts/mts/js exists', async () => {
+    const root = await tempDir()
+    await writeFile(join(root, 'entry.js'), 'export default {}\n')
+    await writeFile(
+      join(root, 'mpbuild.config.mjs'),
+      "export default { src: 'src', entry: './entry.js', output: { dir: 'out-mjs' } }\n",
+    )
+    const config = await loadConfig(root)
+    expect(config.output.dir).toBe('out-mjs')
+    expect(config.configPath.replace(/\\/g, '/')).toMatch(/mpbuild\.config\.mjs$/)
+  })
+
+  it('prefers mpbuild.config.js over mpbuild.config.mjs', async () => {
+    const root = await tempDir()
+    await writeFile(join(root, 'entry.js'), 'export default {}\n')
+    await writeFile(
+      join(root, 'mpbuild.config.js'),
+      "export default { src: 'src', entry: './entry.js', output: { dir: 'from-js' } }\n",
+    )
+    await writeFile(
+      join(root, 'mpbuild.config.mjs'),
+      "export default { src: 'src', entry: './entry.js', output: { dir: 'from-mjs' } }\n",
+    )
+    const config = await loadConfig(root)
+    expect(config.output.dir).toBe('from-js')
+  })
 })
 
 describe('defineConfig', () => {

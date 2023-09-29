@@ -6,7 +6,12 @@ import type { Plugin, TargetAdapter } from '../types.js'
 import { loadAppEntry } from './entry.js'
 import { userConfigSchema, type AliasValue, type ResolvedConfig } from './schema.js'
 
-const CONFIG_NAMES = ['mpbuild.config.ts', 'mpbuild.config.mts', 'mpbuild.config.js'] as const
+export const CONFIG_NAMES = [
+  'mpbuild.config.ts',
+  'mpbuild.config.mts',
+  'mpbuild.config.js',
+  'mpbuild.config.mjs',
+] as const
 
 export function defineConfig<T>(config: T): T {
   return config

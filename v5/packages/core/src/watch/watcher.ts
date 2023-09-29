@@ -1,10 +1,11 @@
 import { basename, dirname, sep } from 'node:path'
 import chokidar from 'chokidar'
+import { CONFIG_NAMES } from '../config/load.js'
 import { posixRelative } from '../graph/walk.js'
 import type { ModuleGraph } from '../types.js'
 
 const NODE_MODULES_SEG = `${sep}node_modules${sep}`
-const CONFIG_NAMES = new Set(['mpbuild.config.js', 'mpbuild.config.ts', 'mpbuild.config.mts'])
+const CONFIG_NAME_SET = new Set<string>(CONFIG_NAMES) // includes mpbuild.config.mjs
 const DEBOUNCE_MS = 80
 
 /** 已入图 sourcePath + 每个 script 的 dirname + srcDir；去掉含 node_modules 段的路径。 */
@@ -30,7 +31,7 @@ function hasNodeModules(filePath: string): boolean {
 }
 
 function isConfigFile(filePath: string): boolean {
-  return CONFIG_NAMES.has(basename(filePath))
+  return CONFIG_NAME_SET.has(basename(filePath))
 }
 
 /** chokidar 监听 paths，80ms debounce 后按事件类型回调。 */

@@ -34,11 +34,11 @@ await createCompiler(config).run()
 
 ## 2. 把 4.x 配置字段抄到 mpbuild.config.*
 
-加载顺序：`mpbuild.config.ts` → `mpbuild.config.mts` → `mpbuild.config.js`（`export default` 或 `module.exports`）。
+加载顺序：`mpbuild.config.ts` → `mpbuild.config.mts` → `mpbuild.config.js` → `mpbuild.config.mjs`（`export default` 或 `module.exports`）。
 
 **不读取** `mpb.config.js`。工作区里只有旧文件时诊断 `LEGACY_CONFIG`，退出码 2。
 
-生产环境的 `@mpbuild/cli`（`mpb` bin）是编译后的 JS，**请把发布配置写成 `mpbuild.config.js`**。`.ts` / `.mts` 需要额外的 TypeScript loader，本版本的生产 bin 不再默认 `tsx register`。生产环境不要同时留下 `mpbuild.config.ts` / `.mts`，否则会先加载它们并失败，请删掉或只留 `.js`。
+生产环境的 `@mpbuild/cli`（`mpb` bin）是编译后的 JS，**请把发布配置写成 `mpbuild.config.js` 或 `mpbuild.config.mjs`**。`.ts` / `.mts` 需要额外的 TypeScript loader，本版本的生产 bin 不再默认 `tsx register`。生产环境不要同时留下 `mpbuild.config.ts` / `.mts`，否则会先加载它们并失败，请删掉或只留 `.js` / `.mjs`。
 
 字段对照：
 
