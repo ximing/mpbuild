@@ -1,18 +1,29 @@
-import { basename, dirname, sep } from 'node:path'
+import { basename, dirname, resolve, sep } from 'node:path'
 import chokidar from 'chokidar'
-import { CONFIG_NAMES } from '../config/load.js'
-import { posixRelative } from '../graph/walk.js'
+import type { SubProject } from '../config/schema.js'
+import { posixJoin, posixRelative } from '../graph/walk.js'
+import { projectForPath } from '../resolve/resolver.js'
 import type { ModuleGraph } from '../types.js'
+import { CONFIG_NAMES } from '../config/load.js'
 
 const NODE_MODULES_SEG = `${sep}node_modules${sep}`
 const CONFIG_NAME_SET = new Set<string>(CONFIG_NAMES) // includes mpbuild.config.mjs
 const DEBOUNCE_MS = 80
 
-/** 已入图 sourcePath + 每个 script 的 dirname + srcDir；去掉含 node_modules 段的路径。 */
-export function watchPaths(graph: ModuleGraph, srcDir: string): string[] {
+/** 已入图 sourcePath + 每个 script 的 dirname + srcDir + projects[].src；去掉含 node_modules 段的路径。 */
+export function watchPaths(
+  graph: ModuleGraph,
+  srcDir: string,
+  projects?: SubProject[],
+): string[] {
   const paths = new Set<string>()
   if (!hasNodeModules(srcDir)) {
     paths.add(srcDir)
+  }
+  for (const project of projects ?? []) {
+    if (project.src && !hasNodeModules(project.src)) {
+      paths.add(project.src)
+    }
   }
   for (const node of graph.nodes.values()) {
     if (!node.sourcePath || hasNodeModules(node.sourcePath)) {
@@ -34,10 +45,32 @@ function isConfigFile(filePath: string): boolean {
   return CONFIG_NAME_SET.has(basename(filePath))
 }
 
-/** chokidar 监听 paths，80ms debounce 后按事件类型回调。 */
+/** 先按 sourcePath 精确匹配节点 id；否则 intern 子仓库公式，否则相对 srcDir。 */
+export function graphIdFromAbs(
+  graph: ModuleGraph,
+  absPath: string,
+  srcDir: string,
+  projects?: SubProject[],
+): string {
+  const abs = resolve(absPath)
+  for (const node of graph.nodes.values()) {
+    if (node.sourcePath && resolve(node.sourcePath) === abs) {
+      return node.id
+    }
+  }
+  const project = projectForPath(abs, projects)
+  if (project) {
+    return posixJoin(project.name, posixRelative(project.src, abs))
+  }
+  return posixRelative(srcDir, abs)
+}
+
+/** chokidar 监听 paths，80ms debounce 后按事件类型回调。id 走 graphIdFromAbs。 */
 export async function startWatch(input: {
   paths: string[]
   srcDir: string
+  graph: ModuleGraph
+  projects?: SubProject[]
   onTick: (batch: { changedIds: string[]; deletedIds: string[]; addedRelPaths: string[] }) => Promise<void>
   onConfigChange: () => Promise<void>
 }): Promise<{ close(): Promise<void> }> {
@@ -54,7 +87,8 @@ export async function startWatch(input: {
   let running = false
   let closed = false
 
-  const toSrcRel = (absPath: string): string => posixRelative(input.srcDir, absPath)
+  const toId = (absPath: string): string =>
+    graphIdFromAbs(input.graph, absPath, input.srcDir, input.projects)
 
   const flush = async (): Promise<void> => {
     if (closed || running) {
@@ -105,9 +139,9 @@ export async function startWatch(input: {
     if (isConfigFile(filePath)) {
       configChanged = true
     } else {
-      const rel = toSrcRel(filePath)
-      deletedIds.delete(rel)
-      addedRelPaths.add(rel)
+      const id = toId(filePath)
+      deletedIds.delete(id)
+      addedRelPaths.add(id)
     }
     schedule()
   })
@@ -115,10 +149,10 @@ export async function startWatch(input: {
     if (isConfigFile(filePath)) {
       configChanged = true
     } else {
-      const rel = toSrcRel(filePath)
-      addedRelPaths.delete(rel)
-      changedIds.delete(rel)
-      deletedIds.add(rel)
+      const id = toId(filePath)
+      addedRelPaths.delete(id)
+      changedIds.delete(id)
+      deletedIds.add(id)
     }
     schedule()
   })
@@ -126,14 +160,13 @@ export async function startWatch(input: {
     if (isConfigFile(filePath)) {
       configChanged = true
     } else {
-      const rel = toSrcRel(filePath)
-      changedIds.add(rel)
+      changedIds.add(toId(filePath))
     }
     schedule()
   })
 
-  await new Promise<void>((resolve, reject) => {
-    watcher.once('ready', () => resolve())
+  await new Promise<void>((resolveReady, reject) => {
+    watcher.once('ready', () => resolveReady())
     watcher.once('error', reject)
   })
 

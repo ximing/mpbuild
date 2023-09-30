@@ -63,6 +63,7 @@ describe('watchPaths', () => {
     const srcDir = join('/proj', 'src')
     const appPath = join(srcDir, 'app.js')
     const npmPath = join(srcDir, 'node_modules', 'x.js')
+    const projectSrc = join('/proj', 'projects', 'one')
     const graph: ModuleGraph = {
       entries: ['app.js'],
       nodes: new Map([
@@ -73,9 +74,10 @@ describe('watchPaths', () => {
       packages: [],
     }
 
-    const paths = watchPaths(graph, srcDir)
+    const paths = watchPaths(graph, srcDir, [{ name: '@one', src: projectSrc, alias: {} }])
     expect(paths).toContain(appPath)
     expect(paths).toContain(srcDir)
+    expect(paths).toContain(projectSrc)
     expect(paths).not.toContain(npmPath)
     expect(paths.some((p) => p.includes(`${sep}node_modules${sep}`))).toBe(false)
   })
