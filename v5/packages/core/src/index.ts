@@ -47,6 +47,6 @@ export { emitPlan } from './compile/emit.js'
 export { createCompiler } from './compiler.js'
 export { topologyChanged, planChanged } from './watch/diff.js'
 export { applyWatchTick } from './watch/tick.js'
-export { watchPaths } from './watch/watcher.js'
+export { watchPaths, graphIdFromAbs, startWatch } from './watch/watcher.js'
 export { formatGraphInspect } from './inspect.js'
 

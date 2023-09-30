@@ -215,8 +215,12 @@ export function createCompiler(config: ResolvedConfig): {
       await run()
     }
     const srcDir = resolve(config.rootDir, config.src)
+    const projects = (config.projects ?? []).map((project) => ({
+      ...project,
+      src: resolve(config.rootDir, project.src),
+    }))
     const paths = [
-      ...watchPaths(lastGraph, srcDir),
+      ...watchPaths(lastGraph, srcDir, projects),
       ...CONFIG_NAMES.map((name) => join(config.rootDir, name)),
     ]
     if (config.configPath) {
@@ -225,6 +229,10 @@ export function createCompiler(config: ResolvedConfig): {
     return startWatch({
       paths,
       srcDir,
+      get graph() {
+        return lastGraph
+      },
+      projects,
       onTick: async (batch) => {
         await applyWatchTick(batch)
       },
