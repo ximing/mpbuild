@@ -18,6 +18,7 @@ export async function applyWatchTick(input: {
   deletedIds: string[]
   addedRelPaths: string[]
   skipAppJsonPages?: boolean
+  cacheDir?: string
 }): Promise<{
   graph: ModuleGraph
   plan: OutputPlan
@@ -82,6 +83,10 @@ export async function applyWatchTick(input: {
     previousDests: input.previousDests,
     preserveNames: [config.target.projectConfigFile],
     npmCompat: config.target.npmCompat,
+    minify: config.compile.minify,
+    cacheDir: input.cacheDir,
+    platform: config.platform,
+    ifdefTokens: config.ifdef?.tokens ?? {},
   })
   diagnostics.push(...emitted.diagnostics)
 

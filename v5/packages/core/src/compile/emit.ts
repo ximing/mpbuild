@@ -2,7 +2,14 @@ import { mkdir, readdir, readFile, rm, stat, unlink, writeFile } from 'node:fs/p
 import { basename, dirname, join } from 'node:path'
 import type { Diagnostic } from '../diagnostic/index.js'
 import { isNodeModulesPath, npmCompat } from '../plugin/npm-compat.js'
-import type { Module, ModuleGraph, OutputPlan } from '../types.js'
+import type { AbstractKind, Module, ModuleGraph, OutputPlan } from '../types.js'
+import {
+  cacheExt,
+  compilerDepVersions,
+  readTransformCache,
+  transformCacheKey,
+  writeTransformCache,
+} from './cache.js'
 import { rewriteCode } from './rewrite.js'
 import { transformModule } from './transform.js'
 
@@ -17,6 +24,10 @@ export async function emitPlan(input: {
   previousDests?: Iterable<string>
   preserveNames?: string[]
   npmCompat?: 'weapp' | 'none'
+  minify?: boolean | Record<string, boolean>
+  cacheDir?: string
+  platform?: string
+  ifdefTokens?: Record<string, boolean | string>
 }): Promise<{ diagnostics: Diagnostic[]; dests: string[] }> {
   const diagnostics: Diagnostic[] = []
   const dests = input.plan.placements.map((placement) => placement.destPath)
@@ -35,22 +46,51 @@ export async function emitPlan(input: {
     if (source === undefined) {
       continue
     }
+    const minifyFlag = minifyOf(node.kind, input.minify)
     const useNpmCompat =
       input.npmCompat === 'weapp' && node.kind === 'script' && isNodeModulesPath(node.sourcePath)
-    const { code } = useNpmCompat
-      ? npmCompat({
-          kind: node.kind,
-          sourcePath: node.sourcePath,
-          code: source,
-          js: input.js,
-        })
-      : transformModule({
-          kind: node.kind,
-          sourcePath: node.sourcePath,
-          code: source,
-          js: input.js,
-          css: input.css,
-        })
+    const cacheable =
+      node.kind === 'script' || node.kind === 'script-module' || node.kind === 'style'
+    const key =
+      input.cacheDir && cacheable
+        ? transformCacheKey({
+            hash: node.hash,
+            js: input.js,
+            css: input.css ?? { lightningcss: true },
+            minify: input.minify ?? false,
+            platform: input.platform,
+            ifdefTokens: input.ifdefTokens ?? {},
+            ...compilerDepVersions(),
+            kind: node.kind,
+            ext: cacheExt(node.sourcePath),
+            npmCompat: useNpmCompat,
+          })
+        : undefined
+    let code: string | undefined
+    if (input.cacheDir && key) {
+      code = await readTransformCache(input.cacheDir, key)
+    }
+    if (code === undefined) {
+      const transformed = useNpmCompat
+        ? npmCompat({
+            kind: node.kind,
+            sourcePath: node.sourcePath,
+            code: source,
+            js: input.js,
+          })
+        : transformModule({
+            kind: node.kind,
+            sourcePath: node.sourcePath,
+            code: source,
+            js: input.js,
+            css: input.css,
+            minify: minifyFlag,
+          })
+      code = transformed.code
+      if (input.cacheDir && key) {
+        await writeTransformCache(input.cacheDir, key, code)
+      }
+    }
     const rewritten = rewriteCode({
       moduleId: node.id,
       kind: node.kind,
@@ -120,4 +160,17 @@ async function sameUtf8(destPath: string, next: string): Promise<boolean> {
   } catch {
     return false
   }
+}
+
+function minifyOf(
+  kind: AbstractKind,
+  minify: boolean | Record<string, boolean> | undefined,
+): boolean {
+  if (minify === true) {
+    return true
+  }
+  if (minify && typeof minify === 'object') {
+    return minify[kind] === true
+  }
+  return false
 }

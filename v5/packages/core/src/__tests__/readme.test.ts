@@ -26,6 +26,7 @@ describe('root README', () => {
     expect(readme).toContain(
       'mpbuild.config.ts` → `mpbuild.config.mts` → `mpbuild.config.js` → `mpbuild.config.mjs',
     )
+    expect(readme).toContain('--no-cache')
   })
 
   it('ships npm README files for core and cli', () => {

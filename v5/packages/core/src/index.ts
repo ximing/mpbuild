@@ -44,7 +44,14 @@ export { legacyScss } from './plugin/legacy-scss.js'
 export { formatAnalyzeJson } from './analyze-json.js'
 export { rewriteCode } from './compile/rewrite.js'
 export { emitPlan } from './compile/emit.js'
+export type { CompilerOptions } from './compiler.js'
 export { createCompiler } from './compiler.js'
+export {
+  TRANSFORM_CACHE_MAX_FILES,
+  transformCacheDir,
+  transformCacheKey,
+  gcTransformCache,
+} from './compile/cache.js'
 export { topologyChanged, planChanged } from './watch/diff.js'
 export { applyWatchTick } from './watch/tick.js'
 export { watchPaths, graphIdFromAbs, startWatch } from './watch/watcher.js'

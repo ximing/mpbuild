@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
+import { transformCacheDir } from './compile/cache.js'
 import { emitPlan } from './compile/emit.js'
 import { loadAppEntry } from './config/entry.js'
 import { CONFIG_NAMES } from './config/load.js'
@@ -13,6 +14,8 @@ import { planGraph } from './plan/plan.js'
 import type { ModuleGraph, OutputPlan, Plugin } from './types.js'
 import { applyWatchTick as applyWatchTickOnce } from './watch/tick.js'
 import { startWatch, watchPaths } from './watch/watcher.js'
+
+export type CompilerOptions = { cache?: boolean }
 
 function emptyGraph(): ModuleGraph {
   return { entries: [], nodes: new Map(), edges: [], packages: [] }
@@ -35,7 +38,10 @@ type CompilerTickResult = CompilerRunResult & {
 }
 
 /** 建图 → analyze → plan → emit。缺 app.js/ts 则 MISSING_APP_JS。 */
-export function createCompiler(config: ResolvedConfig): {
+export function createCompiler(
+  config: ResolvedConfig,
+  options?: CompilerOptions,
+): {
   run(): Promise<CompilerRunResult>
   analyze(): Promise<Omit<CompilerRunResult, 'dests'>>
   applyWatchTick(args: {
@@ -45,6 +51,7 @@ export function createCompiler(config: ResolvedConfig): {
   }): Promise<CompilerTickResult>
   watch(): Promise<{ close(): Promise<void> }>
 } {
+  const cacheDir = options?.cache === false ? undefined : transformCacheDir(config.rootDir)
   let lastGraph: ModuleGraph = emptyGraph()
   let lastPlan: OutputPlan = emptyPlan()
   let lastDests: string[] = []
@@ -153,6 +160,10 @@ export function createCompiler(config: ResolvedConfig): {
       previousDests: didEmit ? lastDests : [],
       preserveNames: [config.target.projectConfigFile],
       npmCompat: config.target.npmCompat,
+      minify: config.compile.minify,
+      cacheDir,
+      platform: config.platform,
+      ifdefTokens: config.ifdef?.tokens ?? {},
     })
     const extras = await applyGeneratePlugins(config.plugins ?? [], {
       outputDir: built.outputDir,
@@ -205,6 +216,7 @@ export function createCompiler(config: ResolvedConfig): {
       deletedIds: args.deletedIds,
       addedRelPaths: args.addedRelPaths,
       skipAppJsonPages,
+      cacheDir,
     })
     remember(result)
     return result
