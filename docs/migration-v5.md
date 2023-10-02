@@ -16,6 +16,7 @@ pnpm add -D @mpbuild/cli
 
 ```bash
 mpb build
+mpb build --no-cache
 mpb dev
 mpb analyze
 mpb inspect graph

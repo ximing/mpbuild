@@ -24,10 +24,13 @@ pnpm add -D @mpbuild/cli
 
 ```bash
 mpb build
+mpb build --no-cache
 mpb dev
 mpb analyze
 mpb inspect graph
 ```
+
+`--no-cache` 跳过磁盘 transform 缓存（目录 `node_modules/.cache/mpbuild`）。`output.clean` 不会删这个目录。
 
 `--watch` 是 `dev` 的别名。退出码：0 成功；1 含 error；2 配置错误。
 

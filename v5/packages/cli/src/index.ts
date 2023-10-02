@@ -63,7 +63,9 @@ export async function run(argv: string[] = process.argv): Promise<void> {
     if (!config) {
       return
     }
-    const { diagnostics } = await createCompiler(config).run()
+    const { diagnostics } = await createCompiler(config, {
+      cache: !argv.includes('--no-cache'),
+    }).run()
     printDiagnostics(diagnostics)
     if (diagnostics.some(isError)) {
       process.exitCode = 1
