@@ -1,4 +1,5 @@
-import { existsSync } from 'node:fs'
+import { spawnSync } from 'node:child_process'
+import { existsSync, readFileSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -6,10 +7,12 @@ import { afterEach, describe, expect, it } from 'vitest'
 import {
   createCompiler,
   legacyScss,
+  loadConfig,
   projectConfig,
   weappAdapter,
 } from '../index'
 import type { Diagnostic, ResolvedConfig } from '../index'
+import { cliDir, v5Dir } from './repo'
 
 type CompareGoldResult = {
   missingPrefixes: string[]
@@ -162,5 +165,50 @@ describe('projectConfig generate', () => {
     )
     expect(again).toBeUndefined()
     await rm(dir, { recursive: true, force: true })
+  })
+})
+
+describe('example/demo mpbuild.config.mjs', () => {
+  it('loadConfig + createCompiler matches gold, and mpb build exits 0', { timeout: 120_000 }, async () => {
+    expect(existsSync(join(demoRoot, 'mpbuild.config.mjs'))).toBe(true)
+    expect(existsSync(join(demoRoot, 'mpbuild.config.js'))).toBe(false)
+    const cfgText = readFileSync(join(demoRoot, 'mpbuild.config.mjs'), 'utf8')
+    expect(cfgText).not.toMatch(/tsx/)
+    expect(cfgText).toContain('../../v5/packages/core/dist/index.js')
+    expect(cfgText).toContain('legacyScss')
+    expect(cfgText).toContain('projectConfig')
+    expect(cfgText).toContain("dir: 'dist-v5'")
+
+    const built = spawnSync('pnpm', ['build'], { cwd: v5Dir, encoding: 'utf8' })
+    expect(built.status, `${built.stdout}\n${built.stderr}`).toBe(0)
+
+    const cfg = await loadConfig(demoRoot)
+    expect(cfg.platform).toBe('wx')
+    expect(cfg.output.dir).toBe('dist-v5')
+    expect(cfg.projects.map((p) => p.name).sort()).toEqual(['@one', '@two'])
+    expect(cfg.plugins?.map((p) => p.name).sort()).toEqual(['legacy-scss', 'project-config'])
+    expect(cfg.configPath.replace(/\\/g, '/')).toMatch(/mpbuild\.config\.mjs$/)
+
+    const { diagnostics } = await createCompiler(cfg).run()
+    expect(diagnostics.filter((d: Diagnostic) => d.code === 'RESOLVE_MISS')).toEqual([])
+    expect(diagnostics.filter((d: Diagnostic) => d.severity === 'error')).toEqual([])
+
+    const { compareGold } = (await import('../../../../../example/demo/scripts/compare-gold.mjs')) as {
+      compareGold: (gold: string, dest: string) => Promise<CompareGoldResult>
+    }
+    const result = await compareGold(goldDir, destDir)
+    expect(result.missingPrefixes).toEqual([])
+    expect(result.npmQuerystring).toBe(true)
+    expect(result.npmUtil).toBe(true)
+    expect(result.destPages).toEqual(result.goldPages)
+    expect(result.destSubPackages).toEqual(result.goldSubPackages)
+    expect(existsSync(join(destDir, 'project.config.json'))).toBe(true)
+
+    const spawned = spawnSync(process.execPath, [join(cliDir, 'bin/mpb.js'), 'build'], {
+      cwd: demoRoot,
+      encoding: 'utf8',
+      env: { ...process.env, NODE_OPTIONS: '' },
+    })
+    expect(spawned.status, `${spawned.stdout}\n${spawned.stderr}`).toBe(0)
   })
 })
