@@ -1,0 +1,48 @@
+name: publish-mpbuild
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: v5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: https://registry.npmjs.org
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: Check tag matches package versions
+        run: |
+          if [[ "${GITHUB_REF}" != refs/tags/v* ]]; then
+            echo "publish only from tags matching v*"
+            exit 1
+          fi
+          TAG="${GITHUB_REF_NAME}"
+          CORE_VER="$(node -p "require('./packages/core/package.json').version")"
+          CLI_VER="$(node -p "require('./packages/cli/package.json').version")"
+          if [[ "${CORE_VER}" != "${CLI_VER}" ]]; then
+            echo "core ${CORE_VER} != cli ${CLI_VER}"
+            exit 1
+          fi
+          if [[ "${TAG}" != "v${CORE_VER}" ]]; then
+            echo "tag ${TAG} != v${CORE_VER}"
+            exit 1
+          fi
+      - run: pnpm publish -r --filter @mpbuild/core --filter @mpbuild/cli --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

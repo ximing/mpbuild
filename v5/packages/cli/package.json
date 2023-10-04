@@ -30,7 +30,8 @@
   "scripts": {
     "dev": "tsx src/index.ts",
     "build": "tsc -p tsconfig.json",
-    "pack:check": "pnpm build && npm pack --dry-run"
+    "pack:check": "pnpm build && npm pack --dry-run",
+    "prepublishOnly": "pnpm build"
   },
   "dependencies": {
     "@mpbuild/core": "workspace:*"

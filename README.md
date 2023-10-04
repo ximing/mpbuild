@@ -67,6 +67,12 @@ export default defineConfig({
 
 冷构建相对 4.x 快 5 倍是志向指标，不进 CI fail。
 
+## 发布
+
+不要在本地执行 `npm publish` 或 `changeset publish` 来发 `@mpbuild/*`。给仓库打并 push `v*` tag（包 version 都是 `2.0.0` 时 tag 必须是 `v2.0.0`）后，[`.github/workflows/publish-mpbuild.yml`](.github/workflows/publish-mpbuild.yml) 会在 GitHub Actions 里对 `@mpbuild/core` 与 `@mpbuild/cli` 执行 `pnpm publish`。
+
+在 GitHub Settings → Secrets and variables → Actions 添加名为 `NPM_TOKEN` 的 repository secret（npm 登录 token）。不要把 token 写进仓库。
+
 ## 仓库
 
 实现只在 `v5/packages/core` 与 `v5/packages/cli`。金样在 `example/demo`（不要到 `v5/packages/example` 找）。

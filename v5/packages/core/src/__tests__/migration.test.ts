@@ -32,6 +32,7 @@ describe('migration-v5.md', () => {
       'mpbuild.config.mjs',
       '不要同时留下',
       '--no-cache',
+      'NPM_TOKEN',
     ]
     for (const token of required) {
       expect(md, `missing ${token}`).toContain(token)

@@ -27,6 +27,10 @@ describe('root README', () => {
       'mpbuild.config.ts` → `mpbuild.config.mts` → `mpbuild.config.js` → `mpbuild.config.mjs',
     )
     expect(readme).toContain('--no-cache')
+    expect(readme).toContain('NPM_TOKEN')
+    expect(readme).toContain('Secrets and variables')
+    expect(readme).toContain('publish-mpbuild.yml')
+    expect(readme).not.toMatch(/npm_[A-Za-z0-9]{10,}/)
   })
 
   it('ships npm README files for core and cli', () => {
