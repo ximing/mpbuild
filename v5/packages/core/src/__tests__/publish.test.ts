@@ -51,6 +51,18 @@ describe('publish build', () => {
     expect((v5Pkg.scripts as Record<string, string>)['pack:check']).toContain(
       'pack:check',
     )
+    expect((corePkg.scripts as Record<string, string>).prepublishOnly).toBe(
+      'pnpm build',
+    )
+    expect((cliPkg.scripts as Record<string, string>).prepublishOnly).toBe(
+      'pnpm build',
+    )
+    expect((corePkg.scripts as Record<string, string>)['pack:check']).toContain(
+      'pack --dry-run',
+    )
+    expect((cliPkg.scripts as Record<string, string>)['pack:check']).toContain(
+      'pack --dry-run',
+    )
   })
 
   it('tsc emits dist/index.js + d.ts without __tests__', { timeout: 60_000 }, () => {

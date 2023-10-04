@@ -24,7 +24,8 @@
   "scripts": {
     "test": "vitest run",
     "build": "tsc -p tsconfig.build.json",
-    "pack:check": "pnpm build && npm pack --dry-run"
+    "pack:check": "pnpm build && npm pack --dry-run",
+    "prepublishOnly": "pnpm build"
   },
   "devDependencies": {
     "@types/node": "^22.13.0",
