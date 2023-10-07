@@ -174,7 +174,7 @@ export function createCompiler(
     const result: CompilerRunResult = {
       graph: built.graph,
       plan: built.plan,
-      diagnostics: [...built.diagnostics, ...emitted.diagnostics],
+      diagnostics: [...(config.loadWarnings ?? []), ...built.diagnostics, ...emitted.diagnostics],
       dests: [...emitted.dests, ...extras],
     }
     remember(result)
@@ -188,7 +188,7 @@ export function createCompiler(
     return {
       graph: built.graph,
       plan: built.plan,
-      diagnostics: built.diagnostics,
+      diagnostics: [...(config.loadWarnings ?? []), ...built.diagnostics],
     }
   }
 

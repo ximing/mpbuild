@@ -44,12 +44,12 @@ describe('root README', () => {
     expect(cliReadme).toContain('mpbuild.config.mjs')
   })
 
-  it('marks P5 as current work without editing P0-P3 acceptance lines', () => {
+  it('marks P6 as current work without editing P0-P3 acceptance lines', () => {
     const roadmap = readFileSync(
       join(repoRoot, 'docs/superpowers/plans/2026-08-19-mpbuild-v5-roadmap.md'),
       'utf8',
     )
-    expect(roadmap).toMatch(/当前开工：P5/)
+    expect(roadmap).toMatch(/当前开工：P6/)
     expect(roadmap).toContain('2026-08-20-mpbuild-v5-p5-ship.md')
     expect(roadmap).toContain('2026-08-19-mpbuild-v5-p4-release.md')
     expect(roadmap).toContain('`mpb inspect graph` 打出节点/边；假 adapter 快照通过')

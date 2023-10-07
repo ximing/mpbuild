@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import type { Diagnostic } from '../diagnostic/index.js'
 import type { Plugin, TargetAdapter } from '../types.js'
 
 function isTargetAdapter(value: unknown): value is TargetAdapter {
@@ -112,4 +113,6 @@ export interface ResolvedConfig {
   appEntry: AppEntry
   configPath: string
   plugins?: Plugin[]
+  /** loadConfig 跳过 leftover .ts 时的 warning；手写 config 可省略 */
+  loadWarnings?: Diagnostic[]
 }
