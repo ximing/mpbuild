@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { diagnostic, type Diagnostic } from '../diagnostic/index.js'
 import { getTargetAdapter } from '../target/index.js'
 import type { Plugin, TargetAdapter } from '../types.js'
 import { loadAppEntry } from './entry.js'
@@ -21,9 +22,24 @@ function resolveTarget(target: string | TargetAdapter): TargetAdapter {
   return typeof target === 'string' ? getTargetAdapter(target) : target
 }
 
+function isTsConfigPath(file: string): boolean {
+  return file.endsWith('.ts') || file.endsWith('.mts')
+}
+
+/** leftover .ts 且生产 Node 不能 import 时跳过；SyntaxError 不跳。 */
+function isUnknownConfigExtension(err: unknown): boolean {
+  const code =
+    err && typeof err === 'object' && 'code' in err ? String((err as { code: unknown }).code) : ''
+  if (code === 'ERR_UNKNOWN_FILE_EXTENSION' || code === 'ERR_UNKNOWN_EXTENSION') {
+    return true
+  }
+  const message = err instanceof Error ? err.message : String(err)
+  return /unknown file extension/i.test(message)
+}
+
 export async function loadConfig(rootDir: string): Promise<ResolvedConfig> {
-  const configPath = CONFIG_NAMES.map((name) => join(rootDir, name)).find((file) => existsSync(file))
-  if (!configPath) {
+  const existing = CONFIG_NAMES.map((name) => join(rootDir, name)).filter((file) => existsSync(file))
+  if (existing.length === 0) {
     if (existsSync(join(rootDir, 'mpb.config.js'))) {
       throw Object.assign(new Error('LEGACY_CONFIG: use mpbuild.config.js instead of mpb.config.js'), {
         code: 'LEGACY_CONFIG',
@@ -34,7 +50,36 @@ export async function loadConfig(rootDir: string): Promise<ResolvedConfig> {
     })
   }
 
-  const imported = (await import(pathToFileURL(configPath).href)) as { default?: unknown }
+  const loadWarnings: Diagnostic[] = []
+  let imported: { default?: unknown } | undefined
+  let configPath: string | undefined
+  for (const file of existing) {
+    try {
+      imported = (await import(pathToFileURL(file).href)) as { default?: unknown }
+      configPath = file
+      break
+    } catch (err) {
+      if (isTsConfigPath(file) && isUnknownConfigExtension(err)) {
+        loadWarnings.push(
+          diagnostic({
+            code: 'CONFIG_TS_SKIPPED',
+            severity: 'warning',
+            message: `CONFIG_TS_SKIPPED: cannot import ${file}; trying next mpbuild.config.*`,
+            file,
+          }),
+        )
+        continue
+      }
+      throw err
+    }
+  }
+  if (!imported || !configPath) {
+    throw Object.assign(
+      new Error(`CONFIG_TS_SKIPPED: cannot load TypeScript config and no js/mjs fallback in ${rootDir}`),
+      { code: 'CONFIG_TS_SKIPPED' },
+    )
+  }
+
   const parsed = userConfigSchema.parse(imported.default ?? imported)
   const target = resolveTarget(parsed.target)
   const appEntry = await loadAppEntry(rootDir, parsed.entry)
@@ -57,5 +102,6 @@ export async function loadConfig(rootDir: string): Promise<ResolvedConfig> {
     appEntry,
     configPath,
     plugins: Array.isArray(parsed.plugins) ? (parsed.plugins as Plugin[]) : undefined,
+    loadWarnings,
   }
 }

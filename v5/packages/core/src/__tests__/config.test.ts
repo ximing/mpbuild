@@ -99,6 +99,35 @@ describe('loadConfig', () => {
     const config = await loadConfig(root)
     expect(config.output.dir).toBe('from-js')
   })
+
+  it('skips unloadable leftover .ts and loads js with CONFIG_TS_SKIPPED warning', async () => {
+    const root = await tempDir()
+    await writeFile(join(root, 'entry.js'), 'export default {}\n')
+    await writeFile(
+      join(root, 'mpbuild.config.ts'),
+      "export default { src: 'src', entry: './entry.js', output: { dir: 'from-ts' } }\n",
+    )
+    await writeFile(
+      join(root, 'mpbuild.config.js'),
+      "export default { src: 'src', entry: './entry.js', output: { dir: 'from-js' } }\n",
+    )
+    const config = await loadConfig(root)
+    expect(config.output.dir).toBe('from-js')
+    expect(config.configPath.replace(/\\/g, '/')).toMatch(/mpbuild\.config\.js$/)
+    expect(config.loadWarnings?.some((d) => d.code === 'CONFIG_TS_SKIPPED')).toBe(true)
+    expect(config.loadWarnings?.some((d) => /mpbuild\.config\.ts/.test(d.message))).toBe(true)
+    expect(config.loadWarnings?.every((d) => d.severity === 'warning')).toBe(true)
+  })
+
+  it('fails when only an unloadable .ts config exists', async () => {
+    const root = await tempDir()
+    await writeFile(join(root, 'entry.js'), 'export default {}\n')
+    await writeFile(
+      join(root, 'mpbuild.config.ts'),
+      "export default { src: 'src', entry: './entry.js', output: { dir: 'from-ts' } }\n",
+    )
+    await expect(loadConfig(root)).rejects.toMatchObject({ code: 'CONFIG_TS_SKIPPED' })
+  })
 })
 
 describe('defineConfig', () => {
