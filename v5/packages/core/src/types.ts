@@ -1,3 +1,5 @@
+import type { Diagnostic } from './diagnostic/index.js'
+
 /** 公开模块 kind。禁止把微信后缀做成判别联合。 */
 export type AbstractKind =
   | 'script'
@@ -119,8 +121,12 @@ export interface PluginLoadContext {
 export interface PluginGenerateContext {
   adapter: TargetAdapter
   outputDir?: string
+  rootDir?: string
+  srcDir?: string
   graph?: ModuleGraph
   plan?: OutputPlan
+  addWatchFile?(path: string): void
+  warn?(d: Diagnostic): void
 }
 
 export interface Plugin {
@@ -131,6 +137,11 @@ export interface Plugin {
     ctx: PluginGenerateContext,
   ):
     | { destPath: string; content: string | Buffer; moduleId?: string }
+    | Array<{ destPath: string; content: string | Buffer; moduleId?: string }>
     | void
-    | Promise<{ destPath: string; content: string | Buffer; moduleId?: string } | void>
+    | Promise<
+        | { destPath: string; content: string | Buffer; moduleId?: string }
+        | Array<{ destPath: string; content: string | Buffer; moduleId?: string }>
+        | void
+      >
 }

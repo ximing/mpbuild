@@ -2,7 +2,7 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
-import { defineConfig, loadConfig } from '../index'
+import { defineConfig, loadConfig, reloadConfig } from '../index'
 
 const dirs: string[] = []
 
@@ -134,5 +134,24 @@ describe('defineConfig', () => {
   it('returns the same object', () => {
     const input = { src: 'src' }
     expect(defineConfig(input)).toBe(input)
+  })
+})
+
+describe('reloadConfig', () => {
+  it('cache-busts ESM import so a rewritten config is visible', async () => {
+    const root = await tempDir()
+    await writeFile(join(root, 'entry.js'), 'export default { pages: ["pages/a/a"] }\n')
+    await writeFile(
+      join(root, 'mpbuild.config.js'),
+      "export default { src: 'src', entry: './entry.js', output: { dir: 'first' } }\n",
+    )
+    const config = await loadConfig(root)
+    expect(config.output.dir).toBe('first')
+    await writeFile(
+      join(root, 'mpbuild.config.js'),
+      "export default { src: 'src', entry: './entry.js', output: { dir: 'second' } }\n",
+    )
+    await reloadConfig(config)
+    expect(config.output.dir).toBe('second')
   })
 })

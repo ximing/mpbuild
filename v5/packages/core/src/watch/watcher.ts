@@ -41,8 +41,15 @@ function hasNodeModules(filePath: string): boolean {
   return filePath.includes(NODE_MODULES_SEG)
 }
 
-function isConfigFile(filePath: string): boolean {
-  return CONFIG_NAME_SET.has(basename(filePath))
+function shouldReload(filePath: string, reloadFiles: string[] | undefined): boolean {
+  if (CONFIG_NAME_SET.has(basename(filePath))) {
+    return true
+  }
+  if (!reloadFiles?.length) {
+    return false
+  }
+  const abs = resolve(filePath)
+  return reloadFiles.some((file) => resolve(file) === abs)
 }
 
 /** 先按 sourcePath 精确匹配节点 id；否则 intern 子仓库公式，否则相对 srcDir。 */
@@ -71,6 +78,7 @@ export async function startWatch(input: {
   srcDir: string
   graph: ModuleGraph
   projects?: SubProject[]
+  reloadFiles?: string[]
   onTick: (batch: { changedIds: string[]; deletedIds: string[]; addedRelPaths: string[] }) => Promise<void>
   onConfigChange: () => Promise<void>
 }): Promise<{ close(): Promise<void> }> {
@@ -136,7 +144,7 @@ export async function startWatch(input: {
   }
 
   watcher.on('add', (filePath) => {
-    if (isConfigFile(filePath)) {
+    if (shouldReload(filePath, input.reloadFiles)) {
       configChanged = true
     } else {
       const id = toId(filePath)
@@ -146,7 +154,7 @@ export async function startWatch(input: {
     schedule()
   })
   watcher.on('unlink', (filePath) => {
-    if (isConfigFile(filePath)) {
+    if (shouldReload(filePath, input.reloadFiles)) {
       configChanged = true
     } else {
       const id = toId(filePath)
@@ -157,7 +165,7 @@ export async function startWatch(input: {
     schedule()
   })
   watcher.on('change', (filePath) => {
-    if (isConfigFile(filePath)) {
+    if (shouldReload(filePath, input.reloadFiles)) {
       configChanged = true
     } else {
       changedIds.add(toId(filePath))

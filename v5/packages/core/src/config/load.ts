@@ -1,10 +1,10 @@
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
-import { pathToFileURL } from 'node:url'
 import { diagnostic, type Diagnostic } from '../diagnostic/index.js'
 import { getTargetAdapter } from '../target/index.js'
 import type { Plugin, TargetAdapter } from '../types.js'
 import { loadAppEntry } from './entry.js'
+import { importFresh } from './import-fresh.js'
 import { userConfigSchema, type AliasValue, type ResolvedConfig } from './schema.js'
 
 export const CONFIG_NAMES = [
@@ -55,7 +55,7 @@ export async function loadConfig(rootDir: string): Promise<ResolvedConfig> {
   let configPath: string | undefined
   for (const file of existing) {
     try {
-      imported = (await import(pathToFileURL(file).href)) as { default?: unknown }
+      imported = (await importFresh(file)) as { default?: unknown }
       configPath = file
       break
     } catch (err) {
@@ -104,4 +104,11 @@ export async function loadConfig(rootDir: string): Promise<ResolvedConfig> {
     plugins: Array.isArray(parsed.plugins) ? (parsed.plugins as Plugin[]) : undefined,
     loadWarnings,
   }
+}
+
+/** 原地刷新 current（compiler 闭包的同一对象）。 */
+export async function reloadConfig(current: ResolvedConfig): Promise<ResolvedConfig> {
+  const next = await loadConfig(current.rootDir)
+  Object.assign(current, next)
+  return current
 }

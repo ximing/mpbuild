@@ -1,6 +1,6 @@
 import { isAbsolute, join } from 'node:path'
-import { pathToFileURL } from 'node:url'
 import type { AppEntry } from './schema.js'
+import { importFresh } from './import-fresh.js'
 
 /** 字符串路径相对 rootDir 动态 import；失败抛 ENTRY_LOAD。 */
 export async function loadAppEntry(rootDir: string, entry: string | Record<string, unknown>): Promise<AppEntry> {
@@ -10,7 +10,7 @@ export async function loadAppEntry(rootDir: string, entry: string | Record<strin
 
   const abs = isAbsolute(entry) ? entry : join(rootDir, entry)
   try {
-    const imported = (await import(pathToFileURL(abs).href)) as {
+    const imported = (await importFresh(abs)) as {
       default?: unknown
       module?: { exports?: unknown }
     }
