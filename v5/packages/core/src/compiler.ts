@@ -4,7 +4,7 @@ import { dirname, join, resolve } from 'node:path'
 import { transformCacheDir } from './compile/cache.js'
 import { emitPlan } from './compile/emit.js'
 import { loadAppEntry } from './config/entry.js'
-import { CONFIG_NAMES } from './config/load.js'
+import { CONFIG_NAMES, reloadConfig } from './config/load.js'
 import type { ResolvedConfig } from './config/schema.js'
 import { diagnostic, type Diagnostic } from './diagnostic/index.js'
 import { analyzeGraph } from './graph/analyze.js'
@@ -170,6 +170,8 @@ export function createCompiler(
       adapter: config.target,
       graph: built.graph,
       plan: built.plan,
+      rootDir: config.rootDir,
+      srcDir: resolve(config.rootDir, config.src),
     })
     const result: CompilerRunResult = {
       graph: built.graph,
@@ -218,8 +220,17 @@ export function createCompiler(
       skipAppJsonPages,
       cacheDir,
     })
-    remember(result)
-    return result
+    const extras = await applyGeneratePlugins(config.plugins ?? [], {
+      outputDir: resolve(config.rootDir, config.output.dir),
+      adapter: config.target,
+      graph: result.graph,
+      plan: result.plan,
+      rootDir: config.rootDir,
+      srcDir: resolve(config.rootDir, config.src),
+    })
+    const withExtras = { ...result, dests: [...result.dests, ...extras] }
+    remember(withExtras)
+    return withExtras
   }
 
   async function watch(): Promise<{ close(): Promise<void> }> {
@@ -231,13 +242,12 @@ export function createCompiler(
       ...project,
       src: resolve(config.rootDir, project.src),
     }))
-    const paths = [
-      ...watchPaths(lastGraph, srcDir, projects),
+    const reloadFiles = [
       ...CONFIG_NAMES.map((name) => join(config.rootDir, name)),
-    ]
-    if (config.configPath) {
-      paths.push(config.configPath)
-    }
+      config.configPath,
+      typeof config.entry === 'string' ? resolve(config.rootDir, config.entry) : '',
+    ].filter((file) => Boolean(file))
+    const paths = [...watchPaths(lastGraph, srcDir, projects), ...reloadFiles]
     return startWatch({
       paths,
       srcDir,
@@ -245,10 +255,12 @@ export function createCompiler(
         return lastGraph
       },
       projects,
+      reloadFiles,
       onTick: async (batch) => {
         await applyWatchTick(batch)
       },
       onConfigChange: async () => {
+        await reloadConfig(config)
         await run()
       },
     })
@@ -269,6 +281,8 @@ async function applyGeneratePlugins(
     adapter: ResolvedConfig['target']
     graph: ModuleGraph
     plan: OutputPlan
+    rootDir: string
+    srcDir: string
   },
 ): Promise<string[]> {
   const dests: string[] = []
@@ -284,14 +298,16 @@ async function applyGeneratePlugins(
         outputDir: ctx.outputDir,
         graph: ctx.graph,
         plan: ctx.plan,
+        rootDir: ctx.rootDir,
+        srcDir: ctx.srcDir,
       },
     )
-    if (!result || existsSync(result.destPath)) {
-      continue
+    const files = result == null ? [] : Array.isArray(result) ? result : [result]
+    for (const file of files) {
+      await mkdir(dirname(file.destPath), { recursive: true })
+      await writeFile(file.destPath, file.content)
+      dests.push(file.destPath)
     }
-    await mkdir(dirname(result.destPath), { recursive: true })
-    await writeFile(result.destPath, result.content)
-    dests.push(result.destPath)
   }
   return dests
 }

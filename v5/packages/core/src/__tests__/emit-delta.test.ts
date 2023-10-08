@@ -91,4 +91,34 @@ describe('emitPlan delta', () => {
     const after = await stat(destA)
     expect(after.mtimeMs).toBe(kept.mtimeMs)
   })
+
+  it('does not unlink preserveNames extras when they are not placements', async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), 'mpbuild-emit-keep-'))
+    dirs.push(rootDir)
+    const outputDir = join(rootDir, 'dist')
+    const srcA = join(rootDir, 'a.js')
+    await writeFile(srcA, 'module.exports = 1\n')
+    await mkdir(outputDir, { recursive: true })
+    const extra = join(outputDir, 'project.config.json')
+    await writeFile(extra, '{"appid":"keep-tick"}\n')
+    const destA = join(outputDir, 'a.js')
+    const graph: ModuleGraph = {
+      entries: ['a.js'],
+      nodes: new Map([['a.js', mod('a.js', srcA)]]),
+      edges: [],
+      packages: [],
+    }
+    const js = { target: 'es2018', module: 'commonjs' } as const
+    await emitPlan({
+      graph,
+      plan: { placements: [{ moduleId: 'a.js', destPath: destA, package: 'main' }], rewrites: [] },
+      outputDir,
+      clean: false,
+      js,
+      previousDests: [destA, extra],
+      preserveNames: ['project.config.json'],
+    })
+    expect(existsSync(extra)).toBe(true)
+    expect(await readFile(extra, 'utf8')).toBe('{"appid":"keep-tick"}\n')
+  })
 })

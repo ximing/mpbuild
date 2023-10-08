@@ -106,8 +106,9 @@ export async function emitPlan(input: {
   }
 
   const keep = new Set(dests)
+  const preserve = new Set((input.preserveNames ?? []).map((name) => basename(name)))
   for (const prev of input.previousDests ?? []) {
-    if (keep.has(prev)) {
+    if (keep.has(prev) || preserve.has(basename(prev))) {
       continue
     }
     try {
