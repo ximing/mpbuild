@@ -161,3 +161,41 @@ describe('createCompiler @one watch', () => {
     }
   })
 })
+
+describe('createCompiler @one add companion', () => {
+  it('attaches a new wxml under @one after applyWatchTick add', async () => {
+    const rootDir = await fixture({
+      'src/app.js': 'App({})\n',
+      'src/app.json': JSON.stringify({ pages: ['pages/index/index'] }),
+      'src/pages/index/index.js': 'Page({})\n',
+      'src/pages/index/index.json': JSON.stringify({
+        usingComponents: { test: '@one/pages/test/index' },
+      }),
+      'projects/one/pages/test/index.js': 'Component({})\n',
+      'projects/one/pages/test/index.json': JSON.stringify({ component: true }),
+    })
+    const oneSrc = join(rootDir, 'projects', 'one')
+    const compiler = createCompiler(configOf(rootDir, oneSrc))
+    const first = await compiler.run()
+    expect(first.graph.nodes.has('@one/pages/test/index.js')).toBe(true)
+    expect(first.graph.nodes.has('@one/pages/test/index.wxml')).toBe(false)
+
+    await writeFile(join(oneSrc, 'pages/test/index.wxml'), '<view/>\n')
+    const tick = await compiler.applyWatchTick({
+      changedIds: [],
+      deletedIds: [],
+      addedRelPaths: ['@one/pages/test/index.wxml'],
+    })
+    expect(tick.graph.nodes.has('@one/pages/test/index.wxml')).toBe(true)
+    expect(tick.graph.nodes.get('@one/pages/test/index.wxml')?.kind).toBe('template')
+    expect(tick.graph.edges).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          from: '@one/pages/test/index.js',
+          to: '@one/pages/test/index.wxml',
+        }),
+      ]),
+    )
+  })
+})
+

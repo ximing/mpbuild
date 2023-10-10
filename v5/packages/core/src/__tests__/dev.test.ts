@@ -81,6 +81,30 @@ describe('watchPaths', () => {
     expect(paths).not.toContain(npmPath)
     expect(paths.some((p) => p.includes(`${sep}node_modules${sep}`))).toBe(false)
   })
+
+  it('includes extraWatchFiles outside node_modules', () => {
+    const srcDir = join('/proj', 'src')
+    const appPath = join(srcDir, 'app.js')
+    const mixinPath = join(srcDir, 'wxss', 'mixin.wxss')
+    const npmExtra = join(srcDir, 'node_modules', 'pkg', 'mix.js')
+    const graph: ModuleGraph = {
+      entries: ['app.js'],
+      nodes: new Map([
+        [
+          'app.js',
+          {
+            ...mod('app.js', appPath),
+            extraWatchFiles: [mixinPath, npmExtra],
+          },
+        ],
+      ]),
+      edges: [],
+      packages: [],
+    }
+    const paths = watchPaths(graph, srcDir)
+    expect(paths).toContain(mixinPath)
+    expect(paths.some((p) => p.includes(`${sep}node_modules${sep}`))).toBe(false)
+  })
 })
 
 describe('createCompiler watch', () => {
