@@ -10,7 +10,7 @@ const NODE_MODULES_SEG = `${sep}node_modules${sep}`
 const CONFIG_NAME_SET = new Set<string>(CONFIG_NAMES) // includes mpbuild.config.mjs
 const DEBOUNCE_MS = 80
 
-/** 已入图 sourcePath + 每个 script 的 dirname + srcDir + projects[].src；去掉含 node_modules 段的路径。 */
+/** 已入图 sourcePath + extraWatchFiles + 每个 script 的 dirname + srcDir + projects[].src；去掉含 node_modules 段的路径。 */
 export function watchPaths(
   graph: ModuleGraph,
   srcDir: string,
@@ -33,6 +33,11 @@ export function watchPaths(
     if (node.kind === 'script') {
       paths.add(dirname(node.sourcePath))
     }
+    for (const extra of node.extraWatchFiles ?? []) {
+      if (extra && !hasNodeModules(extra)) {
+        paths.add(extra)
+      }
+    }
   }
   return [...paths]
 }
@@ -52,7 +57,7 @@ function shouldReload(filePath: string, reloadFiles: string[] | undefined): bool
   return reloadFiles.some((file) => resolve(file) === abs)
 }
 
-/** 先按 sourcePath 精确匹配节点 id；否则 intern 子仓库公式，否则相对 srcDir。 */
+/** 先按 sourcePath 精确匹配节点 id；再 extraWatchFiles 回所属节点；否则 intern 子仓库公式，否则相对 srcDir。 */
 export function graphIdFromAbs(
   graph: ModuleGraph,
   absPath: string,
@@ -63,6 +68,13 @@ export function graphIdFromAbs(
   for (const node of graph.nodes.values()) {
     if (node.sourcePath && resolve(node.sourcePath) === abs) {
       return node.id
+    }
+  }
+  for (const node of graph.nodes.values()) {
+    for (const extra of node.extraWatchFiles ?? []) {
+      if (extra && resolve(extra) === abs) {
+        return node.id
+      }
     }
   }
   const project = projectForPath(abs, projects)

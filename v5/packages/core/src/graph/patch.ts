@@ -16,7 +16,6 @@ import {
   enqueue,
   posixDirname,
   posixJoin,
-  posixRelative,
   processModule,
   suiteEdgeKind,
   type GraphWalk,
@@ -37,8 +36,12 @@ export async function applyGraphChange(opts: {
   deletedIds: string[] // src-relative，文件已删
   addedRelPaths: string[] // src-relative，新出现的文件（可能尚未入图）
 }): Promise<{ graph: ModuleGraph; diagnostics: Diagnostic[]; topologyChanged: boolean }> {
-  const { graph, srcDir, adapter, alias, projects, platform, ifdef, changedIds, deletedIds, addedRelPaths } = opts
+  const { graph, srcDir, adapter, alias, platform, ifdef, changedIds, deletedIds, addedRelPaths } = opts
   const skipAppJsonPages = opts.skipAppJsonPages === true
+  const projects = (opts.projects ?? []).map((project) => ({
+    ...project,
+    src: resolve(opts.rootDir, project.src),
+  }))
   const before = topologyFingerprint(graph)
   const walk: GraphWalk = {
     srcDir,
@@ -104,11 +107,22 @@ function removeDeleted(walk: GraphWalk, deletedIds: string[]): void {
   )
 }
 
+function absFromGraphId(walk: GraphWalk, id: string): string {
+  const project = walk.projects?.find(
+    (item) => id === item.name || id.startsWith(`${item.name}/`),
+  )
+  if (project) {
+    const rel = id.slice(project.name.length).replace(/^\//, '')
+    return resolve(project.src, ...rel.split('/').filter(Boolean))
+  }
+  return resolve(walk.srcDir, ...id.split('/'))
+}
+
 function attachAddedCompanions(walk: GraphWalk, addedRelPaths: string[]): void {
-  const { adapter, srcDir } = walk
+  const { adapter } = walk
   for (const rel of addedRelPaths) {
     const id = rel.split(/[\\/]/).join('/')
-    const abs = resolve(srcDir, ...id.split('/'))
+    const abs = absFromGraphId(walk, id)
     const addedDir = dirname(abs)
     for (const node of [...walk.nodes.values()]) {
       if (node.kind !== 'script' || dirname(node.sourcePath) !== addedDir) {
@@ -126,7 +140,7 @@ function attachAddedCompanions(walk: GraphWalk, addedRelPaths: string[]): void {
           continue
         }
         const hit = companionPath(node.sourcePath, companionKind, adapter, walk.platform)
-        if (!hit || posixRelative(srcDir, hit) !== id) {
+        if (!hit || resolve(hit) !== resolve(abs)) {
           continue
         }
         const kind = suiteEdgeKind(node, walk.edges)
