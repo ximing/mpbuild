@@ -64,24 +64,39 @@ export function graphIdFromAbs(
   srcDir: string,
   projects?: SubProject[],
 ): string {
+  return classifyAbs(graph, absPath, srcDir, projects).id
+}
+
+/** extra: 命中 extraWatchFiles 且不是任何节点的 sourcePath。 */
+function classifyAbs(
+  graph: ModuleGraph,
+  absPath: string,
+  srcDir: string,
+  projects?: SubProject[],
+): { id: string; extra: boolean } {
   const abs = resolve(absPath)
+  let extraOwner: string | undefined
   for (const node of graph.nodes.values()) {
     if (node.sourcePath && resolve(node.sourcePath) === abs) {
-      return node.id
+      return { id: node.id, extra: false }
     }
-  }
-  for (const node of graph.nodes.values()) {
-    for (const extra of node.extraWatchFiles ?? []) {
-      if (extra && resolve(extra) === abs) {
-        return node.id
+    if (extraOwner === undefined) {
+      for (const extra of node.extraWatchFiles ?? []) {
+        if (extra && resolve(extra) === abs) {
+          extraOwner = node.id
+          break
+        }
       }
     }
   }
+  if (extraOwner !== undefined) {
+    return { id: extraOwner, extra: true }
+  }
   const project = projectForPath(abs, projects)
   if (project) {
-    return posixJoin(project.name, posixRelative(project.src, abs))
+    return { id: posixJoin(project.name, posixRelative(project.src, abs)), extra: false }
   }
-  return posixRelative(srcDir, abs)
+  return { id: posixRelative(srcDir, abs), extra: false }
 }
 
 /** chokidar 监听 paths，80ms debounce 后按事件类型回调。id 走 graphIdFromAbs。 */
@@ -107,8 +122,8 @@ export async function startWatch(input: {
   let running = false
   let closed = false
 
-  const toId = (absPath: string): string =>
-    graphIdFromAbs(input.graph, absPath, input.srcDir, input.projects)
+  const classify = (absPath: string) =>
+    classifyAbs(input.graph, absPath, input.srcDir, input.projects)
 
   const flush = async (): Promise<void> => {
     if (closed || running) {
@@ -159,9 +174,13 @@ export async function startWatch(input: {
     if (shouldReload(filePath, input.reloadFiles)) {
       configChanged = true
     } else {
-      const id = toId(filePath)
-      deletedIds.delete(id)
-      addedRelPaths.add(id)
+      const { id, extra } = classify(filePath)
+      if (extra) {
+        changedIds.add(id)
+      } else {
+        deletedIds.delete(id)
+        addedRelPaths.add(id)
+      }
     }
     schedule()
   })
@@ -169,10 +188,14 @@ export async function startWatch(input: {
     if (shouldReload(filePath, input.reloadFiles)) {
       configChanged = true
     } else {
-      const id = toId(filePath)
-      addedRelPaths.delete(id)
-      changedIds.delete(id)
-      deletedIds.add(id)
+      const { id, extra } = classify(filePath)
+      if (extra) {
+        changedIds.add(id)
+      } else {
+        addedRelPaths.delete(id)
+        changedIds.delete(id)
+        deletedIds.add(id)
+      }
     }
     schedule()
   })
@@ -180,7 +203,7 @@ export async function startWatch(input: {
     if (shouldReload(filePath, input.reloadFiles)) {
       configChanged = true
     } else {
-      changedIds.add(toId(filePath))
+      changedIds.add(classify(filePath).id)
     }
     schedule()
   })
