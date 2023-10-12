@@ -228,12 +228,27 @@ export async function processModule(walk: GraphWalk, id: string): Promise<void> 
   }
 
   const importer = node.sourcePath || join(walk.srcDir, stripVirtualPrefix(id))
-  for (const extracted of extractEdges({
-    id,
-    kind: node.kind,
-    code,
-    adapter: walk.adapter,
-  })) {
+  let extractedList: ReturnType<typeof extractEdges>
+  try {
+    extractedList = extractEdges({
+      id,
+      kind: node.kind,
+      code,
+      adapter: walk.adapter,
+    })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    walk.diagnostics.push(
+      diagnostic({
+        code: 'TRANSFORM_FAIL',
+        severity: 'error',
+        message: `TRANSFORM_FAIL: ${message}`,
+        file: node.sourcePath || id,
+      }),
+    )
+    return
+  }
+  for (const extracted of extractedList) {
     const result = tryResolve(walk, {
       request: extracted.raw,
       importer,

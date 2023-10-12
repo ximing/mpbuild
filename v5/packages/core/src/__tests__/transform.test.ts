@@ -106,4 +106,28 @@ describe('transformModule', () => {
     expect(code).not.toContain('destPath')
     expect(code).not.toContain('owner')
   })
+
+  it('records TRANSFORM_FAIL warning when lightningcss rejects style', () => {
+    const result = transformModule({
+      kind: 'style',
+      sourcePath: '/a.wxss',
+      code: '.a { color: }',
+      js,
+    })
+    expect(result.code).toContain('.a')
+    expect(result.diagnostics?.some((d) => d.code === 'TRANSFORM_FAIL' && d.severity === 'warning')).toBe(
+      true,
+    )
+  })
+
+  it('throws or returns TRANSFORM_FAIL error diagnostics for invalid js', () => {
+    expect(() =>
+      transformModule({
+        kind: 'script',
+        sourcePath: '/a.js',
+        code: 'const x = {',
+        js,
+      }),
+    ).toThrow()
+  })
 })

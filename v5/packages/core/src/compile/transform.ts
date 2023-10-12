@@ -1,6 +1,7 @@
 import { transformSync } from '@swc/core'
 import { transform as transformCss } from 'lightningcss'
 import { extname } from 'node:path'
+import type { Diagnostic } from '../diagnostic/index.js'
 import type { AbstractKind } from '../types.js'
 
 /** 按 kind 变换源码。不写入 destPath / owner。 */
@@ -11,7 +12,7 @@ export function transformModule(input: {
   js: { target: 'es5' | 'es2018' | 'es2020'; module: 'commonjs' | 'es6' }
   css?: { lightningcss: boolean }
   minify?: boolean
-}): { code: string } {
+}): { code: string; diagnostics?: Diagnostic[] } {
   const minify = input.minify ?? false
   switch (input.kind) {
     case 'script':
@@ -23,7 +24,7 @@ export function transformModule(input: {
       if (input.css?.lightningcss === false) {
         return { code: input.code }
       }
-      return { code: transformStyle(input, minify) }
+      return transformStyle(input, minify)
     case 'json':
       return { code: transformJson(input.code, minify) }
     case 'template':
@@ -64,16 +65,31 @@ function transformScript(
 function transformStyle(
   input: { sourcePath: string; code: string },
   minify: boolean,
-): string {
+): { code: string; diagnostics?: Diagnostic[] } {
   try {
+    // lightningcss 1.33 把 `color:` 空值当 unparsed，不抛；空声明仍视为失败。
+    if (/(?:^|[{;])\s*[\w-]+\s*:\s*(?:;|})/.test(input.code)) {
+      throw new Error('invalid CSS declaration')
+    }
     const result = transformCss({
       filename: input.sourcePath,
       code: Buffer.from(input.code),
       minify,
     })
-    return Buffer.from(result.code).toString('utf8')
-  } catch {
-    return input.code
+    return { code: Buffer.from(result.code).toString('utf8') }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    return {
+      code: input.code,
+      diagnostics: [
+        {
+          code: 'TRANSFORM_FAIL',
+          severity: 'warning',
+          message: `TRANSFORM_FAIL: ${message}`,
+          file: input.sourcePath,
+        },
+      ],
+    }
   }
 }
 
