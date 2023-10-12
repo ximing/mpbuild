@@ -71,24 +71,33 @@ export async function emitPlan(input: {
       code = await readTransformCache(input.cacheDir, key)
     }
     if (code === undefined) {
-      const transformed = useNpmCompat
-        ? npmCompat({
-            kind: node.kind,
-            sourcePath: node.sourcePath,
-            code: source,
-            js: input.js,
-          })
-        : transformModule({
-            kind: node.kind,
-            sourcePath: node.sourcePath,
-            code: source,
-            js: input.js,
-            css: input.css,
-            minify: minifyFlag,
-          })
-      code = transformed.code
-      if (input.cacheDir && key) {
-        await writeTransformCache(input.cacheDir, key, code)
+      try {
+        const transformed = useNpmCompat
+          ? npmCompat({ kind: node.kind, sourcePath: node.sourcePath, code: source, js: input.js })
+          : transformModule({
+              kind: node.kind,
+              sourcePath: node.sourcePath,
+              code: source,
+              js: input.js,
+              css: input.css,
+              minify: minifyFlag,
+            })
+        code = transformed.code
+        if (transformed.diagnostics) {
+          diagnostics.push(...transformed.diagnostics)
+        }
+        if (input.cacheDir && key) {
+          await writeTransformCache(input.cacheDir, key, code)
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err)
+        diagnostics.push({
+          code: 'TRANSFORM_FAIL',
+          severity: 'error',
+          message: `TRANSFORM_FAIL: ${message}`,
+          file: node.sourcePath,
+        })
+        continue
       }
     }
     const rewritten = rewriteCode({

@@ -1,34 +1,26 @@
-import { existsSync } from 'node:fs'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import {
-  analyzeGraph,
-  buildGraph,
   createCompiler,
   formatAnalyzeJson,
   formatGraphInspect,
   isError,
   loadConfig,
-  weappAdapter,
 } from '@mpbuild/core'
 
-/** inspect graph：cwd 下有 src/app.js 则建图打印。build：run 一次。dev/--watch：watch 并保持进程。 */
+/** inspect graph：loadConfig + analyze。build：run 一次，`--minify` 覆盖 compile.minify。 */
 export async function run(argv: string[] = process.argv): Promise<void> {
   if (argv[2] === 'inspect' && argv[3] === 'graph') {
-    const cwd = process.cwd()
-    const appJs = join(cwd, 'src', 'app.js')
-    if (!existsSync(appJs)) {
-      console.log('no src/app.js')
+    const config = await loadOrReport(process.cwd())
+    if (!config) {
       return
     }
-    const { graph } = await buildGraph({
-      rootDir: cwd,
-      srcDir: join(cwd, 'src'),
-      adapter: weappAdapter,
-      entryScripts: ['src/app.js'],
-    })
-    analyzeGraph(graph, [{ root: '' }], weappAdapter)
+    const { graph, diagnostics } = await createCompiler(config).analyze()
+    printDiagnostics(diagnostics)
     console.log(formatGraphInspect(graph))
+    if (diagnostics.some(isError)) {
+      process.exitCode = 1
+    }
     return
   }
   if (argv[2] === 'dev' || argv[2] === '--watch' || (argv[2] === 'build' && argv.includes('--watch'))) {
@@ -62,6 +54,9 @@ export async function run(argv: string[] = process.argv): Promise<void> {
     const config = await loadOrReport(process.cwd())
     if (!config) {
       return
+    }
+    if (argv.includes('--minify')) {
+      config.compile = { ...config.compile, minify: true }
     }
     const { diagnostics } = await createCompiler(config, {
       cache: !argv.includes('--no-cache'),
