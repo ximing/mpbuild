@@ -74,7 +74,7 @@ describe('extractEdges', () => {
     expect(edges.map((e) => e.raw)).toEqual(['/comp/btn'])
   })
 
-  it('extracts string componentGenerics leaves and skips true / objects', () => {
+  it('extracts componentGenerics string paths and *.default, skips true', () => {
     const edges = extractEdges({
       id: '/p.json',
       kind: 'json',
@@ -87,9 +87,9 @@ describe('extractEdges', () => {
         },
       }),
     })
-    expect(edges).toEqual([
-      expect.objectContaining({ raw: '/comp/item', kind: EdgeKinds.usingComponent }),
-    ])
+    const raws = edges.map((e) => e.raw).sort()
+    expect(raws).toEqual(['/comp/item', '/comp/nested'])
+    expect(edges.every((e) => e.kind === EdgeKinds.usingComponent)).toBe(true)
   })
 
   it('extracts string import() and export-from', () => {

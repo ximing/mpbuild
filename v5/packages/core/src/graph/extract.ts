@@ -89,7 +89,7 @@ function extractJson(code: string, adapter: TargetAdapter): ExtractedEdge[] {
   return edges
 }
 
-/** `.` 分段，`*` 展开对象键；只收表里登记的路径。name-or-path 仅字符串叶子当路径。 */
+/** `.` 分段，`*` 展开对象键；只收表里登记的路径。path-or-true：字符串当路径，布尔 true 不当路径。 */
 function walkJsonPath(
   node: unknown,
   segments: string[],
@@ -130,6 +130,9 @@ function isJsonPathLeaf(
   node: unknown,
   value: 'path' | 'path-or-true' | 'name-or-path',
 ): node is string {
+  if (node === true && value === 'path-or-true') {
+    return false
+  }
   if (typeof node !== 'string' || node === '') {
     return false
   }

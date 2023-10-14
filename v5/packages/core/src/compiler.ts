@@ -55,6 +55,7 @@ export function createCompiler(
   let lastGraph: ModuleGraph = emptyGraph()
   let lastPlan: OutputPlan = emptyPlan()
   let lastDests: string[] = []
+  let lastWatchFiles: string[] = []
   let didEmit = false
   let skipAppJsonPages = false
 
@@ -173,11 +174,17 @@ export function createCompiler(
       rootDir: config.rootDir,
       srcDir: resolve(config.rootDir, config.src),
     })
+    lastWatchFiles = extras.watchFiles
     const result: CompilerRunResult = {
       graph: built.graph,
       plan: built.plan,
-      diagnostics: [...(config.loadWarnings ?? []), ...built.diagnostics, ...emitted.diagnostics],
-      dests: [...emitted.dests, ...extras],
+      diagnostics: [
+        ...(config.loadWarnings ?? []),
+        ...built.diagnostics,
+        ...emitted.diagnostics,
+        ...extras.diagnostics,
+      ],
+      dests: [...emitted.dests, ...extras.dests],
     }
     remember(result)
     return result
@@ -228,7 +235,12 @@ export function createCompiler(
       rootDir: config.rootDir,
       srcDir: resolve(config.rootDir, config.src),
     })
-    const withExtras = { ...result, dests: [...result.dests, ...extras] }
+    lastWatchFiles = extras.watchFiles
+    const withExtras = {
+      ...result,
+      dests: [...result.dests, ...extras.dests],
+      diagnostics: [...result.diagnostics, ...extras.diagnostics],
+    }
     remember(withExtras)
     return withExtras
   }
@@ -247,7 +259,7 @@ export function createCompiler(
       config.configPath,
       typeof config.entry === 'string' ? resolve(config.rootDir, config.entry) : '',
     ].filter((file) => Boolean(file))
-    const paths = [...watchPaths(lastGraph, srcDir, projects), ...reloadFiles]
+    const paths = [...watchPaths(lastGraph, srcDir, projects), ...reloadFiles, ...lastWatchFiles]
     return startWatch({
       paths,
       srcDir,
@@ -284,8 +296,10 @@ async function applyGeneratePlugins(
     rootDir: string
     srcDir: string
   },
-): Promise<string[]> {
+): Promise<{ dests: string[]; watchFiles: string[]; diagnostics: Diagnostic[] }> {
   const dests: string[] = []
+  const watchFiles: string[] = []
+  const diagnostics: Diagnostic[] = []
   const destPath = join(ctx.outputDir, ctx.adapter.projectConfigFile)
   for (const plugin of plugins) {
     if (!plugin.generate) {
@@ -300,6 +314,12 @@ async function applyGeneratePlugins(
         plan: ctx.plan,
         rootDir: ctx.rootDir,
         srcDir: ctx.srcDir,
+        addWatchFile: (path) => {
+          watchFiles.push(path)
+        },
+        warn: (d) => {
+          diagnostics.push(d)
+        },
       },
     )
     const files = result == null ? [] : Array.isArray(result) ? result : [result]
@@ -309,5 +329,5 @@ async function applyGeneratePlugins(
       dests.push(file.destPath)
     }
   }
-  return dests
+  return { dests, watchFiles, diagnostics }
 }
