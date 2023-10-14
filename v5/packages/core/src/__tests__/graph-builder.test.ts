@@ -72,4 +72,34 @@ describe('buildGraph', () => {
     expect(diagnostics.some((d) => d.code === 'RESOLVE_MISS' && d.file === appAbs)).toBe(true)
     expect([...graph.nodes.keys()].some((id) => id.includes('nope'))).toBe(false)
   })
+
+  it('puts componentGenerics default path into the graph', async () => {
+    const { rootDir, srcDir } = await fixture({
+      'app.js': 'App({})\n',
+      'app.json': JSON.stringify({ pages: ['pages/index/index'] }),
+      'pages/index/index.js': 'Page({})\n',
+      'pages/index/index.json': JSON.stringify({
+        componentGenerics: {
+          item: { default: '/components/generic-item/index' },
+        },
+      }),
+      'components/generic-item/index.js': 'Component({})\n',
+      'components/generic-item/index.json': JSON.stringify({ component: true }),
+    })
+    const { graph } = await buildGraph({
+      rootDir,
+      srcDir,
+      adapter: weappAdapter,
+      entryScripts: [join(srcDir, 'app.js')],
+    })
+    expect(graph.nodes.has('components/generic-item/index.js')).toBe(true)
+    expect(graph.edges).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          from: 'pages/index/index.json',
+          raw: '/components/generic-item/index',
+        }),
+      ]),
+    )
+  })
 })
