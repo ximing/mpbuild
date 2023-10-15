@@ -5,7 +5,7 @@
 需要 Node.js `>=20`。
 
 ```js
-import { createCompiler, defineConfig, loadConfig, legacyScss, projectConfig } from '@mpbuild/core'
+import { copy, createCompiler, defineConfig, loadConfig, legacyScss, projectConfig } from '@mpbuild/core'
 
 const config = await loadConfig(process.cwd())
 await createCompiler(config).run()

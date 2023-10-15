@@ -17,6 +17,7 @@ pnpm add -D @mpbuild/cli
 ```bash
 mpb build
 mpb build --no-cache
+mpb build --minify
 mpb dev
 mpb analyze
 mpb inspect graph
@@ -41,7 +42,7 @@ await createCompiler(config).run()
 
 **不读取** `mpb.config.js`。工作区里只有旧文件时诊断 `LEGACY_CONFIG`，退出码 2。
 
-生产环境的 `@mpbuild/cli`（`mpb` bin）是编译后的 JS，**请把发布配置写成 `mpbuild.config.js` 或 `mpbuild.config.mjs`**。`.ts` / `.mts` 需要额外的 TypeScript loader，本版本的生产 bin 不再默认 `tsx register`。生产环境不要同时留下 `mpbuild.config.ts` / `.mts`，否则会先加载它们并失败，请删掉或只留 `.js` / `.mjs`。
+生产环境的 `@mpbuild/cli`（`mpb` bin）是编译后的 JS，**请把发布配置写成 `mpbuild.config.js` 或 `mpbuild.config.mjs`**。`.ts` / `.mts` 需要额外的 TypeScript loader，本版本的生产 bin 不再默认 `tsx register`。生产 bin 不能加载 `.ts` / `.mts` 时会 **跳过并诊断 `CONFIG_TS_SKIPPED`**，继续尝试 `.js` / `.mjs`；若只有无法加载的 `.ts` 则失败。不要同时留下会误导的 leftover `.ts` / `.mts`，仍建议删掉。
 
 字段对照：
 
@@ -160,7 +161,7 @@ interface Plugin {
 
 `load` 第一个返回字符串的插件胜出（用于 `legacyScss()`）。`generate` 用于 extras（`projectConfig()` 写 `adapter.projectConfigFile`；目标处已有文件则不覆盖）。
 
-规格 §13 里的 `resolve` / `extract` / `transform` / `plan` / `emitModule` / `addEntry` **本版本没有实现**。不要按那张完整表去写自定义插件并期待能跑。也不要调用不存在的 `copy()`。完整 PluginContext 首发没有。
+规格 §13 里的 `resolve` / `extract` / `transform` / `plan` / `emitModule` / `addEntry` **本版本没有实现**。不要按那张完整表去写自定义插件并期待能跑。2.0 Plugin 只有 `load` / `generate`。`copy(patterns)` 默认 extras；`copy({ graph: true })` 未做。完整 PluginContext 首发没有。
 
 虚文件：core 对 router 生成的 app.json 使用 `virtual:app.json`。用户侧若以前靠虚文件注入，请先改用 `generate` 写 extras；完整的 `virtual:` + `load` + `emitModule` 建图 API 尚未开放。
 
@@ -185,10 +186,10 @@ weapp 的 npm 运行时变换由 emit 内置的 `npmCompat` 完成（`adapter.np
 | SubProjectPlugin | `projects` |
 | CleanMbpPlugin | `output.clean`（仅该 compiler 第一次 emit） |
 | ProjectConfigPlugin | `projectConfig()` |
-| Copy / CopyImage | **首发无 `copy()`**，请自己拷贝或 `generate` |
+| Copy / CopyImage | `copy()` extras（默认 `graph: false`） |
 | JSON require 内联 | 独立 json（刻意 break） |
 | `plugin://` | 原样保留 |
 
 ## 首发明确不做
 
-抖音/头条 adapter、`@mpbuild/target-tt`、HMR、把小程序打成 JS bundle、workers / sitemap / tabBar 图标 / WXML `<image src>` 入图、json `extends`、minify 的 include/exclude、完整 PluginContext。详见规格 §2.2 与 §22.2。
+抖音/头条 adapter、`@mpbuild/target-tt`、HMR、把小程序打成 JS bundle、workers / sitemap / tabBar 图标 / WXML `<image src>` 入图、json `extends`、minify 的 include/exclude、完整 PluginContext。详见规格 §2.2 与 §22.2。不要把 origin 上那 2 个 Snyk 提交 merge 进 5.x；发布 tag 是 `v2.0.0`。

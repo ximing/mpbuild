@@ -12,6 +12,7 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: v5
@@ -26,6 +27,7 @@ jobs:
           registry-url: https://registry.npmjs.org
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+      - run: pnpm --filter @mpbuild/core test -- --run
       - name: Check tag matches package versions
         run: |
           if [[ "${GITHUB_REF}" != refs/tags/v* ]]; then

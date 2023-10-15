@@ -29,11 +29,23 @@ describe('publish workflow', () => {
     expect(yml).not.toMatch(/id-token/)
     expect(yml).not.toMatch(/provenance/)
     expect(yml).not.toMatch(/\bnpm publish\b/)
+    expect(yml).toContain('pnpm --filter @mpbuild/core test -- --run')
+    expect(yml).toContain('timeout-minutes')
+
+    const pages = readFileSync(join(repoRoot, '.github/workflows/github-pages.yml'), 'utf8')
+    expect(pages).toMatch(/if:\s*false/)
+    expect(pages).toContain('disabled: website package removed')
 
     const corePkg = readJson(join(coreDir, 'package.json'))
     const cliPkg = readJson(join(cliDir, 'package.json'))
     const v5Pkg = readJson(join(v5Dir, 'package.json'))
     const rootPkg = readJson(join(repoRoot, 'package.json'))
+    expect((corePkg.publishConfig as Record<string, string>).registry).toBe(
+      'https://registry.npmjs.org',
+    )
+    expect((cliPkg.publishConfig as Record<string, string>).registry).toBe(
+      'https://registry.npmjs.org',
+    )
     expect((corePkg.scripts as Record<string, string>).prepublishOnly).toBe('pnpm build')
     expect((cliPkg.scripts as Record<string, string>).prepublishOnly).toBe('pnpm build')
     expect((corePkg.scripts as Record<string, string>)['pack:check']).toContain('pack --dry-run')

@@ -33,6 +33,12 @@ describe('migration-v5.md', () => {
       '不要同时留下',
       '--no-cache',
       'NPM_TOKEN',
+      'copy(',
+      '--minify',
+      'CONFIG_TS_SKIPPED',
+      'graph: true',
+      'Snyk',
+      'v2.0.0',
     ]
     for (const token of required) {
       expect(md, `missing ${token}`).toContain(token)
