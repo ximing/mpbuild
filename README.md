@@ -25,23 +25,24 @@ pnpm add -D @mpbuild/cli
 ```bash
 mpb build
 mpb build --no-cache
+mpb build --minify
 mpb dev
 mpb analyze
 mpb inspect graph
 ```
 
-`--no-cache` 跳过磁盘 transform 缓存（目录 `node_modules/.cache/mpbuild`）。`output.clean` 不会删这个目录。
+`--no-cache` 跳过磁盘 transform 缓存（目录 `node_modules/.cache/mpbuild`）。`output.clean` 不会删这个目录。`--minify` 覆盖 `compile.minify: true`。
 
 `--watch` 是 `dev` 的别名。退出码：0 成功；1 含 error；2 配置错误。
 
 ## 配置
 
-项目根使用 `mpbuild.config.ts` / `mpbuild.config.mts` / `mpbuild.config.js` / `mpbuild.config.mjs`（`export default` 或 `module.exports`）。加载顺序：`mpbuild.config.ts` → `mpbuild.config.mts` → `mpbuild.config.js` → `mpbuild.config.mjs`（**.js 在 .mjs 前**，已有 `.js` 项目行为不变）。生产 bin 不能加载 `.ts` / `.mts`；生产请用 `.js` 或 `.mjs`。生产环境不要同时留下 `mpbuild.config.ts` / `.mts`，否则会先加载它们并失败，请删掉或只留 `.js` / `.mjs`。
+项目根使用 `mpbuild.config.ts` / `mpbuild.config.mts` / `mpbuild.config.js` / `mpbuild.config.mjs`（`export default` 或 `module.exports`）。加载顺序：`mpbuild.config.ts` → `mpbuild.config.mts` → `mpbuild.config.js` → `mpbuild.config.mjs`（**.js 在 .mjs 前**，已有 `.js` 项目行为不变）。生产 bin 不能加载 `.ts` / `.mts` 时会 **跳过并诊断 `CONFIG_TS_SKIPPED`**，继续尝试 `.js` / `.mjs`；若只有无法加载的 `.ts` 则失败。不要同时留下会误导的 leftover `.ts` / `.mts`，生产请用 `.js` 或 `.mjs`，仍建议删掉无法加载的 TypeScript 配置。
 
 **不读取** `mpb.config.js`。
 
 ```js
-import { defineConfig, legacyScss, projectConfig } from '@mpbuild/core'
+import { copy, defineConfig, legacyScss, projectConfig } from '@mpbuild/core'
 
 export default defineConfig({
   src: 'src',
@@ -51,11 +52,16 @@ export default defineConfig({
   plugins: [
     legacyScss(),
     projectConfig({ projectname: 'my-app', appId: 'touristappid' }),
+    copy('src/tabbar.png'),
   ],
 })
 ```
 
 该示例需要 `package.json` 的 `"type": "module"`，或把文件命名为 `mpbuild.config.mjs`。无插件的字段配置仍可用 CJS `module.exports`（不要 `require('@mpbuild/core')`）。
+
+## 插件（2.0.0 承诺）
+
+公开 `Plugin` 只有 `name` + `load?` + `generate?`。官方插件：`legacyScss()`、`projectConfig()`、`copy()`。`copy(patterns)` 默认 extras；`copy({ graph: true })` 未实现。完整 PluginContext 是以后的版本。
 
 从 4.x 迁移见 [docs/migration-v5.md](docs/migration-v5.md)。
 
@@ -69,9 +75,11 @@ export default defineConfig({
 
 ## 发布
 
-不要在本地执行 `npm publish` 或 `changeset publish` 来发 `@mpbuild/*`。给仓库打并 push `v*` tag（包 version 都是 `2.0.0` 时 tag 必须是 `v2.0.0`）后，[`.github/workflows/publish-mpbuild.yml`](.github/workflows/publish-mpbuild.yml) 会在 GitHub Actions 里对 `@mpbuild/core` 与 `@mpbuild/cli` 执行 `pnpm publish`。
+不要在本地执行 `npm publish` 或 `changeset publish` 来发 `@mpbuild/*`。tag 必须是 `v2.0.0`。给仓库打并 push `v2.0.0` 后，[`.github/workflows/publish-mpbuild.yml`](.github/workflows/publish-mpbuild.yml) 会在 GitHub Actions 里对 `@mpbuild/core` 与 `@mpbuild/cli` 执行 `pnpm publish`。
 
 在 GitHub Settings → Secrets and variables → Actions 添加名为 `NPM_TOKEN` 的 repository secret（npm 登录 token）。不要把 token 写进仓库。
+
+用 `git push --force-with-lease origin master` 推 rewrite，**不要 merge origin 的 Snyk / 4.x `packages/mpbuild`**。`V1` 已备份 4.x。
 
 ## 仓库
 

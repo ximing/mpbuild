@@ -31,6 +31,16 @@ describe('root README', () => {
     expect(readme).toContain('Secrets and variables')
     expect(readme).toContain('publish-mpbuild.yml')
     expect(readme).not.toMatch(/npm_[A-Za-z0-9]{10,}/)
+    expect(readme).toContain('--minify')
+    expect(readme).toContain('copy(')
+    expect(readme).toContain('legacyScss')
+    expect(readme).toContain('projectConfig')
+    expect(readme).toContain('CONFIG_TS_SKIPPED')
+    expect(readme).toContain('v2.0.0')
+    expect(readme).toContain('force-with-lease')
+    expect(readme).toContain('Snyk')
+    expect(readme).toContain('load')
+    expect(readme).toContain('generate')
   })
 
   it('ships npm README files for core and cli', () => {
@@ -50,6 +60,7 @@ describe('root README', () => {
       'utf8',
     )
     expect(roadmap).toMatch(/当前开工：P6/)
+    expect(roadmap).toContain('2026-08-20-mpbuild-v5-p6-harden.md')
     expect(roadmap).toContain('2026-08-20-mpbuild-v5-p5-ship.md')
     expect(roadmap).toContain('2026-08-19-mpbuild-v5-p4-release.md')
     expect(roadmap).toContain('`mpb inspect graph` 打出节点/边；假 adapter 快照通过')

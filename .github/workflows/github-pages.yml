@@ -12,7 +12,8 @@ on:
   repository_dispatch:
 jobs:
   build:
-    name: Build
+    if: false
+    name: "disabled: website package removed"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout  🛎️
