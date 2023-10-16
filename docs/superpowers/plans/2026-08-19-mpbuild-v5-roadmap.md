@@ -2,7 +2,7 @@
 
 > 总规格：`docs/superpowers/specs/2026-08-19-mpbuild-v5-graph-driven-design.md`  
 > 执行方式：主 Agent 只编排；每阶段一份独立实施计划；子代理 TDD；每完成一小步就提交。  
-> 当前开工：P6 → `docs/superpowers/plans/2026-08-20-mpbuild-v5-p6-harden.md`
+> 当前开工：P7 → `docs/superpowers/plans/2026-08-20-mpbuild-v5-p7-polish.md`
 
 ## 阶段
 
@@ -15,12 +15,13 @@
 | P4 发布 | `2026-08-19-mpbuild-v5-p4-release.md` | 迁移文档 + `@mpbuild/*@2.0.0`；不发布名为 `mpbuild` 的 5.0 |
 | P5 发布清单 | `2026-08-20-mpbuild-v5-p5-ship.md` | watch `@one/`、磁盘 transform 缓存、`example/demo` 能 `mpb build`、GitHub Actions 发包（禁止本地 `npm publish`） |
 | P6 硬化 | `2026-08-20-mpbuild-v5-p6-harden.md` | leftover `.ts` 跳过、watch extras/entry/`extraWatchFiles`、`copy()`、`inspect graph` 走配置、`--minify`、componentGenerics 表、publish 跑测试 |
+| P7 抛光 | `2026-08-20-mpbuild-v5-p7-polish.md` | `mpb dev` 打印诊断；watch 已入图 `add`=change；copy `**` 零层 + extras 不每 tick 删；已入图 npm 文件 watch；wxss `url()`；非 minify 写 `.map`；`componentRelative` / `ABS_PATH_IN_SUBPROJECT` / `resolve.extensions` |
 
 后一阶段计划必须等前一阶段计划全部 Task complete 且全量测试绿后再写，避免空中楼阁。
 
 ## 编排规则
 
-1. 工作在当前阶段分支（P6：`feat/v5-p6-harden`）的隔离 worktree，不直接改用户当前 checkout 的 master 工作区。
+1. 工作在当前阶段分支（P7：`feat/v5-p7-polish`）的隔离 worktree，不直接改用户当前 checkout 的 master 工作区。
 2. 每个 Task：RED → 确认失败 → GREEN → 确认通过 → 提交。
 3. 提交信息用约定式中文/英文短句，禁止 `Co-authored-by`、禁止提及 AI / Grok / Claude / Cursor / Generated。
 4. Task 完成后由评审子代理看 diff；Critical/Important 必须修完再进下一 Task。
