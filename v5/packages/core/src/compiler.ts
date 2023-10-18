@@ -49,7 +49,9 @@ export function createCompiler(
     deletedIds: string[]
     addedRelPaths: string[]
   }): Promise<CompilerTickResult>
-  watch(): Promise<{ close(): Promise<void> }>
+  watch(opts?: {
+    onDiagnostics?: (diagnostics: Diagnostic[]) => void
+  }): Promise<{ close(): Promise<void>; diagnostics: Diagnostic[] }>
 } {
   const cacheDir = options?.cache === false ? undefined : transformCacheDir(config.rootDir)
   let lastGraph: ModuleGraph = emptyGraph()
@@ -245,9 +247,14 @@ export function createCompiler(
     return withExtras
   }
 
-  async function watch(): Promise<{ close(): Promise<void> }> {
+  async function watch(opts?: {
+    onDiagnostics?: (diagnostics: Diagnostic[]) => void
+  }): Promise<{ close(): Promise<void>; diagnostics: Diagnostic[] }> {
+    let firstDiagnostics: Diagnostic[] = []
     if (!didEmit) {
-      await run()
+      const first = await run()
+      firstDiagnostics = first.diagnostics
+      opts?.onDiagnostics?.(firstDiagnostics)
     }
     const srcDir = resolve(config.rootDir, config.src)
     const projects = (config.projects ?? []).map((project) => ({
@@ -260,7 +267,7 @@ export function createCompiler(
       typeof config.entry === 'string' ? resolve(config.rootDir, config.entry) : '',
     ].filter((file) => Boolean(file))
     const paths = [...watchPaths(lastGraph, srcDir, projects), ...reloadFiles, ...lastWatchFiles]
-    return startWatch({
+    const handle = await startWatch({
       paths,
       srcDir,
       get graph() {
@@ -269,13 +276,16 @@ export function createCompiler(
       projects,
       reloadFiles,
       onTick: async (batch) => {
-        await applyWatchTick(batch)
+        const result = await applyWatchTick(batch)
+        opts?.onDiagnostics?.(result.diagnostics)
       },
       onConfigChange: async () => {
         await reloadConfig(config)
-        await run()
+        const result = await run()
+        opts?.onDiagnostics?.(result.diagnostics)
       },
     })
+    return { close: handle.close, diagnostics: firstDiagnostics }
   }
 
   return {
