@@ -23,6 +23,8 @@ mpb analyze
 mpb inspect graph
 ```
 
+`mpb dev` 把首次构建和每次 watch tick 的诊断打印到 stderr（与 `mpb build` 相同），打印后保持进程。
+
 发布走 GitHub Actions 的 `v*` tag，仓库 secret 名是 `NPM_TOKEN`；不要本地 `npm publish`。
 
 `--watch` 是 `dev` 的别名。退出码：0 成功；1 含 error；2 配置错误（包括只找到 `mpb.config.js`）。

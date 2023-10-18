@@ -132,4 +132,23 @@ describe('createCompiler watch', () => {
       await handle.close()
     }
   })
+
+  it('watch() returns first-run MISSING_APP_JS and onDiagnostics sees ticks', async () => {
+    const rootDir = await fixture({
+      'src/pages/p/p.js': 'Page({})\n',
+    })
+    const codes: string[] = []
+    const compiler = createCompiler(configOf(rootDir))
+    const handle = await compiler.watch({
+      onDiagnostics: (ds) => {
+        codes.push(...ds.map((d) => d.code))
+      },
+    })
+    try {
+      expect(handle.diagnostics.some((d) => d.code === 'MISSING_APP_JS')).toBe(true)
+      expect(codes).toContain('MISSING_APP_JS')
+    } finally {
+      await handle.close()
+    }
+  })
 })

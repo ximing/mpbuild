@@ -28,7 +28,7 @@ export async function run(argv: string[] = process.argv): Promise<void> {
     if (!config) {
       return
     }
-    await createCompiler(config).watch()
+    await createCompiler(config).watch({ onDiagnostics: printDiagnostics })
     await new Promise<void>(() => {})
     return
   }

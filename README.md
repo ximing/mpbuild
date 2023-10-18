@@ -33,7 +33,7 @@ mpb inspect graph
 
 `--no-cache` 跳过磁盘 transform 缓存（目录 `node_modules/.cache/mpbuild`）。`output.clean` 不会删这个目录。`--minify` 覆盖 `compile.minify: true`。
 
-`--watch` 是 `dev` 的别名。退出码：0 成功；1 含 error；2 配置错误。
+`--watch` 是 `dev` 的别名。退出码：0 成功；1 含 error；2 配置错误。`mpb dev` 把首次构建和每次 watch tick 的诊断打印到 stderr（与 `mpb build` 相同），打印后保持进程。
 
 ## 配置
 
