@@ -151,4 +151,30 @@ describe('createCompiler watch', () => {
       await handle.close()
     }
   })
+
+  it('unlink then write of an in-graph file updates dest content', async () => {
+    const rootDir = await fixture({
+      'src/app.js': 'App({})\n',
+      'src/app.json': JSON.stringify({ pages: ['pages/index/index'] }),
+      'src/pages/index/index.js': "require('./lib')\n",
+      'src/pages/index/lib.js': 'module.exports = 1\n',
+    })
+    const compiler = createCompiler(configOf(rootDir))
+    const handle = await compiler.watch()
+    try {
+      const src = join(rootDir, 'src/pages/index/lib.js')
+      const dest = join(rootDir, 'dist/pages/index/lib.js')
+      expect(await readFile(dest, 'utf8')).toContain('1')
+      await rm(src)
+      await writeFile(src, "module.exports = 'after-atomic-save'\n")
+      await vi.waitFor(
+        async () => {
+          expect(await readFile(dest, 'utf8')).toContain('after-atomic-save')
+        },
+        { timeout: 4000 },
+      )
+    } finally {
+      await handle.close()
+    }
+  })
 })

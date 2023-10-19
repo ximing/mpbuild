@@ -177,6 +177,9 @@ export async function startWatch(input: {
       const { id, extra } = classify(filePath)
       if (extra) {
         changedIds.add(id)
+      } else if (input.graph.nodes.has(id)) {
+        deletedIds.delete(id)
+        changedIds.add(id)
       } else {
         deletedIds.delete(id)
         addedRelPaths.add(id)

@@ -63,14 +63,27 @@ export async function applyGraphChange(opts: {
 
   removeDeleted(walk, deletedIds)
 
+  const posixAdded = addedRelPaths.map((rel) => rel.split(/[\\/]/).join('/'))
+  const changed = [...changedIds]
+  const added: string[] = []
+  for (const id of posixAdded) {
+    if (walk.nodes.has(id)) {
+      if (!changed.includes(id)) {
+        changed.push(id)
+      }
+    } else {
+      added.push(id)
+    }
+  }
+
   const existed = new Set(walk.nodes.keys())
   for (const id of existed) {
     walk.visited.add(id)
   }
 
-  attachAddedCompanions(walk, addedRelPaths)
+  attachAddedCompanions(walk, added)
 
-  for (const id of changedIds) {
+  for (const id of changed) {
     if (!existed.has(id) || !walk.nodes.has(id)) {
       continue
     }
