@@ -69,4 +69,28 @@ describe('copy()', () => {
     })
     expect(existsSync(dest)).toBe(true)
   })
+
+  it('copy(src/**/*.png) hits src/tabbar.png and keeps dest after applyWatchTick', async () => {
+    const png = Buffer.from([137, 80, 78, 71, 1, 2, 3, 4])
+    const rootDir = await fixture({
+      'src/app.js': 'App({})\n',
+      'src/app.json': JSON.stringify({ pages: ['pages/p/p'] }),
+      'src/pages/p/p.js': 'Page({})\n',
+      'src/tabbar.png': png,
+    })
+    const compiler = createCompiler(configOf(rootDir, [copy('src/**/*.png')]))
+    await compiler.run()
+    const dest = join(rootDir, 'dist/tabbar.png')
+    expect(existsSync(dest)).toBe(true)
+    expect(Buffer.from(await readFile(dest)).equals(png)).toBe(true)
+
+    await writeFile(join(rootDir, 'src/pages/p/p.js'), 'Page({ x: 1 })\n')
+    await compiler.applyWatchTick({
+      changedIds: ['pages/p/p.js'],
+      deletedIds: [],
+      addedRelPaths: [],
+    })
+    expect(existsSync(dest)).toBe(true)
+    expect(Buffer.from(await readFile(dest)).equals(png)).toBe(true)
+  })
 })

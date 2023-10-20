@@ -23,6 +23,7 @@ export async function emitPlan(input: {
   css?: { lightningcss: boolean }
   previousDests?: Iterable<string>
   preserveNames?: string[]
+  preservePaths?: Iterable<string>
   npmCompat?: 'weapp' | 'none'
   minify?: boolean | Record<string, boolean>
   cacheDir?: string
@@ -116,8 +117,9 @@ export async function emitPlan(input: {
 
   const keep = new Set(dests)
   const preserve = new Set((input.preserveNames ?? []).map((name) => basename(name)))
+  const preservePaths = new Set(input.preservePaths ?? [])
   for (const prev of input.previousDests ?? []) {
-    if (keep.has(prev) || preserve.has(basename(prev))) {
+    if (keep.has(prev) || preserve.has(basename(prev)) || preservePaths.has(prev)) {
       continue
     }
     try {

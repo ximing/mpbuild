@@ -27,7 +27,7 @@ export function copy(patterns: string | string[], opts?: { graph?: boolean }): P
       }
       const files: Array<{ destPath: string; content: Buffer }> = []
       for (const pattern of list) {
-        for (const abs of await expandPattern(rootDir, pattern)) {
+        for (const abs of await expandPattern(rootDir, pattern, outputDir)) {
           const destPath = destFor(abs, rootDir, srcDir, outputDir)
           const content = await readFile(abs)
           ctx.addWatchFile?.(abs)
@@ -47,14 +47,14 @@ function destFor(abs: string, rootDir: string, srcDir: string, outputDir: string
   return join(outputDir, relative(rootDir, abs))
 }
 
-async function expandPattern(rootDir: string, pattern: string): Promise<string[]> {
+async function expandPattern(rootDir: string, pattern: string, outputDir: string): Promise<string[]> {
   const normalized = pattern.replace(/\\/g, '/')
   if (!normalized.includes('*')) {
     const abs = resolve(rootDir, normalized)
     return existsSync(abs) ? [abs] : []
   }
   const out: string[] = []
-  await walkFiles(rootDir, async (abs) => {
+  await walkFiles(rootDir, outputDir, async (abs) => {
     const rel = relative(rootDir, abs).split(sep).join('/')
     if (matchGlob(rel, normalized)) {
       out.push(abs)
@@ -63,7 +63,11 @@ async function expandPattern(rootDir: string, pattern: string): Promise<string[]
   return out
 }
 
-async function walkFiles(dir: string, visit: (abs: string) => Promise<void>): Promise<void> {
+async function walkFiles(
+  dir: string,
+  outputDir: string,
+  visit: (abs: string) => Promise<void>,
+): Promise<void> {
   let entries
   try {
     entries = await readdir(dir)
@@ -82,7 +86,10 @@ async function walkFiles(dir: string, visit: (abs: string) => Promise<void>): Pr
       if (name === 'node_modules' || name === '.git') {
         continue
       }
-      await walkFiles(abs, visit)
+      if (resolve(abs) === resolve(outputDir) || abs.startsWith(outputDir + sep)) {
+        continue
+      }
+      await walkFiles(abs, outputDir, visit)
     } else if (st.isFile()) {
       await visit(abs)
     }
@@ -92,8 +99,10 @@ async function walkFiles(dir: string, visit: (abs: string) => Promise<void>): Pr
 function matchGlob(rel: string, pattern: string): boolean {
   const escaped = pattern
     .replace(/[.+^${}()|[\]\\]/g, '\\$&')
-    .replace(/\*\*/g, '\u0000')
+    .replace(/\*\*\//g, '\u0000')
+    .replace(/\*\*/g, '\u0001')
     .replace(/\*/g, '[^/]*')
-    .replace(/\u0000/g, '.*')
+    .replace(/\u0000/g, '(?:.*/)?')
+    .replace(/\u0001/g, '.*')
   return new RegExp(`^${escaped}$`).test(rel)
 }

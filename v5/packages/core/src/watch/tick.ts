@@ -14,6 +14,7 @@ export async function applyWatchTick(input: {
   graph: ModuleGraph
   plan: OutputPlan
   previousDests: Iterable<string>
+  preservePaths?: Iterable<string>
   changedIds: string[]
   deletedIds: string[]
   addedRelPaths: string[]
@@ -82,6 +83,7 @@ export async function applyWatchTick(input: {
     css: config.compile.css,
     previousDests: input.previousDests,
     preserveNames: [config.target.projectConfigFile],
+    preservePaths: input.preservePaths,
     npmCompat: config.target.npmCompat,
     minify: config.compile.minify,
     cacheDir: input.cacheDir,

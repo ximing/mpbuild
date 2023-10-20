@@ -57,6 +57,7 @@ export function createCompiler(
   let lastGraph: ModuleGraph = emptyGraph()
   let lastPlan: OutputPlan = emptyPlan()
   let lastDests: string[] = []
+  let lastExtraDests: string[] = []
   let lastWatchFiles: string[] = []
   let didEmit = false
   let skipAppJsonPages = false
@@ -162,6 +163,7 @@ export function createCompiler(
       css: config.compile.css,
       previousDests: didEmit ? lastDests : [],
       preserveNames: [config.target.projectConfigFile],
+      preservePaths: lastExtraDests,
       npmCompat: config.target.npmCompat,
       minify: config.compile.minify,
       cacheDir,
@@ -177,6 +179,7 @@ export function createCompiler(
       srcDir: resolve(config.rootDir, config.src),
     })
     lastWatchFiles = extras.watchFiles
+    lastExtraDests = extras.dests
     const result: CompilerRunResult = {
       graph: built.graph,
       plan: built.plan,
@@ -223,6 +226,7 @@ export function createCompiler(
       graph: lastGraph,
       plan: lastPlan,
       previousDests: lastDests,
+      preservePaths: lastExtraDests,
       changedIds: args.changedIds,
       deletedIds: args.deletedIds,
       addedRelPaths: args.addedRelPaths,
@@ -238,6 +242,7 @@ export function createCompiler(
       srcDir: resolve(config.rootDir, config.src),
     })
     lastWatchFiles = extras.watchFiles
+    lastExtraDests = extras.dests
     const withExtras = {
       ...result,
       dests: [...result.dests, ...extras.dests],
