@@ -163,7 +163,7 @@ interface Plugin {
 
 `load` 第一个返回字符串的插件胜出（用于 `legacyScss()`）。`generate` 用于 extras（`projectConfig()` 写 `adapter.projectConfigFile`；目标处已有文件则不覆盖）。
 
-规格 §13 里的 `resolve` / `extract` / `transform` / `plan` / `emitModule` / `addEntry` **本版本没有实现**。不要按那张完整表去写自定义插件并期待能跑。2.0 Plugin 只有 `load` / `generate`。`copy(patterns)` 默认 extras；`copy({ graph: true })` 未做。完整 PluginContext 首发没有。
+规格 §13 里的 `resolve` / `extract` / `transform` / `plan` / `emitModule` / `addEntry` **本版本没有实现**。不要按那张完整表去写自定义插件并期待能跑。2.0 Plugin 只有 `load` / `generate`。`copy(patterns)` 默认 extras；`copy('src/**/*.png')` 能匹配 `src/tabbar.png`（`**` 含零层目录）；copy 产物在 watch tick 中保留，不会每拍删掉。`copy({ graph: true })` 未做。完整 PluginContext 首发没有。
 
 虚文件：core 对 router 生成的 app.json 使用 `virtual:app.json`。用户侧若以前靠虚文件注入，请先改用 `generate` 写 extras；完整的 `virtual:` + `load` + `emitModule` 建图 API 尚未开放。
 
@@ -188,7 +188,7 @@ weapp 的 npm 运行时变换由 emit 内置的 `npmCompat` 完成（`adapter.np
 | SubProjectPlugin | `projects` |
 | CleanMbpPlugin | `output.clean`（仅该 compiler 第一次 emit） |
 | ProjectConfigPlugin | `projectConfig()` |
-| Copy / CopyImage | `copy()` extras（默认 `graph: false`） |
+| Copy / CopyImage | `copy()` extras（默认 `graph: false`；`**` 含零层，watch tick 不删 copy 产物） |
 | JSON require 内联 | 独立 json（刻意 break） |
 | `plugin://` | 原样保留 |
 

@@ -121,4 +121,35 @@ describe('emitPlan delta', () => {
     expect(existsSync(extra)).toBe(true)
     expect(await readFile(extra, 'utf8')).toBe('{"appid":"keep-tick"}\n')
   })
+
+  it('skips unlink for preservePaths extras that are not placements', async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), 'mpbuild-emit-copy-'))
+    dirs.push(rootDir)
+    const outputDir = join(rootDir, 'dist')
+    const srcA = join(rootDir, 'a.js')
+    await writeFile(srcA, 'module.exports = 1\n')
+    await mkdir(outputDir, { recursive: true })
+    const extra = join(outputDir, 'tabbar.png')
+    await writeFile(extra, Buffer.from([1, 2, 3, 4]))
+    const destA = join(outputDir, 'a.js')
+    const graph: ModuleGraph = {
+      entries: ['a.js'],
+      nodes: new Map([['a.js', mod('a.js', srcA)]]),
+      edges: [],
+      packages: [],
+    }
+    const js = { target: 'es2018', module: 'commonjs' } as const
+    await emitPlan({
+      graph,
+      plan: { placements: [{ moduleId: 'a.js', destPath: destA, package: 'main' }], rewrites: [] },
+      outputDir,
+      clean: false,
+      js,
+      previousDests: [destA, extra],
+      preserveNames: ['project.config.json'],
+      preservePaths: [extra],
+    })
+    expect(existsSync(extra)).toBe(true)
+    expect(Buffer.from(await readFile(extra))).toEqual(Buffer.from([1, 2, 3, 4]))
+  })
 })

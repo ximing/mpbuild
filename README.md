@@ -57,6 +57,8 @@ export default defineConfig({
 })
 ```
 
+`copy('src/**/*.png')` 能匹配 `src/tabbar.png`（`**` 含零层目录）；copy 产物在 watch tick 中保留，不会每拍删掉。
+
 该示例需要 `package.json` 的 `"type": "module"`，或把文件命名为 `mpbuild.config.mjs`。无插件的字段配置仍可用 CJS `module.exports`（不要 `require('@mpbuild/core')`）。
 
 ## 插件（2.0.0 承诺）
