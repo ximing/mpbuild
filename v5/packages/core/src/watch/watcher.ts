@@ -10,7 +10,7 @@ const NODE_MODULES_SEG = `${sep}node_modules${sep}`
 const CONFIG_NAME_SET = new Set<string>(CONFIG_NAMES) // includes mpbuild.config.mjs
 const DEBOUNCE_MS = 80
 
-/** 已入图 sourcePath + extraWatchFiles + 每个 script 的 dirname + srcDir + projects[].src；去掉含 node_modules 段的路径。 */
+/** 已入图 sourcePath + extraWatchFiles + 每个 script 的 dirname + srcDir + projects[].src；入图 npm 只加该文件，不加 dirname / extraWatchFiles 下的 node_modules。 */
 export function watchPaths(
   graph: ModuleGraph,
   srcDir: string,
@@ -26,7 +26,11 @@ export function watchPaths(
     }
   }
   for (const node of graph.nodes.values()) {
-    if (!node.sourcePath || hasNodeModules(node.sourcePath)) {
+    if (!node.sourcePath) {
+      continue
+    }
+    if (hasNodeModules(node.sourcePath)) {
+      paths.add(node.sourcePath)
       continue
     }
     paths.add(node.sourcePath)
@@ -109,9 +113,23 @@ export async function startWatch(input: {
   onTick: (batch: { changedIds: string[]; deletedIds: string[]; addedRelPaths: string[] }) => Promise<void>
   onConfigChange: () => Promise<void>
 }): Promise<{ close(): Promise<void> }> {
+  const keepNpm = new Set(
+    input.paths.filter((p) => p.includes(NODE_MODULES_SEG) || p.includes('/node_modules/')).map((p) => resolve(p)),
+  )
   const watcher = chokidar.watch(input.paths, {
     ignoreInitial: true,
-    ignored: /node_modules/,
+    ignored: (filePath: string) => {
+      const abs = resolve(filePath)
+      if (keepNpm.has(abs)) {
+        return false
+      }
+      for (const keep of keepNpm) {
+        if (keep === abs || keep.startsWith(`${abs}${sep}`)) {
+          return false
+        }
+      }
+      return /(?:^|[\\/])node_modules(?:[\\/]|$)/.test(filePath)
+    },
   })
 
   const addedRelPaths = new Set<string>()
