@@ -59,16 +59,24 @@ afterEach(async () => {
 })
 
 describe('watchPaths', () => {
-  it('includes sourcePath and srcDir, drops node_modules even when in the graph', () => {
+  it('includes in-graph npm sourcePath files but not extraWatchFiles under node_modules', () => {
     const srcDir = join('/proj', 'src')
     const appPath = join(srcDir, 'app.js')
     const npmPath = join(srcDir, 'node_modules', 'x.js')
+    const npmExtra = join(srcDir, 'node_modules', 'pkg', 'mix.js')
     const projectSrc = join('/proj', 'projects', 'one')
     const graph: ModuleGraph = {
       entries: ['app.js'],
       nodes: new Map([
         ['app.js', mod('app.js', appPath)],
         ['node_modules/x.js', mod('node_modules/x.js', npmPath)],
+        [
+          'lib.js',
+          {
+            ...mod('lib.js', join(srcDir, 'lib.js')),
+            extraWatchFiles: [npmExtra],
+          },
+        ],
       ]),
       edges: [],
       packages: [],
@@ -78,8 +86,9 @@ describe('watchPaths', () => {
     expect(paths).toContain(appPath)
     expect(paths).toContain(srcDir)
     expect(paths).toContain(projectSrc)
-    expect(paths).not.toContain(npmPath)
-    expect(paths.some((p) => p.includes(`${sep}node_modules${sep}`))).toBe(false)
+    expect(paths).toContain(npmPath)
+    expect(paths).not.toContain(npmExtra)
+    expect(paths).not.toContain(dirname(npmPath))
   })
 
   it('includes extraWatchFiles outside node_modules', () => {
