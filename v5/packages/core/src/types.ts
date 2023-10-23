@@ -21,6 +21,7 @@ export const EdgeKinds = {
   templateInclude: 'template-include',
   scriptModule: 'script-module',
   styleImport: 'style-import',
+  styleUrl: 'style-url',
   pageSuite: 'page-suite',
   componentSuite: 'component-suite',
   jsonPath: 'json-path',

@@ -104,4 +104,25 @@ describe('extractEdges', () => {
     expect(edges.find((e) => e.raw === './x')?.kind).toBe(EdgeKinds.dynamicImport)
     expect(edges.find((e) => e.raw === './a')?.kind).toBe(EdgeKinds.import)
   })
+
+  it('extracts style url() relative paths and skips data/empty/absolute/hash/var', () => {
+    const edges = extractEdges({
+      id: '/a.wxss',
+      kind: 'style',
+      adapter: weappAdapter,
+      code: [
+        ".a{background:url('./x.png')}",
+        ".b{background:url(\"./y.png\")}",
+        '.c{background:url(data:image/png;base64,aaa)}',
+        '.d{background:url()}',
+        '.e{background:url(https://ex/z.png)}',
+        '.f{background:url(#icon)}',
+        '.g{background:url(var(--x))}',
+        '@import "./mix.wxss";',
+      ].join('\n'),
+    })
+    const raws = edges.map((e) => e.raw).sort()
+    expect(raws).toEqual(['./mix.wxss', './x.png', './y.png'].sort())
+    expect(edges.find((e) => e.raw === './x.png')?.kind).toBe(EdgeKinds.styleUrl)
+  })
 })

@@ -71,4 +71,22 @@ describe('createCompiler', () => {
     expect(await readFile(join(dist, 'pages/index/index.js'), 'utf8')).toContain('plugin://x/y')
     expect(diagnostics.some((d) => d.severity === 'error')).toBe(false)
   })
+
+  it('copies url() assets next to rewritten wxss', async () => {
+    const png = Buffer.from([137, 80, 78, 71, 9, 8, 7, 6])
+    const rootDir = await fixture({
+      'src/app.js': 'App({})\n',
+      'src/app.json': JSON.stringify({ pages: ['pages/p/p'] }),
+      'src/pages/p/p.js': 'Page({})\n',
+      'src/pages/p/p.wxss': ".a{background:url('./x.png')}",
+    })
+    await writeFile(join(rootDir, 'src/pages/p/x.png'), png)
+    const { diagnostics } = await createCompiler(configOf(rootDir)).run()
+    expect(diagnostics.filter((d) => d.severity === 'error')).toEqual([])
+    const dest = join(rootDir, 'dist/pages/p/x.png')
+    expect(existsSync(dest)).toBe(true)
+    expect(Buffer.from(await readFile(dest)).equals(png)).toBe(true)
+    const wxss = await readFile(join(rootDir, 'dist/pages/p/p.wxss'), 'utf8')
+    expect(wxss).toMatch(/url\(\s*['"]?\.\/x\.png['"]?\s*\)/)
+  })
 })

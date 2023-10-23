@@ -51,8 +51,8 @@ export function resolveId(req: ResolveRequest): ResolveResult {
     })
   }
 
-  // 模板/样式无 ./ 前缀时按相对 importer 补全（`<import src="tpl"/>`）
-  if (kind === 'template' || kind === 'style') {
+  // 模板/样式/资源无 ./ 前缀时按相对 importer 补全（`<import src="tpl"/>`、`url(x.png)`）
+  if (kind === 'template' || kind === 'style' || kind === 'asset') {
     const rel = completeSource(resolve(dirname(importer), specifier), exts, platform)
     if (rel) {
       return toResolveResult(rel)

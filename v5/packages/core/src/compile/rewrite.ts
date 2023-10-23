@@ -106,6 +106,10 @@ function rewriteStyle(
       new RegExp(`(@import\\s+(?:url\\s*\\(\\s*)?)(["'])${escaped}\\2`, 'g'),
       (_m, prefix: string, quote: string) => `${prefix}${quote}${dest}${quote}`,
     )
+    out = out.replace(
+      new RegExp(`(url\\(\\s*)(["']?)${escaped}\\2(\\s*\\))`, 'g'),
+      (_m, prefix: string, quote: string, suffix: string) => `${prefix}${quote}${dest}${quote}${suffix}`,
+    )
   }
   return out
 }
