@@ -197,6 +197,13 @@ export async function processModule(walk: GraphWalk, id: string): Promise<void> 
   if (node === undefined) {
     return
   }
+  if (node.kind === 'asset') {
+    if (!isVirtualNode(node) && node.sourcePath) {
+      const buf = await readFile(node.sourcePath)
+      node.hash = createHash('sha256').update(buf).digest('hex')
+    }
+    return
+  }
   let code: string
   if (isVirtualNode(node)) {
     code = typeof node.meta.code === 'string' ? node.meta.code : ''
@@ -249,10 +256,11 @@ export async function processModule(walk: GraphWalk, id: string): Promise<void> 
     return
   }
   for (const extracted of extractedList) {
+    const resolveKind = targetKindFromEdge(extracted.kind)
     const result = tryResolve(walk, {
       request: extracted.raw,
       importer,
-      kind: targetKindFromEdge(extracted.kind),
+      kind: resolveKind,
     })
     if (!result) {
       continue
@@ -265,6 +273,12 @@ export async function processModule(walk: GraphWalk, id: string): Promise<void> 
           extracted.kind === EdgeKinds.usingComponent ? 'component' : undefined,
           result.extraWatchFiles,
         )
+    if (!result.external && resolveKind === 'asset') {
+      const created = walk.nodes.get(to)
+      if (created) {
+        created.kind = 'asset'
+      }
+    }
     const edge: Edge = {
       from: id,
       to,
@@ -582,6 +596,8 @@ function targetKindFromEdge(kind: string): AbstractKind {
       return 'script-module'
     case EdgeKinds.styleImport:
       return 'style'
+    case EdgeKinds.styleUrl:
+      return 'asset'
     case EdgeKinds.jsonPath:
       return 'json'
     default:

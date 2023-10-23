@@ -43,6 +43,15 @@ export async function emitPlan(input: {
     if (!node) {
       continue
     }
+    if (node.kind === 'asset') {
+      if (!node.sourcePath) {
+        continue
+      }
+      const bytes = await readFile(node.sourcePath)
+      await mkdir(dirname(placement.destPath), { recursive: true })
+      await writeFile(placement.destPath, bytes)
+      continue
+    }
     const source = await sourceOf(node)
     if (source === undefined) {
       continue

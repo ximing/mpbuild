@@ -169,7 +169,31 @@ function extractStyle(code: string): ExtractedEdge[] {
       edges.push({ raw, kind: EdgeKinds.styleImport })
     }
   }
+  const urlRe = /url\(\s*(?:'([^']*)'|"([^"]*)"|([^'")\s]+))\s*\)/gi
+  while ((match = urlRe.exec(code)) !== null) {
+    const raw = (match[1] ?? match[2] ?? match[3] ?? '').trim()
+    if (shouldSkipStyleUrl(raw)) {
+      continue
+    }
+    if (edges.some((edge) => edge.raw === raw)) {
+      continue
+    }
+    edges.push({ raw, kind: EdgeKinds.styleUrl })
+  }
   return edges
+}
+
+function shouldSkipStyleUrl(raw: string): boolean {
+  if (!raw) {
+    return true
+  }
+  if (/^(data:|https?:|plugin:|wxfile:|#)/i.test(raw)) {
+    return true
+  }
+  if (raw.startsWith('//') || raw.startsWith('/') || /^var\(/i.test(raw)) {
+    return true
+  }
+  return false
 }
 
 function walk(node: unknown, visit: (node: Record<string, unknown> & { type: string }) => void): void {

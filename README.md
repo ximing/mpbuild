@@ -57,7 +57,7 @@ export default defineConfig({
 })
 ```
 
-`copy('src/**/*.png')` 能匹配 `src/tabbar.png`（`**` 含零层目录）；copy 产物在 watch tick 中保留，不会每拍删掉。
+`copy('src/**/*.png')` 能匹配 `src/tabbar.png`（`**` 含零层目录）；copy 产物在 watch tick 中保留，不会每拍删掉。wxss/css 里的 `url('./x.png')` 会入图并写出到 dist；忽略 `data:`、空、绝对 URL。WXML `<image src>` 仍不抽。
 
 该示例需要 `package.json` 的 `"type": "module"`，或把文件命名为 `mpbuild.config.mjs`。无插件的字段配置仍可用 CJS `module.exports`（不要 `require('@mpbuild/core')`）。
 
