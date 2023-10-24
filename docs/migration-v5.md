@@ -59,6 +59,8 @@ await createCompiler(config).run()
 | `target` | 默认 `'weapp'`。不要把平台名写进 `target` |
 | 多态平台 | `platform: 'wx'`（demo 仍写 `'wx'`） |
 
+`compile.minify` 为假时 script 默认写出独立 `.map` 和 `sourceMappingURL`。
+
 纯字段配置可以继续 CJS：
 
 ```js

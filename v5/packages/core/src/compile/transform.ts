@@ -12,13 +12,13 @@ export function transformModule(input: {
   js: { target: 'es5' | 'es2018' | 'es2020'; module: 'commonjs' | 'es6' }
   css?: { lightningcss: boolean }
   minify?: boolean
-}): { code: string; diagnostics?: Diagnostic[] } {
+}): { code: string; map?: string; diagnostics?: Diagnostic[] } {
   const minify = input.minify ?? false
   switch (input.kind) {
     case 'script':
     case 'script-module': {
       const { kind, sourcePath, code, js } = input
-      return { code: transformScript({ kind, sourcePath, code, js }, minify) }
+      return transformScript({ kind, sourcePath, code, js }, minify)
     }
     case 'style':
       if (input.css?.lightningcss === false) {
@@ -42,7 +42,7 @@ function transformScript(
     js: { target: 'es5' | 'es2018' | 'es2020'; module: 'commonjs' | 'es6' }
   },
   minify: boolean,
-): string {
+): { code: string; map?: string } {
   const ext = extname(input.sourcePath).toLowerCase()
   const isTs = ext === '.ts' || ext === '.tsx'
   const jsx = input.kind === 'script' && (ext === '.tsx' || ext === '.jsx')
@@ -58,8 +58,11 @@ function transformScript(
       type: input.js.module === 'es6' ? 'es6' : 'commonjs',
     },
     minify,
+    sourceMaps: input.kind === 'script' && !minify,
   })
-  return result.code
+  return input.kind === 'script' && !minify && result.map
+    ? { code: result.code, map: result.map }
+    : { code: result.code }
 }
 
 function transformStyle(

@@ -12,7 +12,7 @@ export function npmCompat(input: {
   sourcePath: string
   code: string
   js: { target: 'es5' | 'es2018' | 'es2020'; module: 'commonjs' | 'es6' }
-}): { code: string; diagnostics?: Diagnostic[] } {
+}): { code: string; map?: string; diagnostics?: Diagnostic[] } {
   if (input.kind !== 'script' || !isNodeModulesPath(input.sourcePath)) {
     return { code: input.code }
   }

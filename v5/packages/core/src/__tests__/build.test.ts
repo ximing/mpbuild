@@ -89,4 +89,21 @@ describe('createCompiler', () => {
     const wxss = await readFile(join(rootDir, 'dist/pages/p/p.wxss'), 'utf8')
     expect(wxss).toMatch(/url\(\s*['"]?\.\/x\.png['"]?\s*\)/)
   })
+
+  it('writes an independent .map next to unminified js', async () => {
+    const rootDir = await fixture({
+      'src/app.js': 'App({})\n',
+      'src/app.json': JSON.stringify({ pages: ['pages/p/p'] }),
+      'src/pages/p/p.js': 'Page({ hello: 1 })\n',
+    })
+    await createCompiler(configOf(rootDir)).run()
+    const js = join(rootDir, 'dist/pages/p/p.js')
+    const map = `${js}.map`
+    expect(existsSync(map)).toBe(true)
+    expect(await readFile(js, 'utf8')).toContain('sourceMappingURL=p.js.map')
+    const minifyCfg = configOf(rootDir)
+    minifyCfg.compile = { ...minifyCfg.compile, minify: true }
+    await createCompiler(minifyCfg).run()
+    expect(await readFile(js, 'utf8')).not.toContain('sourceMappingURL')
+  })
 })

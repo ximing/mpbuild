@@ -65,7 +65,7 @@ describe('emitPlan delta', () => {
       preserveNames: ['project.config.json'],
     })
 
-    expect(first.dests).toEqual([destA, destB])
+    expect(first.dests).toEqual([destA, destB, `${destA}.map`, `${destB}.map`])
     expect(existsSync(join(outputDir, 'junk.js'))).toBe(false)
     expect(await readFile(join(outputDir, 'project.config.json'), 'utf8')).toBe(
       '{"appid":"keep"}\n',
@@ -86,8 +86,9 @@ describe('emitPlan delta', () => {
       preserveNames: ['project.config.json'],
     })
 
-    expect(second.dests).toEqual([destA])
+    expect(second.dests).toEqual([destA, `${destA}.map`])
     expect(existsSync(destB)).toBe(false)
+    expect(existsSync(`${destB}.map`)).toBe(false)
     const after = await stat(destA)
     expect(after.mtimeMs).toBe(kept.mtimeMs)
   })

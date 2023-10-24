@@ -77,6 +77,7 @@ export async function emitPlan(input: {
           })
         : undefined
     let code: string | undefined
+    let map: string | undefined
     if (input.cacheDir && key) {
       code = await readTransformCache(input.cacheDir, key)
     }
@@ -93,6 +94,7 @@ export async function emitPlan(input: {
               minify: minifyFlag,
             })
         code = transformed.code
+        map = transformed.map
         if (transformed.diagnostics) {
           diagnostics.push(...transformed.diagnostics)
         }
@@ -117,11 +119,20 @@ export async function emitPlan(input: {
       placement,
       plan: input.plan,
     })
-    await mkdir(dirname(placement.destPath), { recursive: true })
-    if (await sameUtf8(placement.destPath, rewritten)) {
-      continue
+    let out = rewritten
+    const writeMap = node.kind === 'script' && !minifyFlag && typeof map === 'string'
+    const mapPath = `${placement.destPath}.map`
+    if (writeMap) {
+      out = `${rewritten}\n//# sourceMappingURL=${basename(mapPath)}\n`
     }
-    await writeFile(placement.destPath, rewritten)
+    await mkdir(dirname(placement.destPath), { recursive: true })
+    if (!(await sameUtf8(placement.destPath, out))) {
+      await writeFile(placement.destPath, out)
+    }
+    if (writeMap && typeof map === 'string') {
+      await writeFile(mapPath, map)
+      dests.push(mapPath)
+    }
   }
 
   const keep = new Set(dests)
