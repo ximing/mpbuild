@@ -130,4 +130,28 @@ describe('transformModule', () => {
       }),
     ).toThrow()
   })
+
+  it('returns a source map for script when not minifying', () => {
+    const { code, map } = transformModule({
+      kind: 'script',
+      sourcePath: '/x.js',
+      code: 'export const n = 1\n',
+      js: { target: 'es2018', module: 'commonjs' },
+      minify: false,
+    })
+    expect(code).toContain('exports')
+    expect(typeof map).toBe('string')
+    expect(map).toContain('"version"')
+  })
+
+  it('does not return a source map when minify is true', () => {
+    const { map } = transformModule({
+      kind: 'script',
+      sourcePath: '/x.js',
+      code: 'export const n = 1\n',
+      js: { target: 'es2018', module: 'commonjs' },
+      minify: true,
+    })
+    expect(map).toBeUndefined()
+  })
 })
