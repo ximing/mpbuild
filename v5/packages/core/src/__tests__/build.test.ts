@@ -3,7 +3,7 @@ import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promis
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
-import { createCompiler, weappAdapter } from '../index'
+import { createCompiler, transformCacheDir, weappAdapter } from '../index'
 import type { ResolvedConfig } from '../index'
 
 const dirs: string[] = []
@@ -105,5 +105,32 @@ describe('createCompiler', () => {
     minifyCfg.compile = { ...minifyCfg.compile, minify: true }
     await createCompiler(minifyCfg).run()
     expect(await readFile(js, 'utf8')).not.toContain('sourceMappingURL')
+  })
+
+  it('keeps independent .map on transform cache hit', async () => {
+    const rootDir = await fixture({
+      'src/app.js': 'App({})\n',
+      'src/app.json': JSON.stringify({ pages: ['pages/p/p'] }),
+      'src/pages/p/p.js': 'Page({ hello: 1 })\n',
+    })
+    await createCompiler(configOf(rootDir)).run()
+    const js = join(rootDir, 'dist/pages/p/p.js')
+    const map = `${js}.map`
+    expect(existsSync(map)).toBe(true)
+    expect(await readFile(js, 'utf8')).toContain('sourceMappingURL=p.js.map')
+    const cacheDir = transformCacheDir(rootDir)
+    for (const name of await readdir(cacheDir)) {
+      if (name.startsWith('.')) {
+        continue
+      }
+      const file = join(cacheDir, name)
+      await writeFile(file, `/*CACHE_HIT*/\n${await readFile(file, 'utf8')}`)
+    }
+    const second = await createCompiler(configOf(rootDir)).run()
+    const out = await readFile(js, 'utf8')
+    expect(out).toContain('CACHE_HIT')
+    expect(out).toContain('sourceMappingURL=p.js.map')
+    expect(existsSync(map)).toBe(true)
+    expect(second.dests).toContain(map)
   })
 })

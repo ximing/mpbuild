@@ -76,6 +76,17 @@ export async function emitPlan(input: {
             npmCompat: useNpmCompat,
           })
         : undefined
+    const transform = () =>
+      useNpmCompat
+        ? npmCompat({ kind: node.kind, sourcePath: node.sourcePath, code: source, js: input.js })
+        : transformModule({
+            kind: node.kind,
+            sourcePath: node.sourcePath,
+            code: source,
+            js: input.js,
+            css: input.css,
+            minify: minifyFlag,
+          })
     let code: string | undefined
     let map: string | undefined
     if (input.cacheDir && key) {
@@ -83,16 +94,7 @@ export async function emitPlan(input: {
     }
     if (code === undefined) {
       try {
-        const transformed = useNpmCompat
-          ? npmCompat({ kind: node.kind, sourcePath: node.sourcePath, code: source, js: input.js })
-          : transformModule({
-              kind: node.kind,
-              sourcePath: node.sourcePath,
-              code: source,
-              js: input.js,
-              css: input.css,
-              minify: minifyFlag,
-            })
+        const transformed = transform()
         code = transformed.code
         map = transformed.map
         if (transformed.diagnostics) {
@@ -110,6 +112,19 @@ export async function emitPlan(input: {
           file: node.sourcePath,
         })
         continue
+      }
+    } else if (node.kind === 'script' && !minifyFlag) {
+      // 缓存只存 JS；命中后仍取 map，再写 sidecar 与 sourceMappingURL。
+      try {
+        map = transform().map
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err)
+        diagnostics.push({
+          code: 'TRANSFORM_FAIL',
+          severity: 'error',
+          message: `TRANSFORM_FAIL: ${message}`,
+          file: node.sourcePath,
+        })
       }
     }
     const rewritten = rewriteCode({
