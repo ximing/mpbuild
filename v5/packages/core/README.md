@@ -11,4 +11,6 @@ const config = await loadConfig(process.cwd())
 await createCompiler(config).run()
 ```
 
+`resolve.extensions` 按 kind 覆盖该 kind 的 `adapter.sourceExts`。
+
 从 4.x 迁移见仓库根目录 `docs/migration-v5.md`。

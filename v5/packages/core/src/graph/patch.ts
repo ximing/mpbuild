@@ -32,6 +32,7 @@ export async function applyGraphChange(opts: {
   ifdef?: ResolvedConfig['ifdef']
   skipAppJsonPages?: boolean
   plugins?: Plugin[]
+  extensions?: TargetAdapter['sourceExts']
   changedIds: string[] // src-relative，文件仍在
   deletedIds: string[] // src-relative，文件已删
   addedRelPaths: string[] // src-relative，新出现的文件（可能尚未入图）
@@ -59,6 +60,7 @@ export async function applyGraphChange(opts: {
     queue: [],
     skipAppJsonPages,
     plugins: opts.plugins,
+    extensions: opts.extensions,
   }
 
   removeDeleted(walk, deletedIds)

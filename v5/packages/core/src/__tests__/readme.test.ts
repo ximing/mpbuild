@@ -41,6 +41,18 @@ describe('root README', () => {
     expect(readme).toContain('Snyk')
     expect(readme).toContain('load')
     expect(readme).toContain('generate')
+    expect(readme).toContain('打印后保持进程')
+    expect(readme).toContain('unlink')
+    expect(readme).toContain('src/**/*.png')
+    expect(readme).toContain('零层')
+    expect(readme).toContain('已入图')
+    expect(readme).toContain('node_modules')
+    expect(readme).toContain("url('./x.png')")
+    expect(readme).toContain('sourceMappingURL')
+    expect(readme).toContain('componentRelative')
+    expect(readme).toContain('ABS_PATH_IN_SUBPROJECT')
+    expect(readme).toContain('resolve.extensions')
+    expect(readme).toContain('22.18')
   })
 
   it('ships npm README files for core and cli', () => {

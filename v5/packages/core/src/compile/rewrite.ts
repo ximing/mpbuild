@@ -8,6 +8,8 @@ export function rewriteCode(input: {
   code: string
   placement: Placement
   plan: OutputPlan
+  componentRelative?: boolean
+  outputDir?: string
 }): string {
   const items = input.plan.rewrites.filter(
     (item) => item.from === input.moduleId && item.placementPackage === input.placement.package,
@@ -20,7 +22,14 @@ export function rewriteCode(input: {
     case 'script-module':
       return rewriteQuoted(input.code, items, input.placement, input.plan)
     case 'json':
-      return rewriteJson(input.code, items, input.placement, input.plan)
+      return rewriteJson(
+        input.code,
+        items,
+        input.placement,
+        input.plan,
+        input.componentRelative,
+        input.outputDir,
+      )
     case 'template':
       return rewriteTemplate(input.code, items, input.placement, input.plan)
     case 'style':
@@ -48,6 +57,8 @@ function rewriteJson(
   items: Rewrite[],
   placement: Placement,
   plan: OutputPlan,
+  componentRelative?: boolean,
+  outputDir?: string,
 ): string {
   const withPath = items.filter((item) => item.rewritePath)
   const withoutPath = items.filter((item) => !item.rewritePath)
@@ -64,7 +75,7 @@ function rewriteJson(
       if (pointer === undefined) {
         continue
       }
-      setJsonPointer(data, pointer, destSpecifierOf(item, placement, plan))
+      setJsonPointer(data, pointer, destSpecifierOf(item, placement, plan, componentRelative, outputDir))
     }
     out = code.includes('\n') ? JSON.stringify(data, null, 2) : JSON.stringify(data)
   }
@@ -115,7 +126,13 @@ function rewriteStyle(
 }
 
 /** plan.destSpecifier 是 to 的占位（edge.to）；external 保持 raw。 */
-function destSpecifierOf(item: Rewrite, placement: Placement, plan: OutputPlan): string {
+function destSpecifierOf(
+  item: Rewrite,
+  placement: Placement,
+  plan: OutputPlan,
+  componentRelative?: boolean,
+  outputDir?: string,
+): string {
   if (isExternalSpecifier(item.raw) || isExternalSpecifier(item.destSpecifier)) {
     return item.raw
   }
@@ -123,7 +140,16 @@ function destSpecifierOf(item: Rewrite, placement: Placement, plan: OutputPlan):
   if (toDest === undefined) {
     return item.raw
   }
-  return ensureDotRelative(posixRelative(posix.dirname(placement.destPath), toDest))
+  const rel = posixRelative(posix.dirname(asPosix(placement.destPath)), asPosix(toDest))
+  if (componentRelative !== false) {
+    return ensureDotRelative(rel)
+  }
+  const fromRoot = posixRelative(asPosix(outputDir ?? ''), asPosix(toDest))
+  return `/${fromRoot.replace(/^\//, '')}`
+}
+
+function asPosix(value: string): string {
+  return value.replace(/\\/g, '/')
 }
 
 function destPathFor(moduleId: string, pkg: string, plan: OutputPlan): string | undefined {

@@ -100,4 +100,22 @@ describe('subprojects', () => {
       ]),
     )
   })
+
+  it('diagnoses ABS_PATH_IN_SUBPROJECT when a subproject file imports /', async () => {
+    const { rootDir, srcDir } = await fixture({
+      'src/app.js': `require('@one/pages/x')\n`,
+      'src/abs.js': `module.exports = 1\n`,
+      'projects/one/pages/x.js': `require('/abs')\n`,
+    })
+    const projectSrc = join(rootDir, 'projects', 'one')
+    const { diagnostics } = await buildGraph({
+      rootDir,
+      srcDir,
+      adapter: weappAdapter,
+      entryScripts: [join('src', 'app.js')],
+      alias: { '@one': projectSrc },
+      projects: [{ name: '@one', src: projectSrc, alias: {} }],
+    })
+    expect(diagnostics.some((d) => d.code === 'ABS_PATH_IN_SUBPROJECT')).toBe(true)
+  })
 })

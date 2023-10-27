@@ -36,6 +36,7 @@ export interface GraphWalk {
   /** 有 router 时不从磁盘 app.json 扫 pages */
   skipAppJsonPages?: boolean
   plugins?: Plugin[]
+  extensions?: TargetAdapter['sourceExts']
 }
 
 /** 图 id：posix、相对 srcDir。 */
@@ -375,6 +376,7 @@ function enqueuePagesFromAppJson(walk: GraphWalk, code: string): PackageInfo[] |
         alias,
         projects,
         platform: walk.platform,
+        extensions: walk.extensions,
       })
       if (!result || result.external) {
         continue
@@ -482,12 +484,17 @@ export function tryResolve(
       alias: walk.alias,
       projects: walk.projects,
       platform: walk.platform,
+      extensions: walk.extensions,
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
+    const code =
+      err && typeof err === 'object' && 'code' in err && (err as { code: unknown }).code === 'ABS_PATH_IN_SUBPROJECT'
+        ? 'ABS_PATH_IN_SUBPROJECT'
+        : 'RESOLVE_MISS'
     walk.diagnostics.push(
       diagnostic({
-        code: 'RESOLVE_MISS',
+        code,
         severity: 'error',
         message,
         file: req.importer,
