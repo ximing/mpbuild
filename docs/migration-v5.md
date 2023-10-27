@@ -44,7 +44,7 @@ await createCompiler(config).run()
 
 **不读取** `mpb.config.js`。工作区里只有旧文件时诊断 `LEGACY_CONFIG`，退出码 2。
 
-生产环境的 `@mpbuild/cli`（`mpb` bin）是编译后的 JS，**请把发布配置写成 `mpbuild.config.js` 或 `mpbuild.config.mjs`**。`.ts` / `.mts` 需要额外的 TypeScript loader，本版本的生产 bin 不再默认 `tsx register`。生产 bin 不能加载 `.ts` / `.mts` 时会 **跳过并诊断 `CONFIG_TS_SKIPPED`**，继续尝试 `.js` / `.mjs`；若只有无法加载的 `.ts` 则失败。不要同时留下会误导的 leftover `.ts` / `.mts`，仍建议删掉。
+生产环境的 `@mpbuild/cli`（`mpb` bin）是编译后的 JS，**请把发布配置写成 `mpbuild.config.js` 或 `mpbuild.config.mjs`**。`.ts` / `.mts` 需要额外的 TypeScript loader，本版本的生产 bin 不再默认 `tsx register`。生产 bin 不能加载 `.ts` / `.mts` 时会 **跳过并诊断 `CONFIG_TS_SKIPPED`**，继续尝试 `.js` / `.mjs`；若只有无法加载的 `.ts` 则失败。不要同时留下会误导的 leftover `.ts` / `.mts`，仍建议删掉。Node 22.18+ 会对 leftover `mpbuild.config.ts` 做 type-strip **并执行它**（顺序仍是 ts → mts → js → mjs，不改成 js-first）。生产请删 leftover `.ts`，或保证它就是你要的配置。`resolve.extensions` 按 kind 整表覆盖该 kind 的 `adapter.sourceExts`。
 
 字段对照：
 

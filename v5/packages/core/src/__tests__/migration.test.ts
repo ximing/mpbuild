@@ -39,6 +39,13 @@ describe('migration-v5.md', () => {
       'graph: true',
       'Snyk',
       'v2.0.0',
+      '打印后保持进程',
+      'src/**/*.png',
+      'url(',
+      'sourceMappingURL',
+      'ABS_PATH_IN_SUBPROJECT',
+      'resolve.extensions',
+      '22.18',
     ]
     for (const token of required) {
       expect(md, `missing ${token}`).toContain(token)

@@ -115,6 +115,7 @@ export function createCompiler(
       packages: fromRouter?.packages,
       skipAppJsonPages,
       plugins: config.plugins,
+      extensions: config.resolve.extensions,
       virtualModules:
         fromRouter === undefined
           ? undefined
@@ -169,6 +170,7 @@ export function createCompiler(
       cacheDir,
       platform: config.platform,
       ifdefTokens: config.ifdef?.tokens ?? {},
+      componentRelative: config.output.componentRelative,
     })
     const extras = await applyGeneratePlugins(config.plugins ?? [], {
       outputDir: built.outputDir,

@@ -13,6 +13,7 @@ export interface ResolveRequest {
   projects?: SubProject[]
   virtualIds?: Set<string>
   platform?: string
+  extensions?: TargetAdapter['sourceExts']
 }
 
 export interface ResolveResult {
@@ -23,7 +24,7 @@ export interface ResolveResult {
 }
 
 export function resolveId(req: ResolveRequest): ResolveResult {
-  const { request, importer, kind, adapter, srcDir, alias, projects, virtualIds, platform } = req
+  const { request, importer, kind, adapter, srcDir, alias, projects, virtualIds, platform, extensions } = req
 
   // 规格 §8.2：external 不落盘、不报 RESOLVE_MISS
   if (adapter.externalSpecifiers.test(request)) {
@@ -39,8 +40,8 @@ export function resolveId(req: ResolveRequest): ResolveResult {
   const specifier = rewritten ?? request
   const fromAlias = rewritten != null
 
-  const candidate = toCandidate(specifier, importer, srcDir, fromAlias)
-  const exts = adapter.sourceExts[kind] ?? []
+  const candidate = toCandidate(specifier, importer, srcDir, fromAlias, projects)
+  const exts = extensions?.[kind] ?? adapter.sourceExts[kind] ?? []
   if (candidate) {
     const completed = completeSource(candidate, exts, platform)
     if (completed) {
@@ -160,12 +161,19 @@ function toCandidate(
   importer: string,
   srcDir: string,
   fromAlias: boolean,
+  projects?: SubProject[],
 ): string | undefined {
   if (specifier.startsWith('.')) {
     return resolve(dirname(importer), specifier)
   }
   // 原请求以 `/` 开头相对 srcDir；alias 展开后的绝对路径按磁盘路径处理
   if (!fromAlias && specifier.startsWith('/')) {
+    if (projectForPath(importer, projects)) {
+      throw Object.assign(
+        new Error(`ABS_PATH_IN_SUBPROJECT: ${importer} must not use src-root path ${specifier}`),
+        { code: 'ABS_PATH_IN_SUBPROJECT' },
+      )
+    }
     return resolve(srcDir, specifier.slice(1))
   }
   if (isAbsolute(specifier)) {

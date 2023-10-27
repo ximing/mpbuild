@@ -133,4 +133,21 @@ describe('createCompiler', () => {
     expect(existsSync(map)).toBe(true)
     expect(second.dests).toContain(map)
   })
+
+  it('resolves extra script extensions from config.resolve.extensions', async () => {
+    const rootDir = await fixture({
+      'src/app.js': 'App({})\n',
+      'src/app.json': JSON.stringify({ pages: ['pages/p/p'] }),
+      'src/pages/p/p.js': "require('./lib')\n",
+      'src/pages/p/lib.mjs': 'export const n = 1\n',
+    })
+    const cfg = configOf(rootDir)
+    cfg.resolve = {
+      alias: {},
+      extensions: { ...weappAdapter.sourceExts, script: ['.mjs', '.js'] },
+    }
+    const { diagnostics } = await createCompiler(cfg).run()
+    expect(diagnostics.filter((d) => d.code === 'RESOLVE_MISS')).toEqual([])
+    expect(existsSync(join(rootDir, 'dist/pages/p/lib.js'))).toBe(true)
+  })
 })

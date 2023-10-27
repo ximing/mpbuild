@@ -170,4 +170,36 @@ describe('resolveId', () => {
       id: join(projectSrc, 'utils', 'b.js'),
     })
   })
+
+  it('throws ABS_PATH_IN_SUBPROJECT for / from a subproject importer', async () => {
+    const { root, srcDir, base } = await fixture()
+    const projectSrc = join(root, 'projects', 'one')
+    await mkdir(join(projectSrc, 'pages'), { recursive: true })
+    await writeFile(join(srcDir, 'b.js'), 'export default 2\n')
+    const importer = join(projectSrc, 'pages', 'x.js')
+    await writeFile(importer, '')
+    expect(() =>
+      resolveId({
+        ...base,
+        importer,
+        request: '/b',
+        projects: [{ name: '@one', src: projectSrc, alias: {} }],
+      }),
+    ).toThrow(/ABS_PATH_IN_SUBPROJECT/)
+  })
+
+  it('uses resolve.extensions instead of adapter.sourceExts when provided', async () => {
+    const { srcDir, base } = await fixture()
+    await writeFile(join(srcDir, 'b.mjs'), 'export default 2\n')
+    expect(
+      resolveId({
+        ...base,
+        request: './b',
+        extensions: {
+          ...weappAdapter.sourceExts,
+          script: ['.mjs'],
+        },
+      }),
+    ).toEqual({ id: join(srcDir, 'b.mjs') })
+  })
 })

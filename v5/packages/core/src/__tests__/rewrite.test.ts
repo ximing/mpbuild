@@ -114,7 +114,41 @@ describe('rewriteCode', () => {
       placement: jsonPlacement,
       plan,
     })
-    expect(JSON.parse(code).usingComponents.x).toBe('../../components/comp.js')
+    const value = JSON.parse(code).usingComponents.x as string
+    expect(value.startsWith('./') || value.startsWith('../')).toBe(true)
+    expect(value).toBe('../../components/comp.js')
+  })
+
+  it('rewrites json paths from outputDir with a leading slash when componentRelative is false', () => {
+    const jsonPlacement: Placement = {
+      moduleId: 'pages/index/index.json',
+      destPath: 'dist/pages/index/index.json',
+      package: 'main',
+    }
+    const comp: Placement = {
+      moduleId: 'components/comp.js',
+      destPath: 'dist/components/comp.js',
+      package: 'main',
+    }
+    const plan = planOf([jsonPlacement, comp], [
+      {
+        from: 'pages/index/index.json',
+        raw: '/components/comp',
+        destSpecifier: 'components/comp.js',
+        placementPackage: 'main',
+        rewritePath: '/usingComponents/x',
+      },
+    ])
+    const code = rewriteCode({
+      moduleId: 'pages/index/index.json',
+      kind: 'json',
+      code: `{"usingComponents":{"x":"/components/comp"}}`,
+      placement: jsonPlacement,
+      plan,
+      componentRelative: false,
+      outputDir: 'dist',
+    })
+    expect(JSON.parse(code).usingComponents.x).toBe('/components/comp.js')
   })
 
   it('replaces template quoted attribute values without serializing the tree', () => {

@@ -37,7 +37,7 @@ mpb inspect graph
 
 ## 配置
 
-项目根使用 `mpbuild.config.ts` / `mpbuild.config.mts` / `mpbuild.config.js` / `mpbuild.config.mjs`（`export default` 或 `module.exports`）。加载顺序：`mpbuild.config.ts` → `mpbuild.config.mts` → `mpbuild.config.js` → `mpbuild.config.mjs`（**.js 在 .mjs 前**，已有 `.js` 项目行为不变）。生产 bin 不能加载 `.ts` / `.mts` 时会 **跳过并诊断 `CONFIG_TS_SKIPPED`**，继续尝试 `.js` / `.mjs`；若只有无法加载的 `.ts` 则失败。不要同时留下会误导的 leftover `.ts` / `.mts`，生产请用 `.js` 或 `.mjs`，仍建议删掉无法加载的 TypeScript 配置。
+项目根使用 `mpbuild.config.ts` / `mpbuild.config.mts` / `mpbuild.config.js` / `mpbuild.config.mjs`（`export default` 或 `module.exports`）。加载顺序：`mpbuild.config.ts` → `mpbuild.config.mts` → `mpbuild.config.js` → `mpbuild.config.mjs`（**.js 在 .mjs 前**，已有 `.js` 项目行为不变）。生产 bin 不能加载 `.ts` / `.mts` 时会 **跳过并诊断 `CONFIG_TS_SKIPPED`**，继续尝试 `.js` / `.mjs`；若只有无法加载的 `.ts` 则失败。不要同时留下会误导的 leftover `.ts` / `.mts`，生产请用 `.js` 或 `.mjs`，仍建议删掉无法加载的 TypeScript 配置。Node 22.18+ 会对 leftover `mpbuild.config.ts` 做 type-strip **并执行它**（顺序仍是 ts → mts → js → mjs，不改成 js-first）。生产请删 leftover `.ts`，或保证它就是你要的配置。
 
 **不读取** `mpb.config.js`。
 
@@ -57,7 +57,7 @@ export default defineConfig({
 })
 ```
 
-`copy('src/**/*.png')` 能匹配 `src/tabbar.png`（`**` 含零层目录）；copy 产物在 watch tick 中保留，不会每拍删掉。wxss/css 里的 `url('./x.png')` 会入图并写出到 dist；忽略 `data:`、空、绝对 URL。WXML `<image src>` 仍不抽。
+`copy('src/**/*.png')` 能匹配 `src/tabbar.png`（`**` 含零层目录）；copy 产物在 watch tick 中保留，不会每拍删掉。wxss/css 里的 `url('./x.png')` 会入图并写出到 dist；忽略 `data:`、空、绝对 URL。WXML `<image src>` 仍不抽。`output.componentRelative` 默认 `true` 时 json 路径以 `./` 或 `../` 开头；`false` 写成相对 `output.dir` 的 `/...`。子仓库 importer 不要用 `/` 开头的源码路径（`ABS_PATH_IN_SUBPROJECT`）。`resolve.extensions` 按 kind 整表覆盖 `adapter.sourceExts`。
 
 该示例需要 `package.json` 的 `"type": "module"`，或把文件命名为 `mpbuild.config.mjs`。无插件的字段配置仍可用 CJS `module.exports`（不要 `require('@mpbuild/core')`）。
 

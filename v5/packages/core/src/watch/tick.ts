@@ -47,6 +47,7 @@ export async function applyWatchTick(input: {
     addedRelPaths: input.addedRelPaths,
     skipAppJsonPages: input.skipAppJsonPages === true,
     plugins: config.plugins,
+    extensions: config.resolve.extensions,
   })
 
   const diagnostics: Diagnostic[] = [...patched.diagnostics]
@@ -89,6 +90,7 @@ export async function applyWatchTick(input: {
     cacheDir: input.cacheDir,
     platform: config.platform,
     ifdefTokens: config.ifdef?.tokens ?? {},
+    componentRelative: config.output.componentRelative,
   })
   diagnostics.push(...emitted.diagnostics)
 

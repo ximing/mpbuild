@@ -38,6 +38,7 @@ export interface BuildGraphOptions {
   /** router 页面：source 为入口值，logical 为无扩展名逻辑路径 */
   pageEntries?: Array<{ source: string; logical: string }>
   plugins?: Plugin[]
+  extensions?: TargetAdapter['sourceExts']
 }
 
 /** 从 entry 入队，按最终 id BFS；环边照常写入，不递归 process。 */
@@ -59,6 +60,7 @@ export async function buildGraph(opts: BuildGraphOptions): Promise<{
     virtualModules,
     pageEntries,
     plugins,
+    extensions,
   } = opts
   const walk: GraphWalk = {
     srcDir,
@@ -76,6 +78,7 @@ export async function buildGraph(opts: BuildGraphOptions): Promise<{
     queue: [],
     skipAppJsonPages: skipAppJsonPages === true,
     plugins,
+    extensions,
   }
 
   for (const entry of entryScripts) {
@@ -138,6 +141,7 @@ function enqueueEntryScript(walk: GraphWalk, entry: string, rootDir: string): vo
       alias: walk.alias,
       projects: walk.projects,
       platform: walk.platform,
+      extensions: walk.extensions,
     })
     if (!result || result.external || result.virtual) {
       return
@@ -173,6 +177,7 @@ function enqueuePageEntry(
       alias: walk.alias,
       projects: walk.projects,
       platform: walk.platform,
+      extensions: walk.extensions,
     })
     if (!result || result.external || result.virtual) {
       return

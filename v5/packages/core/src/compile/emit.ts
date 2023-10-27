@@ -29,6 +29,7 @@ export async function emitPlan(input: {
   cacheDir?: string
   platform?: string
   ifdefTokens?: Record<string, boolean | string>
+  componentRelative?: boolean
 }): Promise<{ diagnostics: Diagnostic[]; dests: string[] }> {
   const diagnostics: Diagnostic[] = []
   const dests = input.plan.placements.map((placement) => placement.destPath)
@@ -133,6 +134,8 @@ export async function emitPlan(input: {
       code,
       placement,
       plan: input.plan,
+      componentRelative: input.componentRelative,
+      outputDir: input.outputDir,
     })
     let out = rewritten
     const writeMap = node.kind === 'script' && !minifyFlag && typeof map === 'string'
