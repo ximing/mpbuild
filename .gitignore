@@ -22,3 +22,4 @@ git_ignore
 dist
 !example/demo/dist
 .worktrees/
+.grok/
