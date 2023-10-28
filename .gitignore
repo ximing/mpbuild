@@ -23,3 +23,4 @@ dist
 !example/demo/dist
 .worktrees/
 .superpowers/
+.grok/
