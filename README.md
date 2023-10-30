@@ -1,6 +1,6 @@
 # mpbuild
 
-微信小程序图驱动构建器。5.x 实现位于 `v5/`，npm 包是 [`@mpbuild/core`](https://www.npmjs.com/package/@mpbuild/core) 与 [`@mpbuild/cli`](https://www.npmjs.com/package/@mpbuild/cli)（都是 `2.0.0`）。
+微信小程序图驱动构建器。5.x 实现位于 `v5/`，npm 包是 [`@mpbuild/core`](https://www.npmjs.com/package/@mpbuild/core) 与 [`@mpbuild/cli`](https://www.npmjs.com/package/@mpbuild/cli)（都是 `5.0.0`）。
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
 [![All Contributors](https://img.shields.io/badge/all_contributors-4-orange.svg?style=flat-square)](#contributors-)
@@ -8,7 +8,7 @@
 
 [![NPM Version](https://img.shields.io/npm/v/@mpbuild/cli.svg?style=flat)](https://www.npmjs.com/package/@mpbuild/cli)
 
-命令行是 `mpb`。**不会**再发布名为 `mpbuild` 的 5.0；历史上的 `mpbuild@4` 已冻结，源码已移出本仓库。
+命令行是 `mpb`。**不会**再发布无作用域的 `mpbuild` 包；历史上的 `mpbuild@4` 已冻结，源码已移出本仓库。
 
 ## 要求
 
@@ -61,7 +61,7 @@ export default defineConfig({
 
 该示例需要 `package.json` 的 `"type": "module"`，或把文件命名为 `mpbuild.config.mjs`。无插件的字段配置仍可用 CJS `module.exports`（不要 `require('@mpbuild/core')`）。
 
-## 插件（2.0.0 承诺）
+## 插件（5.0.0 承诺）
 
 公开 `Plugin` 只有 `name` + `load?` + `generate?`。官方插件：`legacyScss()`、`projectConfig()`、`copy()`。`copy(patterns)` 默认 extras；`copy({ graph: true })` 未实现。完整 PluginContext 是以后的版本。
 
@@ -77,7 +77,7 @@ export default defineConfig({
 
 ## 发布
 
-不要在本地执行 `npm publish` 或 `changeset publish` 来发 `@mpbuild/*`。tag 必须是 `v2.0.0`。给仓库打并 push `v2.0.0` 后，[`.github/workflows/publish-mpbuild.yml`](.github/workflows/publish-mpbuild.yml) 会在 GitHub Actions 里对 `@mpbuild/core` 与 `@mpbuild/cli` 执行 `pnpm publish`。
+不要在本地执行 `npm publish` 或 `changeset publish` 来发 `@mpbuild/*`。tag 必须是 `v5.0.0`。给仓库打并 push `v5.0.0` 后，[`.github/workflows/publish-mpbuild.yml`](.github/workflows/publish-mpbuild.yml) 会在 GitHub Actions 里对 `@mpbuild/core` 与 `@mpbuild/cli` 执行 `pnpm publish`。
 
 在 GitHub Settings → Secrets and variables → Actions 添加名为 `NPM_TOKEN` 的 repository secret（npm 登录 token）。不要把 token 写进仓库。
 

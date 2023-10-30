@@ -1,6 +1,6 @@
 # @mpbuild/cli
 
-`mpb` 命令行。依赖 `@mpbuild/core@2.0.0`。
+`mpb` 命令行。依赖 `@mpbuild/core@5.0.0`。
 
 需要 Node.js `>=20`。
 

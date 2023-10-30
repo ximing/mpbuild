@@ -16,14 +16,14 @@ describe('package', () => {
 })
 
 describe('package identity', () => {
-  it('locks @mpbuild/core and @mpbuild/cli at 2.0.0 with mpb bin', () => {
+  it('locks @mpbuild/core and @mpbuild/cli at 5.0.0 with mpb bin', () => {
     const corePkg = readJson(join(coreDir, 'package.json'))
     const cliPkg = readJson(join(cliDir, 'package.json'))
     expect(corePkg.name).toBe('@mpbuild/core')
     expect(cliPkg.name).toBe('@mpbuild/cli')
-    expect(corePkg.version).toBe('2.0.0')
-    expect(cliPkg.version).toBe('2.0.0')
-    expect(version).toBe('2.0.0')
+    expect(corePkg.version).toBe('5.0.0')
+    expect(cliPkg.version).toBe('5.0.0')
+    expect(version).toBe('5.0.0')
     expect(corePkg.engines).toEqual({ node: '>=20.0.0' })
     expect(cliPkg.engines).toEqual({ node: '>=20.0.0' })
     expect((cliPkg.bin as Record<string, string>).mpb).toBe('./bin/mpb.js')
