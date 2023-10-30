@@ -36,7 +36,7 @@ describe('root README', () => {
     expect(readme).toContain('legacyScss')
     expect(readme).toContain('projectConfig')
     expect(readme).toContain('CONFIG_TS_SKIPPED')
-    expect(readme).toContain('v2.0.0')
+    expect(readme).toContain('v5.0.0')
     expect(readme).toContain('force-with-lease')
     expect(readme).toContain('Snyk')
     expect(readme).toContain('load')

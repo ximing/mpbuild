@@ -38,7 +38,7 @@ describe('migration-v5.md', () => {
       'CONFIG_TS_SKIPPED',
       'graph: true',
       'Snyk',
-      'v2.0.0',
+      'v5.0.0',
       '打印后保持进程',
       'src/**/*.png',
       'url(',
