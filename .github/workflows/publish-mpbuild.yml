@@ -27,6 +27,10 @@ jobs:
           registry-url: https://registry.npmjs.org
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+      - name: Install example/demo npm deps used by the gold test
+        # The demo's package-lock pins dead taobao/nlark mirrors, so install
+        # just the resolvable deps straight from npmjs without the lockfile.
+        run: npm install --prefix ../example/demo --no-save --package-lock=false --ignore-scripts --no-audit --no-fund util@^0.12.5 querystring@^0.2.0
       - run: pnpm --filter @mpbuild/core test -- --run
       - name: Check tag matches package versions
         run: |
