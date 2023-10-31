@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [5.0.0](https://github.com/ximing/mpbuild/compare/v4.0.8...v5.0.0) (2026-08-20)
+
+5.0 是一次图驱动的整体重写（方案 C）。npm 包改为有作用域的 [`@mpbuild/core`](https://www.npmjs.com/package/@mpbuild/core) 与 [`@mpbuild/cli`](https://www.npmjs.com/package/@mpbuild/cli)，命令为 `mpb`；历史上的无作用域 `mpbuild@4` 已冻结，源码移出本仓库。迁移见 [docs/migration-v5.md](docs/migration-v5.md)。
+
+### ⚠ BREAKING CHANGES
+
+* 配置文件改为 `mpbuild.config.ts` / `.mts` / `.js` / `.mjs`，不再读取 `mpb.config.js`，也不读 `module.rules`
+* 插件 API 全新（公开 `Plugin` 为 `name` + `load?` + `generate?`），不兼容 Tapable / `apply(mpb)`
+* `require('./x.json')` 不再内联，产出独立 json
+* 4.x 的 loader 链、`PolymorphismPlugin`、`SubProjectPlugin`、`SubPackagesPlugin` 等由 `platform` / `ifdef` / `projects` 配置字段取代
+* 需要 Node.js `>=20`
+
+### Features
+
+* 图驱动流水线：先建图，再 analyze 归属，再出 Output Plan，最后 transform 并写盘
+* JS/TS 用 SWC、CSS 用 Lightning CSS；类 SCSS 语法由可选插件 `legacyScss()` 隔离
+* `mpb dev` watch：按内容 hash 增量建图、已入图文件的 `add` 视为内容变更、已入图 npm 文件单独监听（不整棵 watch `node_modules`）、诊断打印到 stderr 后保持进程
+* `mpb build`（`--no-cache` / `--minify`）、`mpb analyze`、`mpb inspect graph`
+* 磁盘 transform 缓存（`--no-cache` 跳过）；非 minify 时 script 写独立 `.map` 与 `sourceMappingURL`
+* wxss/css `url()` 相对路径入图并按字节写出；`copy()` 插件 extras（glob `**` 含零层目录）
+* 子仓库 `projects`、条件编译 `ifdef.tokens`、`output.componentRelative`、`resolve.extensions`、`componentGenerics` 路径表
+* 诊断码：`RESOLVE_MISS` / `ABS_PATH_IN_SUBPROJECT` / `CONFIG_TS_SKIPPED` / `TRANSFORM_FAIL` / `LEGACY_CONFIG` 等
+
 ### [4.0.8](https://github.com/ximing/mpbuild/compare/v1.4.13...v4.0.8) (2021-01-09)
 
 
