@@ -62,7 +62,7 @@
         "node-notifier": "8.0.1",
         "p-queue": "^6.0.2",
         "p-retry": "^4.6.2",
-        "postcss": "^7.0.39",
+        "postcss": "^8.4.31",
         "postcss-load-config": "^2.1.0",
         "preprocess": "^3.2.0",
         "resolve": "^1.22.8",
