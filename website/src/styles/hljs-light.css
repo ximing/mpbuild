@@ -1,0 +1,95 @@
+/*
+ * highlight.js GitHub 浅色主题（取自 highlight.js/styles/github.css 调色，
+ * 选择器限定在浅色模式下生效；背景/边框由 base.css 的 --code-bg 统一控制）。
+ */
+
+:root:not([data-theme='dark']) .hljs {
+  color: #24292e;
+}
+
+:root:not([data-theme='dark']) .hljs-doctag,
+:root:not([data-theme='dark']) .hljs-keyword,
+:root:not([data-theme='dark']) .hljs-meta .hljs-keyword,
+:root:not([data-theme='dark']) .hljs-template-tag,
+:root:not([data-theme='dark']) .hljs-template-variable,
+:root:not([data-theme='dark']) .hljs-type,
+:root:not([data-theme='dark']) .hljs-variable.language_ {
+  color: #d73a49;
+}
+
+:root:not([data-theme='dark']) .hljs-title,
+:root:not([data-theme='dark']) .hljs-title.class_,
+:root:not([data-theme='dark']) .hljs-title.class_.inherited__,
+:root:not([data-theme='dark']) .hljs-title.function_ {
+  color: #6f42c1;
+}
+
+:root:not([data-theme='dark']) .hljs-attr,
+:root:not([data-theme='dark']) .hljs-attribute,
+:root:not([data-theme='dark']) .hljs-literal,
+:root:not([data-theme='dark']) .hljs-meta,
+:root:not([data-theme='dark']) .hljs-number,
+:root:not([data-theme='dark']) .hljs-operator,
+:root:not([data-theme='dark']) .hljs-selector-attr,
+:root:not([data-theme='dark']) .hljs-selector-class,
+:root:not([data-theme='dark']) .hljs-selector-id,
+:root:not([data-theme='dark']) .hljs-variable {
+  color: #005cc5;
+}
+
+:root:not([data-theme='dark']) .hljs-meta .hljs-string,
+:root:not([data-theme='dark']) .hljs-regexp,
+:root:not([data-theme='dark']) .hljs-string {
+  color: #032f62;
+}
+
+:root:not([data-theme='dark']) .hljs-built_in,
+:root:not([data-theme='dark']) .hljs-symbol {
+  color: #e36209;
+}
+
+:root:not([data-theme='dark']) .hljs-code,
+:root:not([data-theme='dark']) .hljs-comment,
+:root:not([data-theme='dark']) .hljs-formula {
+  color: #6a737d;
+}
+
+:root:not([data-theme='dark']) .hljs-name,
+:root:not([data-theme='dark']) .hljs-quote,
+:root:not([data-theme='dark']) .hljs-selector-pseudo,
+:root:not([data-theme='dark']) .hljs-selector-tag {
+  color: #22863a;
+}
+
+:root:not([data-theme='dark']) .hljs-subst {
+  color: #24292e;
+}
+
+:root:not([data-theme='dark']) .hljs-section {
+  color: #005cc5;
+  font-weight: 700;
+}
+
+:root:not([data-theme='dark']) .hljs-bullet {
+  color: #735c0f;
+}
+
+:root:not([data-theme='dark']) .hljs-emphasis {
+  color: #24292e;
+  font-style: italic;
+}
+
+:root:not([data-theme='dark']) .hljs-strong {
+  color: #24292e;
+  font-weight: 700;
+}
+
+:root:not([data-theme='dark']) .hljs-addition {
+  color: #22863a;
+  background-color: #f0fff4;
+}
+
+:root:not([data-theme='dark']) .hljs-deletion {
+  color: #b31d28;
+  background-color: #ffeef0;
+}
