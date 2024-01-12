@@ -1,91 +1,116 @@
-# mpbuild
+<h1 align="center">mpbuild</h1>
 
-微信小程序图驱动构建器。5.x 实现位于 `v5/`，npm 包是 [`@mpbuild/core`](https://www.npmjs.com/package/@mpbuild/core) 与 [`@mpbuild/cli`](https://www.npmjs.com/package/@mpbuild/cli)（都是 `5.0.0`）。
+<p align="center">图驱动的微信小程序构建工具</p>
 
-<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-4-orange.svg?style=flat-square)](#contributors-)
-<!-- ALL-CONTRIBUTORS-BADGE:END -->
+<p align="center">
+  <a href="https://www.npmjs.com/package/@mpbuild/cli"><img src="https://img.shields.io/npm/v/@mpbuild/cli.svg?style=flat" alt="NPM Version"></a>
+  <a href="https://nodejs.org"><img src="https://img.shields.io/node/v/@mpbuild/cli.svg?style=flat" alt="Node >= 20"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/npm/l/@mpbuild/cli.svg?style=flat" alt="License: MIT"></a>
+  <a href="https://github.com/ximing/mpbuild/actions/workflows/github-pages.yml"><img src="https://github.com/ximing/mpbuild/actions/workflows/github-pages.yml/badge.svg" alt="Deploy Website"></a>
+  <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+  <a href="#contributors-"><img src="https://img.shields.io/badge/all_contributors-4-orange.svg?style=flat-square" alt="All Contributors"></a>
+  <!-- ALL-CONTRIBUTORS-BADGE:END -->
+</p>
 
-[![NPM Version](https://img.shields.io/npm/v/@mpbuild/cli.svg?style=flat)](https://www.npmjs.com/package/@mpbuild/cli)
+## 简介
 
-命令行是 `mpb`。**不会**再发布无作用域的 `mpbuild` 包；历史上的 `mpbuild@4` 已冻结，源码已移出本仓库。
+mpbuild 5.x 是一次图驱动的整体重写：从源文件出发构建依赖图，经归属分析、Output Plan 到变换写盘，四段流水线职责清晰。历史上的 `mpbuild@4`（无作用域包）已冻结，不会再发布新版本；当前发布的包是 [`@mpbuild/core`](https://www.npmjs.com/package/@mpbuild/core) 与 [`@mpbuild/cli`](https://www.npmjs.com/package/@mpbuild/cli)，命令行为 `mpb`。
+
+## 特性
+
+- **图驱动流水线** — 建图 → 归属分析 → Output Plan → 变换写盘，行为可推理、可检查
+- **SWC + Lightning CSS** — JS/CSS 变换原生级速度，无沉重的前端编译链负担
+- **精准分包** — 多源染色归属模型，shared 模块复制进分包或提升到主包可配
+- **增量 watch + 磁盘缓存** — 内容 hash 增量建图，差量写盘，重启后缓存复用
+- **条件编译与多态** — 文件级 infix（`name.wx.js`）+ 块级 `@ifdef`，编译时拆分多端代码
+- **npm 支持** — 内置 npmCompat 变换，海量 npm 包开箱即用
+- **插件体系** — `load` / `generate` 两段钩子，官方提供 SCSS、projectConfig、copy 插件
+- **可观测** — `mpb analyze` 产物分析、`mpb inspect graph` 逐节点图检查、16 个语义化诊断码
 
 ## 要求
 
-- Node.js `>=20`
+- Node.js `>= 20`
+- 包为纯 ESM
 
-## 安装
-
-```bash
-pnpm add -D @mpbuild/cli
-```
-
-## 命令
+## 快速开始
 
 ```bash
-mpb build
-mpb build --no-cache
-mpb build --minify
-mpb dev
-mpb analyze
-mpb inspect graph
+npm i -D @mpbuild/cli
 ```
 
-`--no-cache` 跳过磁盘 transform 缓存（目录 `node_modules/.cache/mpbuild`）。`output.clean` 不会删这个目录。`--minify` 覆盖 `compile.minify: true`。`compile.minify` 为假时 script 默认写出独立 `.map` 和 `sourceMappingURL`。
+`@mpbuild/cli` 依赖 `@mpbuild/core`，装这一个即可。
 
-`--watch` 是 `dev` 的别名。退出码：0 成功；1 含 error；2 配置错误。`mpb dev` 把首次构建和每次 watch tick 的诊断打印到 stderr（与 `mpb build` 相同），打印后保持进程。已入图文件的 chokidar `add` 当作内容变更（编辑器 unlink 再 add 会更新 dest）。已入图的 npm 文件会单独加入 watch，不会整棵监听 `node_modules`。
-
-## 配置
-
-项目根使用 `mpbuild.config.ts` / `mpbuild.config.mts` / `mpbuild.config.js` / `mpbuild.config.mjs`（`export default` 或 `module.exports`）。加载顺序：`mpbuild.config.ts` → `mpbuild.config.mts` → `mpbuild.config.js` → `mpbuild.config.mjs`（**.js 在 .mjs 前**，已有 `.js` 项目行为不变）。生产 bin 不能加载 `.ts` / `.mts` 时会 **跳过并诊断 `CONFIG_TS_SKIPPED`**，继续尝试 `.js` / `.mjs`；若只有无法加载的 `.ts` 则失败。不要同时留下会误导的 leftover `.ts` / `.mts`，生产请用 `.js` 或 `.mjs`，仍建议删掉无法加载的 TypeScript 配置。Node 22.18+ 会对 leftover `mpbuild.config.ts` 做 type-strip **并执行它**（顺序仍是 ts → mts → js → mjs，不改成 js-first）。生产请删 leftover `.ts`，或保证它就是你要的配置。
-
-**不读取** `mpb.config.js`。
+在项目根目录新建 `mpbuild.config.mjs`：
 
 ```js
-import { copy, defineConfig, legacyScss, projectConfig } from '@mpbuild/core'
+import { defineConfig } from '@mpbuild/core'
 
 export default defineConfig({
-  src: 'src',
   entry: './entry.js',
+  src: 'src',
   platform: 'wx',
-  output: { dir: 'dist', npm: 'npm', clean: true, componentRelative: true },
-  plugins: [
-    legacyScss(),
-    projectConfig({ projectname: 'my-app', appId: 'touristappid' }),
-    copy('src/tabbar.png'),
-  ],
+  output: { dir: 'dist' },
 })
 ```
 
-`copy('src/**/*.png')` 能匹配 `src/tabbar.png`（`**` 含零层目录）；copy 产物在 watch tick 中保留，不会每拍删掉。wxss/css 里的 `url('./x.png')` 会入图并写出到 dist；忽略 `data:`、空、绝对 URL。WXML `<image src>` 仍不抽。`output.componentRelative` 默认 `true` 时 json 路径以 `./` 或 `../` 开头；`false` 写成相对 `output.dir` 的 `/...`。子仓库 importer 不要用 `/` 开头的源码路径（`ABS_PATH_IN_SUBPROJECT`）。`resolve.extensions` 按 kind 整表覆盖 `adapter.sourceExts`。
+对应的 `entry.js`（router 形态——由 entry 直接生成产物 `app.json`，无需磁盘 `src/app.json`）：
 
-该示例需要 `package.json` 的 `"type": "module"`，或把文件命名为 `mpbuild.config.mjs`。无插件的字段配置仍可用 CJS `module.exports`（不要 `require('@mpbuild/core')`）。
+```js
+module.exports = {
+  router: [
+    { root: '', pages: { 'pages/index/index': '/pages/index/index' } },
+  ],
+}
+```
 
-## 插件（5.0.0 承诺）
+`src` 目录下必须存在 `app.js` 或 `app.ts`，否则报 `MISSING_APP_JS`。entry 另有经典形态（`{ pages, subPackages }`），其页面结构以磁盘 `src/app.json` 为准且该文件必须存在，entry 里的字段不会被消费——两种形态的差异与坑点见文档站 [entry 与路由](https://ximing.github.io/mpbuild/#/guide/entry)。
 
-公开 `Plugin` 只有 `name` + `load?` + `generate?`。官方插件：`legacyScss()`、`projectConfig()`、`copy()`。`copy(patterns)` 默认 extras；`copy({ graph: true })` 未实现。完整 PluginContext 是以后的版本。
+```bash
+mpb build   # 构建一次
+mpb dev     # 构建并进入 watch
+```
 
-从 4.x 迁移见 [docs/migration-v5.md](docs/migration-v5.md)。
+完整可运行示例见 [`example/demo`](example/demo)。全部配置项见文档站[配置参考](https://ximing.github.io/mpbuild/#/reference/config)。
 
 ## 文档
 
-- 迁移：[docs/migration-v5.md](docs/migration-v5.md)
-- 架构规格：[docs/superpowers/specs/2026-08-19-mpbuild-v5-graph-driven-design.md](docs/superpowers/specs/2026-08-19-mpbuild-v5-graph-driven-design.md)
-- 包说明：[v5/packages/cli/README.md](v5/packages/cli/README.md)、[v5/packages/core/README.md](v5/packages/core/README.md)
+文档站：<https://ximing.github.io/mpbuild/>
 
-冷构建相对 4.x 快 5 倍是志向指标，不进 CI fail。
+常用入口：
 
-## 发布
+- [快速开始](https://ximing.github.io/mpbuild/#/guide/getting-started)
+- [配置参考](https://ximing.github.io/mpbuild/#/reference/config)
+- [CLI 参考](https://ximing.github.io/mpbuild/#/reference/cli)
+- [插件 API](https://ximing.github.io/mpbuild/#/plugins/api)
+- [诊断码](https://ximing.github.io/mpbuild/#/reference/diagnostics)
+- [FAQ](https://ximing.github.io/mpbuild/#/faq)
 
-不要在本地执行 `npm publish` 或 `changeset publish` 来发 `@mpbuild/*`。tag 必须是 `v5.0.0`。给仓库打并 push `v5.0.0` 后，[`.github/workflows/publish-mpbuild.yml`](.github/workflows/publish-mpbuild.yml) 会在 GitHub Actions 里对 `@mpbuild/core` 与 `@mpbuild/cli` 执行 `pnpm publish`。
+## 从 4.x 迁移
 
-在 GitHub Settings → Secrets and variables → Actions 添加名为 `NPM_TOKEN` 的 repository secret（npm 登录 token）。不要把 token 写进仓库。
+> [!WARNING]
+> 5.x 与 4.x 不兼容，升级前请至少注意以下 breaking changes：
+>
+> - **包名变更**：`mpbuild` → `@mpbuild/core` + `@mpbuild/cli`，无作用域的 `mpbuild` 包不再发布
+> - **配置文件改名**：只读取 `mpbuild.config.{ts,mts,js,mjs}`，不再读取 `mpb.config.js`（报 `LEGACY_CONFIG`，退出码 2）
+> - **`require('./x.json')` 不再内联**：JSON 作为模块入图处理，产物形态与 4.x 不同
+> - **插件 API 全新**：`load` / `generate` 两段钩子，与 4.x 插件不兼容
 
-用 `git push --force-with-lease origin master` 推 rewrite，**不要 merge origin 的 Snyk / 4.x `packages/mpbuild`**。`V1` 已备份 4.x。
+完整迁移指南见文档站[从 4.x 迁移](https://ximing.github.io/mpbuild/#/migration/from-v4)与 [docs/migration-v5.md](docs/migration-v5.md)。
 
-## 仓库
+## 包与仓库布局
 
-实现只在 `v5/packages/core` 与 `v5/packages/cli`。金样在 `example/demo`（不要到 `v5/packages/example` 找）。
+| 包 | 路径 | 说明 |
+|---|---|---|
+| [`@mpbuild/core`](https://www.npmjs.com/package/@mpbuild/core) | [`v5/packages/core`](v5/packages/core) | 图驱动编译器核心 |
+| [`@mpbuild/cli`](https://www.npmjs.com/package/@mpbuild/cli) | [`v5/packages/cli`](v5/packages/cli) | 命令行 `mpb` |
+
+v5 代码位于 `v5/` 下的独立 pnpm workspace；金样示例在 [`example/demo`](example/demo)。
+
+## 生态链接
+
+- [CHANGELOG.md](CHANGELOG.md) — 版本变更记录
+- [CONTRIBUTING.md](CONTRIBUTING.md) — 贡献指南
+- [Issue 模板](.github/ISSUE_TEMPLATE) / [PR 模板](.github/PULL_REQUEST_TEMPLATE.md)
 
 ## License
 
