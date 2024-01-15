@@ -1,49 +1,38 @@
-name: Example Build & Deploy to GitHub Pages
+name: Deploy Website to GitHub Pages
 on:
   push:
-    branches:
-      - master
-      - v4
-    tags:
-      - v1
+    branches: [master]
     paths:
-      - 'packages/website/**'
-      - '.github/**'
-  repository_dispatch:
+      - 'website/**'
+      - '.github/workflows/github-pages.yml'
+  workflow_dispatch: {}
 jobs:
-  build:
-    if: false
-    name: "disabled: website package removed"
+  build-deploy:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: website
+    concurrency:
+      group: gh-pages
+      cancel-in-progress: true
     steps:
-      - name: Checkout  🛎️
-        uses: actions/checkout@master
+      - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Cache node modules
-        uses: actions/cache@v1
+      - uses: pnpm/action-setup@v4
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
-      - name: use Node.js 14
-        uses: actions/setup-node@v1
+          version: 9
+      - uses: actions/setup-node@v4
         with:
-          node-version: '14.x'
-      - name: npm script 🔧
-        run: |
-          pnpm install --registry=https://registry.npmjs.org
-          pnpm run build:website
-        env:
-          CI: true
-      - name: Deploy 🚀
-        uses: JamesIves/github-pages-deploy-action@releases/v3
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: website/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - uses: JamesIves/github-pages-deploy-action@v4
         with:
-          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-          BRANCH: gh-pages
-          FOLDER: packages/website/dist
-          GIT_CONFIG_NAME: ${{ secrets.GIT_CONFIG_NAME}}
-          GIT_CONFIG_EMAIL: ${{ secrets.GIT_CONFIG_EMAIL}}
+          token: ${{ secrets.ACCESS_TOKEN }}
+          branch: gh-pages
+          folder: website/dist
+          git-config-name: ${{ secrets.GIT_CONFIG_NAME }}
+          git-config-email: ${{ secrets.GIT_CONFIG_EMAIL }}
