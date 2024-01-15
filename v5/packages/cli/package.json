@@ -9,6 +9,17 @@
     "url": "git+https://github.com/ximing/mpbuild.git",
     "directory": "v5/packages/cli"
   },
+  "homepage": "https://ximing.github.io/mpbuild/",
+  "keywords": [
+    "weapp",
+    "wechat-miniprogram",
+    "miniprogram",
+    "build-tool",
+    "swc",
+    "lightning-css",
+    "typescript",
+    "npm"
+  ],
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org"
