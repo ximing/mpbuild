@@ -9,6 +9,8 @@ on:
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     defaults:
       run:
         working-directory: website
@@ -31,8 +33,6 @@ jobs:
       - run: pnpm build
       - uses: JamesIves/github-pages-deploy-action@v4
         with:
-          token: ${{ secrets.ACCESS_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           branch: gh-pages
           folder: website/dist
-          git-config-name: ${{ secrets.GIT_CONFIG_NAME }}
-          git-config-email: ${{ secrets.GIT_CONFIG_EMAIL }}
