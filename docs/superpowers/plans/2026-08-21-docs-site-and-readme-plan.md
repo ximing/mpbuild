@@ -342,7 +342,7 @@ v5/packages/cli/package.json           # 补 homepage/repository/keywords
 
 **关键提醒：**
 - 两个 package.json 补：`"homepage": "https://ximing.github.io/mpbuild/"`、`"repository": { "type": "git", "url": "https://github.com/ximing/mpbuild.git", "directory": "v5/packages/core" }`（cli 对应改 directory）、`"keywords"` 同 topics 语义（weapp / wechat-miniprogram / miniprogram / build-tool / swc / lightning-css / typescript / npm，可裁剪为 npm 搜索友好子集）。**不改 version、不触发发布。**
-- workflow 沿用 `ACCESS_TOKEN` / `GIT_CONFIG_NAME` / `GIT_CONFIG_EMAIL` secret；JamesIves action 默认生成 `.nojekyll`，不要关闭。
+- workflow 使用 `GITHUB_TOKEN` + `permissions: contents: write`（`ACCESS_TOKEN` 已失效，首跑后按预案切换；不再需要 `GIT_CONFIG_NAME` / `GIT_CONFIG_EMAIL`）；pnpm 版本经 `package_json_file: website/package.json` 解析（根 package.json 的 pnpm@7 声明会冲突）；JamesIves action 默认生成 `.nojekyll`，不要关闭。
 - 触发 paths 只有 `website/**` 与 workflow 自身；含 `workflow_dispatch`。
 
 **完成标准（可执行）：**
@@ -453,6 +453,6 @@ push 后验证（编排器 + 用户）：
 - [ ] **旧站被替换不可逆**：首次部署前本地 `pnpm preview`（带 base `/mpbuild/`）完整走查 14 路由；首次部署用 `workflow_dispatch` 手动触发；部署前记录 `origin/gh-pages` HEAD 作为回退点（回退 = force-push 旧 commit 回 gh-pages）。
 - [ ] **Gitee 镜像不处理**：只删 README 链接，不动 `sync.yml`。
 - [ ] **Node 版本**：默认 shell 是 Node 14，所有 website/v5 命令前 `eval "$(fnm env)" && fnm use 22`。
-- [ ] **secret 依赖**：workflow 首跑若权限错，检查 `ACCESS_TOKEN` / `GIT_CONFIG_NAME` / `GIT_CONFIG_EMAIL`；备选 `GITHUB_TOKEN` + `permissions: contents: write`，仅在前者失效时切换（切换属 Spec 外变更，需用户确认）。
+- [x] **secret 依赖（已处置）**：首跑证实 `ACCESS_TOKEN` 失效（push gh-pages 认证失败，exit 128），经用户确认后切换为 `GITHUB_TOKEN` + `permissions: contents: write`，部署成功。
 - [ ] **README 与文档站同源**：特性列表与快速开始代码块两处各写一遍；C 与 B1 都以 `example/demo/mpbuild.config.mjs` + `v5/packages/cli/src/index.ts` 为唯一来源，集成验证时 diff 两处代码块一致性。
 - [ ] **B 组与 A 并行的代价**：B 组合入前无法预览页面渲染；若集成验证发现某页 markdown 语法导致渲染异常（如表格爆宽、未标语言的代码块），按文件所有权派回对应 B 任务修复。

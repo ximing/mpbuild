@@ -43,7 +43,7 @@
 | 路由 | **hash 路由**（`#/guide/getting-started` 形态） | GitHub Pages 项目页无服务端 rewrite；history 路由需要 404.html 复制 index.html 的 hack 且对 base path 敏感。hash 路由零部署假设、深链天然可用。URL 美观让位于可靠性 |
 | 主题 | CSS 变量实现浅色/深色，默认跟随系统，手动切换存 localStorage | 无 UI 框架，纯 CSS，克制 |
 | UI 框架 | 不用（无 antd/mui/tailwind） | 页面形态简单（首页 + 文档布局），自写 CSS 约 400 行可覆盖，避免设计语言被框架绑架 |
-| 部署 | 改造现有 `github-pages.yml`，JamesIves/github-pages-deploy-action@v4 推 `website/dist` 到 `gh-pages` | 沿用仓库既有方案与凭据（`ACCESS_TOKEN` secret 已存在） |
+| 部署 | 改造现有 `github-pages.yml`，JamesIves/github-pages-deploy-action@v4 推 `website/dist` 到 `gh-pages` | 使用 `GITHUB_TOKEN` + `permissions: contents: write`（原 `ACCESS_TOKEN` PAT 已失效，首跑认证失败后按预案切换） |
 | 内容语言 | 中文 | 与旧站、README、CHANGELOG 一致 |
 
 ## 4. 文档站
@@ -245,6 +245,8 @@ on:
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     defaults:
       run:
         working-directory: website
@@ -257,7 +259,8 @@ jobs:
           persist-credentials: false
       - uses: pnpm/action-setup@v4
         with:
-          version: 9
+          # 从 website/package.json 的 packageManager 字段读版本(避免与仓库根的 pnpm@7 声明冲突)
+          package_json_file: website/package.json
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -268,11 +271,9 @@ jobs:
       - uses: JamesIves/github-pages-deploy-action@v4
         with:
           # 注意:v4 的输入名为小写(v3 的 ACCESS_TOKEN/BRANCH/FOLDER 大写风格已废弃)
-          token: ${{ secrets.ACCESS_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           branch: gh-pages
           folder: website/dist
-          git-config-name: ${{ secrets.GIT_CONFIG_NAME }}
-          git-config-email: ${{ secrets.GIT_CONFIG_EMAIL }}
 ```
 
 要点：
@@ -341,5 +342,5 @@ jobs:
 4. **旧站被替换是不可逆的对外变更**：首次部署后 `ximing.github.io/mpbuild/` 立刻变新站。部署前在本地 `pnpm preview`（带 base `/mpbuild/`）完整走查一遍；建议首次部署用 `workflow_dispatch` 手动触发，而不是等一次碰巧的 push。
 5. **Gitee 镜像站会进一步过时**：`mpbuild.gitee.io` 停在 4.x 且本 Spec 不处理。README 移除其链接即可；若用户在意，可后续在 `sync.yml` 停用 Gitee Pages 部署（不在本次范围）。
 6. **根 package.json / .nvmrc 滞后**（pnpm 7、Node 14）：不在本次范围，但实施 agent 跑 v5 相关命令时注意用 Node >= 20；文档站是独立 package，不受根 workspace 影响，这正是选择独立 package 的原因。
-7. **secret 依赖**：workflow 沿用 `ACCESS_TOKEN` / `GIT_CONFIG_NAME` / `GIT_CONFIG_EMAIL`。若首次运行报权限错，检查 secret 是否仍有效；备选方案是改用 `GITHUB_TOKEN` + `permissions: contents: write`（JamesIves v4 原生支持），仅在前者失效时切换。
+7. **secret 依赖（已落地）**：首跑证实 `ACCESS_TOKEN` PAT 已失效（git push 认证失败，exit 128），按本预案切换为 `GITHUB_TOKEN` + `permissions: contents: write`（JamesIves v4 原生支持，git 身份用默认 bot，不再需要 `GIT_CONFIG_NAME` / `GIT_CONFIG_EMAIL`）。
 8. **README 与文档站内容同源**：特性列表、快速开始代码块在两处各写一遍，注意保持一致（以文档站为准，README 是精简版）。
