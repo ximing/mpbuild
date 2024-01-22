@@ -7,6 +7,18 @@ import { HomePage } from './components/HomePage';
 
 const SITE_NAME = 'mpbuild';
 
+/**
+ * 正文首个 h1 与 frontmatter title 同名时去掉：
+ * 页面 header 已渲染标题，避免重复。md 文件里的 h1 保留（对纯 markdown 阅读者有意义）。
+ */
+function stripDuplicateH1(body: string, title: string): string {
+  const m = body.match(/^\s*#\s+(.+?)(?:\s+#+)?\s*(?:\r?\n|$)/);
+  if (m && m[1].trim() === title) {
+    return body.slice(m[0].length);
+  }
+  return body;
+}
+
 export default function App() {
   const { path, anchor } = useHashRoute();
   const isHome = path === '';
@@ -42,7 +54,7 @@ export default function App() {
       ) : page ? (
         <article className="markdown-body">
           <h1>{page.title}</h1>
-          <Markdown source={page.body} currentId={page.id} />
+          <Markdown source={stripDuplicateH1(page.body, page.title)} currentId={page.id} />
         </article>
       ) : (
         <div className="not-found">
