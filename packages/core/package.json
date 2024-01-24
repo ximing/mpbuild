@@ -1,13 +1,13 @@
 {
-  "name": "@mpbuild/cli",
+  "name": "@mpbuild/core",
   "version": "5.0.0",
   "type": "module",
-  "description": "CLI for @mpbuild/core (command: mpb)",
+  "description": "Graph-driven WeChat miniprogram compiler core",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ximing/mpbuild.git",
-    "directory": "v5/packages/cli"
+    "directory": "packages/core"
   },
   "homepage": "https://ximing.github.io/mpbuild/",
   "keywords": [
@@ -24,9 +24,6 @@
     "access": "public",
     "registry": "https://registry.npmjs.org"
   },
-  "bin": {
-    "mpb": "./bin/mpb.js"
-  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -35,25 +32,29 @@
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": [
-    "dist",
-    "bin"
-  ],
+  "files": ["dist"],
   "scripts": {
-    "dev": "tsx src/index.ts",
-    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "build": "tsc -p tsconfig.build.json",
     "pack:check": "pnpm build && npm pack --dry-run",
     "prepublishOnly": "pnpm build"
   },
-  "dependencies": {
-    "@mpbuild/core": "workspace:*"
-  },
   "devDependencies": {
-    "@types/node": "^22.20.1",
-    "tsx": "^4.19.2",
-    "typescript": "^5.9.3"
+    "@types/node": "^22.13.0",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.5"
   },
   "engines": {
     "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@swc/core": "^1.16.1",
+    "@yeanzhi/postcss-advanced-variables": "^3.1.0",
+    "chokidar": "^3.6.0",
+    "lightningcss": "^1.30.1",
+    "postcss": "^8.5.26",
+    "postcss-nested": "^8.0.1",
+    "postcss-scss": "^4.0.9",
+    "zod": "^4.4.3"
   }
 }

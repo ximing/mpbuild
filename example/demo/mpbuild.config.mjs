@@ -1,7 +1,7 @@
 // in-repo 相对 dist；生产用户 `import { defineConfig, legacyScss, projectConfig } from '@mpbuild/core'`
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { defineConfig, legacyScss, projectConfig } from '../../v5/packages/core/dist/index.js'
+import { defineConfig, legacyScss, projectConfig } from '../../packages/core/dist/index.js'
 
 const root = dirname(fileURLToPath(import.meta.url))
 const one = join(root, '../projects/one')

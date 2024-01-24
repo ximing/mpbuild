@@ -1,6 +1,6 @@
 # 从 mpbuild 4.x 迁到 @mpbuild/cli 2.0
 
-本文对应仓库规格 `docs/superpowers/specs/2026-08-19-mpbuild-v5-graph-driven-design.md` 的 §21（八条）和 §18（对照表）。5.x 源码在 `v5/`。npm 包是 `@mpbuild/core@5.0.0` 与 `@mpbuild/cli@5.0.0`。**不会**发布无作用域的 `mpbuild` 包；历史上的 `mpbuild@4` 已冻结且源码已移出本仓库。
+本文对应仓库规格 `docs/superpowers/specs/2026-08-19-mpbuild-v5-graph-driven-design.md` 的 §21（八条）和 §18（对照表）。5.x 源码在 `packages/`。npm 包是 `@mpbuild/core@5.0.0` 与 `@mpbuild/cli@5.0.0`。**不会**发布无作用域的 `mpbuild` 包；历史上的 `mpbuild@4` 已冻结且源码已移出本仓库。
 
 需要 Node.js `>=20`。
 

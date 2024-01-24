@@ -3,7 +3,7 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cliDir, v5Dir } from './repo'
+import { cliDir, repoRoot } from './repo'
 
 const dirs: string[] = []
 
@@ -27,7 +27,7 @@ describe('cli p7 dev diagnostics', () => {
   it('mpb dev prints MISSING_APP_JS to stderr and keeps the process', {
     timeout: 60_000,
   }, async () => {
-    const built = spawnSync('pnpm', ['build'], { cwd: v5Dir, encoding: 'utf8' })
+    const built = spawnSync('pnpm', ['build'], { cwd: repoRoot, encoding: 'utf8' })
     expect(built.status, `${built.stdout}\n${built.stderr}`).toBe(0)
 
     const root = await fixture({

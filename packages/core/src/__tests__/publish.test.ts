@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { cliDir, coreDir, readJson, v5Dir } from './repo'
+import { cliDir, coreDir, readJson, repoRoot } from './repo'
 
 function packPaths(cwd: string): string[] {
   const result = spawnSync('npm', ['pack', '--dry-run', '--json'], {
@@ -44,11 +44,11 @@ describe('publish build', () => {
     const exclude = buildTsconfig.exclude as string[]
     expect(exclude.some((x) => x.includes('__tests__'))).toBe(true)
     expect(exclude.some((x) => x.includes('__fixtures__'))).toBe(true)
-    const v5Pkg = readJson(join(v5Dir, 'package.json'))
-    expect((v5Pkg.scripts as Record<string, string>).build).toContain(
+    const rootPkg = readJson(join(repoRoot, 'package.json'))
+    expect((rootPkg.scripts as Record<string, string>).build).toContain(
       '@mpbuild/core',
     )
-    expect((v5Pkg.scripts as Record<string, string>)['pack:check']).toContain(
+    expect((rootPkg.scripts as Record<string, string>)['pack:check']).toContain(
       'pack:check',
     )
     expect((corePkg.scripts as Record<string, string>).prepublishOnly).toBe(
@@ -66,7 +66,7 @@ describe('publish build', () => {
   })
 
   it('tsc emits dist/index.js + d.ts without __tests__', { timeout: 60_000 }, () => {
-    const built = spawnSync('pnpm', ['build'], { cwd: v5Dir, encoding: 'utf8' })
+    const built = spawnSync('pnpm', ['build'], { cwd: repoRoot, encoding: 'utf8' })
     expect(built.status, `${built.stdout}\n${built.stderr}`).toBe(0)
     expect(existsSync(join(coreDir, 'dist/index.js'))).toBe(true)
     expect(existsSync(join(coreDir, 'dist/index.d.ts'))).toBe(true)

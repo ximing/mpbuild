@@ -6,8 +6,7 @@ const here = dirname(fileURLToPath(import.meta.url))
 
 export const coreDir = join(here, '../..')
 export const cliDir = join(here, '../../../cli')
-export const v5Dir = join(here, '../../../..')
-export const repoRoot = join(here, '../../../../..')
+export const repoRoot = join(here, '../../../..')
 
 export function readJson(file: string): Record<string, unknown> {
   return JSON.parse(readFileSync(file, 'utf8')) as Record<string, unknown>

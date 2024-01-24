@@ -101,10 +101,10 @@ mpb dev     # 构建并进入 watch
 
 | 包 | 路径 | 说明 |
 |---|---|---|
-| [`@mpbuild/core`](https://www.npmjs.com/package/@mpbuild/core) | [`v5/packages/core`](v5/packages/core) | 图驱动编译器核心 |
-| [`@mpbuild/cli`](https://www.npmjs.com/package/@mpbuild/cli) | [`v5/packages/cli`](v5/packages/cli) | 命令行 `mpb` |
+| [`@mpbuild/core`](https://www.npmjs.com/package/@mpbuild/core) | [`packages/core`](packages/core) | 图驱动编译器核心 |
+| [`@mpbuild/cli`](https://www.npmjs.com/package/@mpbuild/cli) | [`packages/cli`](packages/cli) | 命令行 `mpb` |
 
-v5 代码位于 `v5/` 下的独立 pnpm workspace；金样示例在 [`example/demo`](example/demo)。
+5.x 代码位于 `packages/`；金样示例在 [`example/demo`](example/demo)。
 
 ## 生态链接
 

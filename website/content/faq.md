@@ -8,7 +8,7 @@ order: 1
 
 暂不支持。5.x 内置的目标平台 adapter 只有微信（`weapp`），传其他名字会报 `UNKNOWN_TARGET`。
 
-不过 `target` 配置项除了字符串，还接受一个自定义的 `TargetAdapter` 对象（描述文件扩展名、模板标签、JSON 路径字段、npm 入口字段等），理论上可以自行适配其他小程序平台。参考写法见仓库里的测试样例 `v5/packages/core/src/__tests__/fake-adapter.test.ts` 与 `v5/packages/core/src/__fixtures__/fake-mini/`：它基于 `weappAdapter` 派生出一个 `fake` adapter，自定义了模板扩展名（`.tpl` → `.out`）与模板标签（`<inc href>`）。接口定义见 `v5/packages/core/src/types.ts` 的 `TargetAdapter`。
+不过 `target` 配置项除了字符串，还接受一个自定义的 `TargetAdapter` 对象（描述文件扩展名、模板标签、JSON 路径字段、npm 入口字段等），理论上可以自行适配其他小程序平台。参考写法见仓库里的测试样例 `packages/core/src/__tests__/fake-adapter.test.ts` 与 `packages/core/src/__fixtures__/fake-mini/`：它基于 `weappAdapter` 派生出一个 `fake` adapter，自定义了模板扩展名（`.tpl` → `.out`）与模板标签（`<inc href>`）。接口定义见 `packages/core/src/types.ts` 的 `TargetAdapter`。
 
 ## 为什么旧项目的 `mpb.config.js` 报退出码 2？
 
@@ -35,7 +35,7 @@ export default {
 }
 ```
 
-它在插件的 `load` 阶段处理 style 模块（`.wxss` / `.css`）的内容，用 postcss-scss 语法解析，支持变量、嵌套、mixin 文件导入（导入路径需包含 `mixin`）；处理失败会报 `UNSUPPORTED_PREPROCESSOR`。注意微信 adapter 默认的 style 扩展名是 `.wxss` / `.css`，真实的 `.scss` 文件不在默认解析范围内。实现见 `v5/packages/core/src/plugin/legacy-scss.ts`，更多说明见 [官方插件](#/plugins/official)。
+它在插件的 `load` 阶段处理 style 模块（`.wxss` / `.css`）的内容，用 postcss-scss 语法解析，支持变量、嵌套、mixin 文件导入（导入路径需包含 `mixin`）；处理失败会报 `UNSUPPORTED_PREPROCESSOR`。注意微信 adapter 默认的 style 扩展名是 `.wxss` / `.css`，真实的 `.scss` 文件不在默认解析范围内。实现见 `packages/core/src/plugin/legacy-scss.ts`，更多说明见 [官方插件](#/plugins/official)。
 
 ## 生产环境为什么建议用 `mpbuild.config.js` / `.mjs`？
 
@@ -47,7 +47,7 @@ export default {
 
 `compile.minify` 是配置字段，支持 `boolean` 或按模块 kind 的对象（如 `{ script: true }`），默认 `false`。
 
-CLI 的 `--minify` 是覆盖开关：`mpb build --minify` 会强制把 `compile.minify` 置为 `true`，优先级高于配置文件。注意 `mpb dev` 与 `mpb build --watch` 进入 watch 分支，`--minify` 不生效。实现见 `v5/packages/cli/src/index.ts`，命令详情见 [CLI 参考](#/reference/cli)。
+CLI 的 `--minify` 是覆盖开关：`mpb build --minify` 会强制把 `compile.minify` 置为 `true`，优先级高于配置文件。注意 `mpb dev` 与 `mpb build --watch` 进入 watch 分支，`--minify` 不生效。实现见 `packages/cli/src/index.ts`，命令详情见 [CLI 参考](#/reference/cli)。
 
 ## 如何查看依赖图和构建分析？
 
