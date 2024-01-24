@@ -12,7 +12,7 @@ import {
   weappAdapter,
 } from '../index'
 import type { Diagnostic, ResolvedConfig } from '../index'
-import { cliDir, v5Dir } from './repo'
+import { cliDir, repoRoot } from './repo'
 
 type CompareGoldResult = {
   missingPrefixes: string[]
@@ -24,7 +24,7 @@ type CompareGoldResult = {
   goldSubPackages: unknown
 }
 
-const demoRoot = join(fileURLToPath(new URL('.', import.meta.url)), '../../../../../example/demo')
+const demoRoot = join(fileURLToPath(new URL('.', import.meta.url)), '../../../../example/demo')
 const oneSrc = join(demoRoot, '../projects/one')
 const twoSrc = join(demoRoot, '../projects/two')
 const destDir = join(demoRoot, 'dist-v5')
@@ -101,7 +101,7 @@ describe('example/demo gold', () => {
     expect(diagnostics.filter((d: Diagnostic) => d.code === 'RESOLVE_MISS')).toEqual([])
     expect(diagnostics.filter((d: Diagnostic) => d.severity === 'error')).toEqual([])
 
-    const { compareGold } = (await import('../../../../../example/demo/scripts/compare-gold.mjs')) as {
+    const { compareGold } = (await import('../../../../example/demo/scripts/compare-gold.mjs')) as {
       compareGold: (gold: string, dest: string) => Promise<CompareGoldResult>
     }
     const result = await compareGold(goldDir, destDir)
@@ -174,12 +174,12 @@ describe('example/demo mpbuild.config.mjs', () => {
     expect(existsSync(join(demoRoot, 'mpbuild.config.js'))).toBe(false)
     const cfgText = readFileSync(join(demoRoot, 'mpbuild.config.mjs'), 'utf8')
     expect(cfgText).not.toMatch(/tsx/)
-    expect(cfgText).toContain('../../v5/packages/core/dist/index.js')
+    expect(cfgText).toContain('../../packages/core/dist/index.js')
     expect(cfgText).toContain('legacyScss')
     expect(cfgText).toContain('projectConfig')
     expect(cfgText).toContain("dir: 'dist-v5'")
 
-    const built = spawnSync('pnpm', ['build'], { cwd: v5Dir, encoding: 'utf8' })
+    const built = spawnSync('pnpm', ['build'], { cwd: repoRoot, encoding: 'utf8' })
     expect(built.status, `${built.stdout}\n${built.stderr}`).toBe(0)
 
     const cfg = await loadConfig(demoRoot)
@@ -193,7 +193,7 @@ describe('example/demo mpbuild.config.mjs', () => {
     expect(diagnostics.filter((d: Diagnostic) => d.code === 'RESOLVE_MISS')).toEqual([])
     expect(diagnostics.filter((d: Diagnostic) => d.severity === 'error')).toEqual([])
 
-    const { compareGold } = (await import('../../../../../example/demo/scripts/compare-gold.mjs')) as {
+    const { compareGold } = (await import('../../../../example/demo/scripts/compare-gold.mjs')) as {
       compareGold: (gold: string, dest: string) => Promise<CompareGoldResult>
     }
     const result = await compareGold(goldDir, destDir)

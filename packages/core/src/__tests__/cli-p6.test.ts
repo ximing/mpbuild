@@ -3,7 +3,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
-import { cliDir, v5Dir } from './repo'
+import { cliDir, repoRoot } from './repo'
 
 const dirs: string[] = []
 
@@ -36,7 +36,7 @@ describe('cli p6', () => {
   it('inspect graph uses loadConfig router and --minify shrinks js; bad js exits 1 with TRANSFORM_FAIL', {
     timeout: 60_000,
   }, async () => {
-    const built = spawnSync('pnpm', ['build'], { cwd: v5Dir, encoding: 'utf8' })
+    const built = spawnSync('pnpm', ['build'], { cwd: repoRoot, encoding: 'utf8' })
     expect(built.status, `${built.stdout}\n${built.stderr}`).toBe(0)
 
     const inspectRoot = await fixture({

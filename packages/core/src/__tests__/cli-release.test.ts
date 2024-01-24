@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { cliDir, readJson, v5Dir } from './repo'
+import { cliDir, readJson, repoRoot } from './repo'
 
 describe('cli production bin', () => {
   it('does not depend on tsx in bin or production dependencies', () => {
@@ -15,7 +15,7 @@ describe('cli production bin', () => {
   })
 
   it('prints usage with plain node after build', { timeout: 60_000 }, () => {
-    const built = spawnSync('pnpm', ['build'], { cwd: v5Dir, encoding: 'utf8' })
+    const built = spawnSync('pnpm', ['build'], { cwd: repoRoot, encoding: 'utf8' })
     expect(built.status, `${built.stdout}\n${built.stderr}`).toBe(0)
     const bin = join(cliDir, 'bin/mpb.js')
     const result = spawnSync(process.execPath, [bin], {

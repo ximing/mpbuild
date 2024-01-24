@@ -9,21 +9,20 @@
 
 ```bash
 git clone https://github.com/ximing/mpbuild.git
-cd mpbuild/v5
+cd mpbuild
 pnpm install
 ```
 
 ## 目录
 
-- `v5/packages/core` — 图驱动编译核心（`@mpbuild/core`）
-- `v5/packages/cli` — 命令行 `mpb`（`@mpbuild/cli`）
+- `packages/core` — 图驱动编译核心（`@mpbuild/core`）
+- `packages/cli` — 命令行 `mpb`（`@mpbuild/cli`）
 - `example/demo` — 金样工程，CI 做语义对比
 - `docs/migration-v5.md` — 4.x → 5.x 迁移指南
 
 ## 构建与测试
 
 ```bash
-cd v5
 pnpm build                                  # 编译 core + cli
 pnpm --filter @mpbuild/core test -- --run   # 跑 core 全量测试
 ```

@@ -13,7 +13,7 @@ import {
   weappAdapter,
 } from '../index'
 import type { ResolvedConfig } from '../index'
-import { cliDir, coreDir, readJson, v5Dir } from './repo'
+import { cliDir, coreDir, readJson, repoRoot } from './repo'
 
 const dirs: string[] = []
 
@@ -184,7 +184,7 @@ describe('mpb build --no-cache', () => {
       'mpbuild.config.js':
         "export default { src: 'src', entry: { pages: ['pages/p/p'] } }\n",
     })
-    const built = spawnSync('pnpm', ['build'], { cwd: v5Dir, encoding: 'utf8' })
+    const built = spawnSync('pnpm', ['build'], { cwd: repoRoot, encoding: 'utf8' })
     expect(built.status, `${built.stdout}\n${built.stderr}`).toBe(0)
     const result = spawnSync(process.execPath, [join(cliDir, 'bin/mpb.js'), 'build', '--no-cache'], {
       cwd: rootDir,

@@ -11,7 +11,7 @@ order: 4
 ## 抖音 / 头条等小程序平台
 
 - **现状**：内置 adapter 仅 `'weapp'`（微信），也不发布抖音/头条/支付宝/百度的官方 adapter；`target` 传其他字符串报 `UNKNOWN_TARGET`。
-- **替代**：`target` 接受自定义 `TargetAdapter` 对象，可自行实现目标平台（接口定义见 `@mpbuild/core` 的 `types.ts`，仓库内 `v5/packages/core/src/__fixtures__/fake-mini` 是一个最小实现样例）。
+- **替代**：`target` 接受自定义 `TargetAdapter` 对象，可自行实现目标平台（接口定义见 `@mpbuild/core` 的 `types.ts`，仓库内 `packages/core/src/__fixtures__/fake-mini` 是一个最小实现样例）。
 
 ## HMR（热更新）
 
