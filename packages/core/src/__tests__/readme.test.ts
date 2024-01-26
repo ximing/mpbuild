@@ -26,6 +26,13 @@ describe('root README', () => {
     expect(readme).toContain('5.x 代码位于 `packages/`')
     expect(readme).not.toContain('v5/packages')
     expect(readme).not.toMatch(/npm_[A-Za-z0-9]{10,}/)
+    expect(readme).toContain('docs/assets/pipeline.gif')
+    expect(readme).toContain('docs/assets/graph.png')
+    expect(readme).toContain('docs/assets/build.gif')
+    expect(readme).toContain('docs/assets/logo.svg')
+    expect(readme).toContain('mpb analyze')
+    expect(readme).toContain('mpb inspect graph')
+    expect(readme).toContain('#/guide/architecture')
   })
 
   it('ships npm README files for core and cli', () => {

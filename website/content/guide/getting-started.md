@@ -6,6 +6,10 @@ order: 1
 
 # 快速开始
 
+mpbuild 把小程序源码建成依赖图，染色归属后再变换写盘。一次构建是四段流水线：
+
+![四段流水线](/mpbuild/assets/pipeline.gif)
+
 ## 环境要求
 
 - Node.js >= 20

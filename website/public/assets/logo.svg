@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" role="img" aria-label="mpbuild">
+  <!-- Diamond DAG: source on the left, emit on the right. Trace teal, emit ember. -->
+  <path d="M14 32 L32 14 L50 32 L32 50 Z" stroke="#0E7A72" stroke-width="2.2" stroke-linejoin="round"/>
+  <circle cx="14" cy="32" r="6.2" fill="#1A211F" stroke="#0E7A72" stroke-width="2"/>
+  <circle cx="32" cy="14" r="6.2" fill="#EEF2F0" stroke="#0E7A72" stroke-width="2"/>
+  <circle cx="32" cy="50" r="6.2" fill="#EEF2F0" stroke="#0E7A72" stroke-width="2"/>
+  <circle cx="50" cy="32" r="6.2" fill="#D4532A" stroke="#D4532A" stroke-width="2"/>
+</svg>

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>mpb build</title>
+  <style>
+    html, body { margin: 0; background: #0d1210; }
+    body {
+      width: 920px;
+      height: 400px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "PingFang SC", monospace;
+      color: #d8e4dd;
+      overflow: hidden;
+    }
+    .bar {
+      height: 36px;
+      background: #121816;
+      border-bottom: 1px solid #263029;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 0 14px;
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #33403a; }
+    .title { margin-left: 8px; font-size: 12px; color: #7d9184; letter-spacing: 0.04em; }
+    pre {
+      margin: 0;
+      padding: 22px 24px;
+      font-size: 14.5px;
+      line-height: 1.75;
+      white-space: pre;
+    }
+    .c { color: #7d9184; }
+    .g { color: #3DCFB6; }
+    .w { color: #eaf4ee; }
+    .e { color: #FF8A66; }
+    .dim { color: #5f7168; }
+  </style>
+</head>
+<body>
+  <div class="bar">
+    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+    <span class="title">mpb build · example/demo</span>
+  </div>
+  <pre id="out"></pre>
+  <script>
+    const step = Number(new URLSearchParams(location.search).get('step') || '0');
+    const frames = [
+      `<span class="w">$ </span>`,
+      `<span class="w">$ mpb build</span>`,
+      `<span class="w">$ mpb build</span>\n`,
+      `<span class="w">$ mpb build</span>\n<span class="c">  graph</span>     <span class="g">ok</span>   <span class="dim">nodes + edges interned</span>`,
+      `<span class="w">$ mpb build</span>\n<span class="c">  graph</span>     <span class="g">ok</span>   <span class="dim">nodes + edges interned</span>\n<span class="c">  analyze</span>   <span class="g">ok</span>   <span class="dim">main · subpackages · shared</span>`,
+      `<span class="w">$ mpb build</span>\n<span class="c">  graph</span>     <span class="g">ok</span>   <span class="dim">nodes + edges interned</span>\n<span class="c">  analyze</span>   <span class="g">ok</span>   <span class="dim">main · subpackages · shared</span>\n<span class="c">  plan</span>      <span class="g">ok</span>   <span class="dim">dest mapped, collisions hashed</span>`,
+      `<span class="w">$ mpb build</span>\n<span class="c">  graph</span>     <span class="g">ok</span>   <span class="dim">nodes + edges interned</span>\n<span class="c">  analyze</span>   <span class="g">ok</span>   <span class="dim">main · subpackages · shared</span>\n<span class="c">  plan</span>      <span class="g">ok</span>   <span class="dim">dest mapped, collisions hashed</span>\n<span class="c">  emit</span>      <span class="e">ok</span>   <span class="dim">SWC · Lightning CSS · write</span>`,
+      `<span class="w">$ mpb build</span>\n<span class="c">  graph</span>     <span class="g">ok</span>   <span class="dim">nodes + edges interned</span>\n<span class="c">  analyze</span>   <span class="g">ok</span>   <span class="dim">main · subpackages · shared</span>\n<span class="c">  plan</span>      <span class="g">ok</span>   <span class="dim">dest mapped, collisions hashed</span>\n<span class="c">  emit</span>      <span class="e">ok</span>   <span class="dim">SWC · Lightning CSS · write</span>\n\n<span class="g">done</span> <span class="dim">dist/  ·  mpb dev to watch</span>`,
+    ];
+    document.getElementById('out').innerHTML = frames[Math.max(0, Math.min(step, frames.length - 1))];
+  </script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { NAV } from '../content';
+import { Pipeline } from './Pipeline';
 
 const FEATURES: { title: string; desc: string }[] = [
   { title: '图驱动架构', desc: '建图 → 归属分析 → Output Plan → 变换写盘，四段流水线职责清晰' },
@@ -62,7 +63,7 @@ export function HomePage() {
         <div className="hero-text">
           <h1 className="hero-title">mpbuild</h1>
           <p className="hero-tagline">图驱动的微信小程序构建工具</p>
-          <p className="hero-sub">SWC + Lightning CSS，精准分包，增量缓存</p>
+          <p className="hero-sub">先建图，再染色，再写盘。<br />SWC + Lightning CSS · 精准分包 · 增量缓存</p>
           <div className="hero-actions">
             <a className="btn btn-primary" href={startPath}>
               快速开始 →
@@ -82,6 +83,47 @@ export function HomePage() {
             <code>{TERM_LINES.map(renderLine)}</code>
           </pre>
         </div>
+      </section>
+
+      <Pipeline />
+
+      <section className="how">
+        <div className="how-copy">
+          <h2>小程序是一张图，不是一条 loader 链</h2>
+          <p>
+            页面、组件、模板、样式、JSON、npm 互相引用。mpbuild 先把这张网建成模块图，在图上决定谁属于主包 / 分包 / shared，再生成确定性的 Output Plan，最后才做变换写盘。watch 是图上的 patch。
+          </p>
+          <p>
+            <a href="#/guide/architecture">看四段流水线如何工作 →</a>
+          </p>
+        </div>
+        <img
+          className="how-img"
+          src={`${import.meta.env.BASE_URL}assets/graph.png`}
+          alt="模块图按 main / subpackage / shared 染色"
+        />
+      </section>
+
+      <section className="commands">
+        <h2>命令</h2>
+        <ul>
+          <li>
+            <code>mpb build</code>
+            <span>全量构建</span>
+          </li>
+          <li>
+            <code>mpb dev</code>
+            <span>构建 + watch</span>
+          </li>
+          <li>
+            <code>mpb analyze</code>
+            <span>写出图与 plan 的 JSON</span>
+          </li>
+          <li>
+            <code>mpb inspect graph</code>
+            <span>打印每个节点的 owner 与出边</span>
+          </li>
+        </ul>
       </section>
 
       <section className="features">
