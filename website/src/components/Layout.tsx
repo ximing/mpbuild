@@ -55,6 +55,7 @@ export function Layout({ currentId, withSidebar, children }: LayoutProps) {
             </button>
           )}
           <a className="brand" href="#/">
+            <img src={`${import.meta.env.BASE_URL}assets/logo.svg`} width="22" height="22" alt="" />
             mpbuild
           </a>
           <nav className="topnav" aria-label="分区导航">

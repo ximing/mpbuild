@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>mpbuild graph</title>
+  <style>
+    html, body { margin: 0; background: #121816; }
+    body {
+      width: 1100px;
+      height: 420px;
+      font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", -apple-system, sans-serif;
+      color: #e8f0ec;
+      overflow: hidden;
+    }
+    svg { display: block; }
+    .kicker {
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      color: #7d9184;
+      margin: 0;
+      padding: 24px 36px 0;
+    }
+    .legend {
+      position: absolute;
+      right: 36px;
+      top: 24px;
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      color: #9aa89f;
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+    }
+    .sw { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; vertical-align: -1px; }
+  </style>
+</head>
+<body>
+  <p class="kicker">MODULE GRAPH · owner = main | subpackage | shared</p>
+  <div class="legend">
+    <span><i class="sw" style="background:#3DCFB6"></i>main</span>
+    <span><i class="sw" style="background:#7db0d4"></i>subpkg</span>
+    <span><i class="sw" style="background:#FF8A66"></i>shared</span>
+  </div>
+  <svg viewBox="0 0 1100 360" width="1100" height="360">
+    <defs>
+      <marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8" fill="none" stroke="#4a5f57" stroke-width="1.4"/>
+      </marker>
+    </defs>
+    <!-- edges -->
+    <g fill="none" stroke="#4a5f57" stroke-width="1.4" marker-end="url(#arr)">
+      <path d="M 210,88 H 310"/>
+      <path d="M 470,88 H 575"/>
+      <path d="M 210,88 C 250,88 270,188 330,188"/>
+      <path d="M 210,88 C 250,88 270,288 330,288"/>
+      <path d="M 490,188 H 575"/>
+      <path d="M 735,88 C 800,88 820,188 860,188"/>
+      <path d="M 490,288 C 680,288 800,188 860,188"/>
+    </g>
+    <!-- nodes -->
+    <g font-family="ui-monospace, Menlo, Consolas, monospace" font-size="13">
+      <g transform="translate(48,58)">
+        <rect width="162" height="60" rx="2" fill="#1b2824" stroke="#3DCFB6" stroke-width="1.6"/>
+        <text x="16" y="26" fill="#3DCFB6" font-size="10" letter-spacing="0.12em">MAIN</text>
+        <text x="16" y="46" fill="#eaf4ee">app.js</text>
+      </g>
+      <g transform="translate(310,58)">
+        <rect width="160" height="60" rx="2" fill="#1b2824" stroke="#3DCFB6" stroke-width="1.6"/>
+        <text x="16" y="26" fill="#3DCFB6" font-size="10" letter-spacing="0.12em">MAIN</text>
+        <text x="16" y="46" fill="#eaf4ee">pages/index</text>
+      </g>
+      <g transform="translate(575,58)">
+        <rect width="160" height="60" rx="2" fill="#1b2824" stroke="#3DCFB6" stroke-width="1.6"/>
+        <text x="16" y="26" fill="#3DCFB6" font-size="10" letter-spacing="0.12em">MAIN</text>
+        <text x="16" y="46" fill="#eaf4ee">components/comp1</text>
+      </g>
+      <g transform="translate(330,158)">
+        <rect width="160" height="60" rx="2" fill="#172228" stroke="#7db0d4" stroke-width="1.6"/>
+        <text x="16" y="26" fill="#7db0d4" font-size="10" letter-spacing="0.12em">SUBPKG</text>
+        <text x="16" y="46" fill="#eaf4ee">subpkg1/one</text>
+      </g>
+      <g transform="translate(575,158)">
+        <rect width="160" height="60" rx="2" fill="#172228" stroke="#7db0d4" stroke-width="1.6"/>
+        <text x="16" y="26" fill="#7db0d4" font-size="10" letter-spacing="0.12em">SUBPKG</text>
+        <text x="16" y="46" fill="#eaf4ee">@one/utils</text>
+      </g>
+      <g transform="translate(330,258)">
+        <rect width="160" height="60" rx="2" fill="#172228" stroke="#7db0d4" stroke-width="1.6"/>
+        <text x="16" y="26" fill="#7db0d4" font-size="10" letter-spacing="0.12em">SUBPKG</text>
+        <text x="16" y="46" fill="#eaf4ee">subpkg1/two</text>
+      </g>
+      <g transform="translate(860,158)">
+        <rect width="180" height="60" rx="2" fill="#2a1c18" stroke="#FF8A66" stroke-width="1.6"/>
+        <text x="16" y="26" fill="#FF8A66" font-size="10" letter-spacing="0.12em">SHARED</text>
+        <text x="16" y="46" fill="#eaf4ee">npm/util</text>
+      </g>
+    </g>
+  </svg>
+</body>
+</html>

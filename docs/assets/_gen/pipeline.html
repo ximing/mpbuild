@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>mpbuild pipeline</title>
+  <style>
+    html, body { margin: 0; background: #121816; }
+    body {
+      width: 1100px;
+      height: 380px;
+      font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", -apple-system, sans-serif;
+      color: #e8f0ec;
+      overflow: hidden;
+    }
+    .stage-wrap {
+      height: 100%;
+      padding: 28px 36px 24px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .kicker {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      color: #7d9184;
+      margin: 0 0 18px;
+    }
+    .row {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+    }
+    .station {
+      flex: 1;
+      min-width: 0;
+      border: 1px solid #263029;
+      background: #171d1a;
+      padding: 18px 18px 16px;
+      position: relative;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .station:first-child { border-radius: 2px 0 0 2px; }
+    .station:last-child { border-radius: 0 2px 2px 0; }
+    .station + .station { margin-left: -1px; }
+    .idx {
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-size: 11px;
+      color: #7d9184;
+      letter-spacing: 0.12em;
+    }
+    h2 {
+      margin: 6px 0 4px;
+      font-size: 22px;
+      font-weight: 650;
+      letter-spacing: 0.02em;
+    }
+    .en {
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-size: 12px;
+      color: #8fd6ae;
+    }
+    p {
+      margin: 10px 0 0;
+      font-size: 13px;
+      line-height: 1.55;
+      color: #9aa89f;
+    }
+    .station.active {
+      border-color: #3DCFB6;
+      background: #1b2824;
+      z-index: 1;
+    }
+    .station.active .idx { color: #3DCFB6; }
+    .station.active h2 { color: #f4fbf8; }
+    .station.done { border-color: #2a4a42; }
+    .station.emit.active {
+      border-color: #FF6B45;
+      background: #2a1c18;
+    }
+    .station.emit.active .idx, .station.emit.active .en { color: #FF8A66; }
+    .trace {
+      height: 3px;
+      margin: 0 0 22px;
+      background: #263029;
+      position: relative;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .trace > i {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, #0E7A72, #3DCFB6 70%, #FF6B45);
+    }
+    body[data-step="1"] .trace > i { width: 18%; }
+    body[data-step="2"] .trace > i { width: 42%; }
+    body[data-step="3"] .trace > i { width: 66%; }
+    body[data-step="4"] .trace > i { width: 88%; }
+    body[data-step="5"] .trace > i, body[data-step="6"] .trace > i, body[data-step="7"] .trace > i { width: 100%; }
+  </style>
+</head>
+<body>
+  <div class="stage-wrap">
+    <div class="kicker">PIPELINE · GRAPH → ANALYZE → PLAN → EMIT</div>
+    <div class="trace"><i></i></div>
+    <div class="row">
+      <div class="station" data-i="1">
+        <div class="idx">01</div>
+        <h2>建图</h2>
+        <div class="en">graph</div>
+        <p>从入口 BFS，抽出 script / style / template / json 依赖，得到整张模块图。</p>
+      </div>
+      <div class="station" data-i="2">
+        <div class="idx">02</div>
+        <h2>归属</h2>
+        <div class="en">analyze</div>
+        <p>多源染色：main / 分包 / shared。独立分包越界在图上直接报错。</p>
+      </div>
+      <div class="station" data-i="3">
+        <div class="idx">03</div>
+        <h2>计划</h2>
+        <div class="en">plan</div>
+        <p>每个节点映射到唯一 dest。碰撞加 hash 后缀，产物路径可推理。</p>
+      </div>
+      <div class="station emit" data-i="4">
+        <div class="idx">04</div>
+        <h2>变换</h2>
+        <div class="en">emit</div>
+        <p>SWC 处理 JS/TS，Lightning CSS 处理样式，按 plan 差量写盘。</p>
+      </div>
+    </div>
+  </div>
+  <script>
+    const step = Number(new URLSearchParams(location.search).get('step') || '0');
+    document.body.dataset.step = String(step);
+    const stations = [...document.querySelectorAll('.station')];
+    stations.forEach((el, i) => {
+      const n = i + 1;
+      if (step >= n && step < 5) {
+        el.classList.toggle('active', step === n);
+        el.classList.toggle('done', step > n);
+      }
+      if (step >= 5) {
+        el.classList.add('done');
+        el.classList.toggle('active', n === 4);
+      }
+    });
+  </script>
+</body>
+</html>

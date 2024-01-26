@@ -1,20 +1,48 @@
+<p align="center">
+  <img src="docs/assets/logo.svg" width="72" height="72" alt="mpbuild" />
+</p>
+
 <h1 align="center">mpbuild</h1>
 
 <p align="center">图驱动的微信小程序构建工具</p>
 
 <p align="center">
   <a href="https://www.npmjs.com/package/@mpbuild/cli"><img src="https://img.shields.io/npm/v/@mpbuild/cli.svg?style=flat" alt="NPM Version"></a>
+  <a href="https://www.npmjs.com/package/@mpbuild/cli"><img src="https://img.shields.io/npm/dm/@mpbuild/cli.svg?style=flat" alt="NPM Downloads"></a>
   <a href="https://nodejs.org"><img src="https://img.shields.io/node/v/@mpbuild/cli.svg?style=flat" alt="Node >= 20"></a>
   <a href="LICENSE"><img src="https://img.shields.io/npm/l/@mpbuild/cli.svg?style=flat" alt="License: MIT"></a>
+  <a href="https://github.com/ximing/mpbuild/stargazers"><img src="https://img.shields.io/github/stars/ximing/mpbuild?style=flat" alt="GitHub Stars"></a>
   <a href="https://github.com/ximing/mpbuild/actions/workflows/github-pages.yml"><img src="https://github.com/ximing/mpbuild/actions/workflows/github-pages.yml/badge.svg" alt="Deploy Website"></a>
   <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
   <a href="#contributors-"><img src="https://img.shields.io/badge/all_contributors-4-orange.svg?style=flat-square" alt="All Contributors"></a>
   <!-- ALL-CONTRIBUTORS-BADGE:END -->
 </p>
 
+<p align="center">
+  <a href="https://ximing.github.io/mpbuild/">文档站</a>
+  ·
+  <a href="https://ximing.github.io/mpbuild/#/guide/getting-started">快速开始</a>
+  ·
+  <a href="https://ximing.github.io/mpbuild/#/migration/from-v4">从 4.x 迁移</a>
+</p>
+
+<p align="center">
+  <img src="docs/assets/pipeline.gif" alt="四段流水线：建图 → 归属 → 计划 → 变换" width="100%" />
+</p>
+
 ## 简介
 
 mpbuild 5.x 是一次图驱动的整体重写：从源文件出发构建依赖图，经归属分析、Output Plan 到变换写盘，四段流水线职责清晰。历史上的 `mpbuild@4`（无作用域包）已冻结，不会再发布新版本；当前发布的包是 [`@mpbuild/core`](https://www.npmjs.com/package/@mpbuild/core) 与 [`@mpbuild/cli`](https://www.npmjs.com/package/@mpbuild/cli)，命令行为 `mpb`。
+
+## 为什么是图驱动
+
+小程序不是「一个 JS bundle」，而是页面、组件、模板、样式、JSON、npm 互相引用的一张网。4.x 用 loader 链顺序处理文件，分包归属和增量更新都很难推理。
+
+5.x 先把这张网建成图，再在图上染色（谁属于主包 / 分包 / shared），再生成一份确定性的 Output Plan，最后才做 SWC / Lightning CSS 变换并写盘。watch 是图上的 patch，不是整盘重跑。
+
+<p align="center">
+  <img src="docs/assets/graph.png" alt="模块图：main / subpackage / shared 染色" width="100%" />
+</p>
 
 ## 特性
 
@@ -65,12 +93,51 @@ module.exports = {
 
 `src` 目录下必须存在 `app.js` 或 `app.ts`，否则报 `MISSING_APP_JS`。entry 另有经典形态（`{ pages, subPackages }`），其页面结构以磁盘 `src/app.json` 为准且该文件必须存在，entry 里的字段不会被消费——两种形态的差异与坑点见文档站 [entry 与路由](https://ximing.github.io/mpbuild/#/guide/entry)。
 
+<p align="center">
+  <img src="docs/assets/build.gif" alt="mpb build 四段流水线跑完" width="100%" />
+</p>
+
 ```bash
 mpb build   # 构建一次
 mpb dev     # 构建并进入 watch
 ```
 
 完整可运行示例见 [`example/demo`](example/demo)。全部配置项见文档站[配置参考](https://ximing.github.io/mpbuild/#/reference/config)。
+
+## 命令
+
+| 命令 | 作用 |
+|---|---|
+| `mpb build` | 全量构建。`--minify` 覆盖 `compile.minify`；`--no-cache` 跳过磁盘变换缓存 |
+| `mpb dev` | 首次构建后进入 watch，诊断打到 stderr，进程保持 |
+| `mpb analyze` | 写出 `<output.dir>/mpbuild-analyze.json`（图 + plan） |
+| `mpb inspect graph` | 把每个节点的 id / owner / 出边打印到 stdout |
+
+`mpb --watch` 与 `mpb build --watch` 等价于 `mpb dev`（watch 分支不应用 `--minify`）。退出码：0 成功 / 1 含 error 级诊断 / 2 配置错误。
+
+## 官方插件
+
+```js
+import { defineConfig, legacyScss, projectConfig, copy } from '@mpbuild/core'
+
+export default defineConfig({
+  src: 'src',
+  entry: './entry.js',
+  plugins: [
+    legacyScss(),
+    projectConfig({ projectname: 'demo', appId: 'touristappid' }),
+    copy(['src/**/*.png']),
+  ],
+})
+```
+
+| 插件 | 作用 |
+|---|---|
+| `legacyScss()` | 用 postcss-scss 解析类 SCSS（变量 / 嵌套 / mixin） |
+| `projectConfig()` | 生成 `project.config.json`，不覆盖已有文件 |
+| `copy(patterns)` | 把 glob 匹配的 extras 拷进产物（`**` 含零层目录） |
+
+npm 兼容变换是内置的，不必再加插件。插件 API 与 4.x Tapable **不兼容**，见[插件 API](https://ximing.github.io/mpbuild/#/plugins/api)。
 
 ## 文档
 
@@ -79,6 +146,7 @@ mpb dev     # 构建并进入 watch
 常用入口：
 
 - [快速开始](https://ximing.github.io/mpbuild/#/guide/getting-started)
+- [架构：四段流水线](https://ximing.github.io/mpbuild/#/guide/architecture)
 - [配置参考](https://ximing.github.io/mpbuild/#/reference/config)
 - [CLI 参考](https://ximing.github.io/mpbuild/#/reference/cli)
 - [插件 API](https://ximing.github.io/mpbuild/#/plugins/api)
