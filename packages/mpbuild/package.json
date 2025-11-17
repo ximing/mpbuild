@@ -63,7 +63,7 @@
         "p-queue": "^6.0.2",
         "p-retry": "^4.6.2",
         "postcss": "^7.0.39",
-        "postcss-load-config": "^2.1.0",
+        "postcss-load-config": "^3.0.0",
         "preprocess": "^3.2.0",
         "resolve": "^1.22.8",
         "schema-utils": "^1.0.0",
