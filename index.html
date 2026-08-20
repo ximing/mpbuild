@@ -1,59 +1,33 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="zh-CN">
   <head>
-    <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
-    />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mpbuild - 图驱动的微信小程序构建工具</title>
+    <meta name="description" content="mpbuild：图驱动的微信小程序构建工具。SWC + Lightning CSS，精准分包，增量缓存。" />
     <link
-      rel="shortcut icon"
-      type="image/x-icon"
-      href="https://raw.githubusercontent.com/ximing/static/master/M.png"
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23067647'/%3E%3Ctext x='16' y='22.5' font-family='ui-monospace,Menlo,monospace' font-size='19' font-weight='bold' fill='%23ffffff' text-anchor='middle'%3Em%3C/text%3E%3C/svg%3E"
     />
-    <style>
-      .markdown.markdown blockquote {
-        background-color: rgba(255, 229, 100, 0.3);
-        color: #454d64;
-        border-left-color: #ffe564;
-        border-left-width: 9px;
-        border-left-style: solid;
-        padding: 20px 45px 20px 26px;
-        margin-bottom: 30px;
-        margin-top: 20px;
-        margin-left: -30px;
-        margin-right: -30px;
-      }
-
-      .markdown.markdown blockquote p:first-of-type {
-        font-weight: 700;
-        margin-top: 0;
-        margin-bottom: 0;
-      }
-    </style>
-    <link rel="stylesheet" href="/mpbuild/umi.ce1cdd42.css" />
     <script>
-      window.routerBase = "/mpbuild";
-    </script>
-    <script>
-      //! umi version: 3.5.21
-    </script>
-    <script>
-      !(function () {
-        var e = localStorage.getItem("dumi:prefers-color"),
-          t = window.matchMedia("(prefers-color-scheme: dark)").matches,
-          r = ["light", "dark", "auto"];
-        document.documentElement.setAttribute(
-          "data-prefers-color",
-          e === r[2] ? (t ? r[1] : r[0]) : r.indexOf(e) > -1 ? e : r[0]
-        );
+      // 首帧前确定主题，避免浅色/深色闪烁：
+      // 优先 localStorage 手动选择，其次跟随系统 prefers-color-scheme。
+      (function () {
+        try {
+          var t = localStorage.getItem('mpbuild-theme');
+          if (t !== 'light' && t !== 'dark') {
+            t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          }
+          document.documentElement.setAttribute('data-theme', t);
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
       })();
     </script>
-    <title>mpbuild - 小程序构建工具 - mpbuild</title>
+    <script type="module" crossorigin src="/mpbuild/assets/index-k7ssw3x3.js"></script>
+    <link rel="stylesheet" crossorigin href="/mpbuild/assets/index-Chjt7O7Z.css">
   </head>
   <body>
     <div id="root"></div>
-
-    <script src="/mpbuild/umi.a79816d0.js"></script>
   </body>
 </html>
