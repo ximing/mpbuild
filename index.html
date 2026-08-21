@@ -5,16 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>mpbuild - 图驱动的微信小程序构建工具</title>
     <meta name="description" content="mpbuild：图驱动的微信小程序构建工具。SWC + Lightning CSS，精准分包，增量缓存。" />
-    <link
-      rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23067647'/%3E%3Ctext x='16' y='22.5' font-family='ui-monospace,Menlo,monospace' font-size='19' font-weight='bold' fill='%23ffffff' text-anchor='middle'%3Em%3C/text%3E%3C/svg%3E"
-    />
+    <link rel="icon" href="/mpbuild/assets/logo.svg" type="image/svg+xml" />
     <script>
       // 首帧前确定主题，避免浅色/深色闪烁：
       // 优先 localStorage 手动选择，其次跟随系统 prefers-color-scheme。
       (function () {
         try {
-          var t = localStorage.getItem('mpbuild-theme');
+          var q = new URLSearchParams(location.search).get('theme');
+          var t = q === 'light' || q === 'dark' ? q : localStorage.getItem('mpbuild-theme');
           if (t !== 'light' && t !== 'dark') {
             t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
           }
@@ -24,8 +22,8 @@
         }
       })();
     </script>
-    <script type="module" crossorigin src="/mpbuild/assets/index-BDq15HuQ.js"></script>
-    <link rel="stylesheet" crossorigin href="/mpbuild/assets/index-Chjt7O7Z.css">
+    <script type="module" crossorigin src="/mpbuild/assets/index-chAmKjZX.js"></script>
+    <link rel="stylesheet" crossorigin href="/mpbuild/assets/index-BQkYiFYf.css">
   </head>
   <body>
     <div id="root"></div>
