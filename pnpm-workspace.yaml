@@ -1,3 +1,4 @@
 packages:
   - 'packages/*'
-  - 'example/*'
+  # example/coverage 用自己的 file: 依赖，由 npm 安装，不进 workspace lock。
+  - 'example/demo'
