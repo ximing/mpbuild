@@ -1,4 +1,5 @@
-import { EdgeKinds, type ModuleGraph, type OutputPlan, type PackageInfo } from '../types.js'
+import { topologyFingerprint } from '../graph/fingerprint.js'
+import type { ModuleGraph, OutputPlan } from '../types.js'
 
 /** 节点 id、边元组、entries、packages、suite 伴生任一变化则为 true。 */
 export function topologyChanged(before: ModuleGraph, after: ModuleGraph): boolean {
@@ -18,31 +19,6 @@ export function planChanged(input: {
     placementFingerprint(input.before) !== placementFingerprint(input.after) ||
     sharedPlacementFingerprint(input.before) !== sharedPlacementFingerprint(input.after)
   )
-}
-
-function topologyFingerprint(graph: ModuleGraph): string {
-  const nodeIds = [...graph.nodes.keys()].sort()
-  const edgeTuples = graph.edges
-    .map((edge) => `${edge.from}\0${edge.to}\0${edge.kind}\0${edge.raw}`)
-    .sort()
-  const entries = [...graph.entries].sort()
-  const packages = graph.packages.map((pkg) => packageKey(pkg)).sort()
-  const suites = nodeIds.map((id) => {
-    const companions = graph.edges
-      .filter(
-        (edge) =>
-          edge.from === id &&
-          (edge.kind === EdgeKinds.pageSuite || edge.kind === EdgeKinds.componentSuite),
-      )
-      .map((edge) => edge.to)
-      .sort()
-    return `${id}\0${companions.join('\0')}`
-  })
-  return JSON.stringify({ nodeIds, edgeTuples, entries, packages, suites })
-}
-
-function packageKey(pkg: PackageInfo): string {
-  return `${pkg.root}\0${pkg.independent === true ? '1' : '0'}`
 }
 
 function placementFingerprint(plan: OutputPlan): string {
