@@ -1,0 +1,3 @@
+<template name="cov">
+  <view>tpl-marker</view>
+</template>

@@ -1,0 +1,9 @@
+{
+  "name": "coverage",
+  "private": true,
+  "version": "1.0.0",
+  "description": "mpbuild feature-coverage miniprogram",
+  "dependencies": {
+    "cov-id": "file:./vendor/cov-id"
+  }
+}

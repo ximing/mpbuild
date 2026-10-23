@@ -1,0 +1,9 @@
+<import src="./tpl.wxml"/>
+<include src="./part.wxml"/>
+<wxs src="./home.wxs" module="m"/>
+<!-- @ifdef wx -->
+<view>wx-tpl</view>
+<!-- @endif -->
+<!-- @ifdef mt -->
+<view>mt-tpl</view>
+<!-- @endif -->

@@ -1,0 +1,6 @@
+@import '../../wxss/mixin.wxss';
+
+.home {
+  @include reset-border;
+  color: red;
+}
