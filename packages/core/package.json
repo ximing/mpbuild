@@ -55,6 +55,6 @@
     "postcss": "^8.5.26",
     "postcss-nested": "^8.0.1",
     "postcss-scss": "^4.0.9",
-    "zod": "^4.4.3"
+    "zod": "^4.6.6"
   }
 }
